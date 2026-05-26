@@ -1,24 +1,93 @@
-# generate-datasheet
+# claude-skill-generate-datasheet
 
-A Claude Code skill that generates two production-quality HTML documents from your codebase:
+> The cure for vibe-coding without documentation.
 
-1. **Sales Datasheet** — dark industrial theme, persona filters, 3-layer progressive disclosure, CTAs, honest limitations
-2. **Technical Specification** — architecture, security, API, SLA, multi-tenancy, known gaps
+A Claude Code skill that scans your codebase and generates a **complete documentation pack** — evidence-based, zero hallucination. Only documents what it can prove from actual files, configs, and code.
 
-Both are standalone HTML files with zero dependencies. Responsive, print-friendly, dark theme.
+## The Problem
 
-## Why
+AI-assisted coding tools (Cursor, Claude Code, Copilot, Windsurf, Bolt) are creating a generation of **functional projects that nobody can explain, maintain, or audit**:
 
-- Most SaaS companies have bad technical documentation ([source](https://www.productmarketingalliance.com/developer-marketing/discover-the-key-types-of-saas-documentation-real-life-examples/))
-- Creating these documents manually takes days and the result is usually a marketing brochure, not a procurement-ready asset
-- This skill scans your actual codebase and generates documentation that reflects reality, including honest limitations
+- 70% of AI-built projects ship with zero architecture docs ([Addy Osmani, Google](https://beyond.addy.ie))
+- Significant chunks of AI-generated code ship with security vulnerabilities ([Veracode 2025](https://dev.to/incomplete_developer/vibe-coding-is-not-the-problem-ignorance-is-13fj))
+- Most existing doc generators (Docusaurus, MkDocs, Sphinx) generate **sites**, not **content**
+- No tool generates architecture + data dictionary + security + sales docs from code
 
-## What it produces
+## What It Generates
 
-| Document | Audience | Key Features |
-|----------|----------|-------------|
-| Sales Datasheet | Executives, Buyers, Marketing | Persona filter chips, 3-layer depth per module, credibility metrics, CTA sections, limitations section |
-| Technical Spec | CTOs, IT Managers, Infosec | "6 answers in 60s" header, architecture diagrams, data residency, API reference, security matrix, SLA with RPO/RTO, known gaps |
+### Layer 1 — Internal Documentation (Markdown)
+
+| File | Content |
+|------|---------|
+| `architecture.md` | System design, stack, modules, ASCII diagrams |
+| `backend-architecture.md` | API patterns, middleware, auth flow |
+| `data-dictionary.md` | Tables, columns, types from actual migrations |
+| `endpoints.md` | All routes, methods, auth levels |
+| `glossary.md` | Domain terms mapped to code entities |
+| `CHANGELOG.md` | From git history (quotes, not summaries) |
+| `security.md` | Controls matrix with status tags |
+| `roadmap.md` | From TODOs, issues, PRDs found in code |
+| `contributing.md` | Setup, test, PR process from configs |
+| `bugs-known.md` | From FIXME/HACK/TODO in codebase |
+| `backlog.md` | Planned features from PRDs and issues |
+| `pendencies.md` | Blocked items and missing configs |
+
+### Layer 2 — Sales Datasheet (HTML)
+
+For executives, buyers, and marketing teams.
+
+- Dark theme, responsive, print-friendly (PDF via `window.print()`)
+- Persona filter chips (Executives / IT / Buyers / Marketing)
+- 3-layer depth: Title → Features → Technical accordion
+- Credibility metrics from real codebase numbers
+- **Honest limitations section** — mandatory
+- AI features branded under proprietary name (like HubSpot's "Breeze AI")
+
+### Layer 3 — Technical Specification (HTML)
+
+For CTOs, IT managers, and infosec teams.
+
+- "6 answers in 60 seconds" quick-reference header
+- Architecture diagrams (ASCII context + container views)
+- Data residency & subprocessors table
+- Security controls matrix with status tags (Implemented / Partial / Not Available)
+- API reference: auth, rate limits, webhooks
+- SLA with RPO/RTO
+- **Known gaps section** — brutally honest
+
+### Security Pack (Markdown)
+
+For compliance, infosec reviews, and procurement.
+
+| File | Content |
+|------|---------|
+| `security-whitepaper.md` | Complete security posture with evidence |
+| `data-residency.md` | Where data lives, moves, and is processed |
+| `subprocessors.md` | External services with confirmed API calls |
+| `incident-response.md` | Current capabilities + gaps |
+| `backup-dr-policy.md` | RPO, RTO, restore process |
+
+## Zero Hallucination
+
+**Core differentiator.** Every claim traces to a file and line number.
+
+```
+WRONG: "The system uses microservices architecture"
+RIGHT: "Monolith — single entry point at api/index.php 
+       (no service discovery or container orchestration detected)"
+
+WRONG: "Approximately 50 endpoints"  
+RIGHT: "47 endpoints (find api/ -name '*.php' | wc -l)"
+```
+
+When the skill can't determine something:
+
+| Marker | Meaning |
+|--------|---------|
+| `[VERIFY]` | Found something, can't confirm purpose |
+| `[NOT DETECTED]` | Looked for it, didn't find it |
+| `[MANUAL]` | Requires human input |
+| `[PARTIAL]` | Found evidence but incomplete |
 
 ## Install
 
@@ -41,84 +110,91 @@ curl -sL -o ~/.claude/skills/generate-datasheet/SKILL.md \
 ### Option B — Clone the repo
 
 ```bash
-# Project-level
 git clone https://github.com/thiago-a11y/claude-skill-generate-datasheet.git \
   .claude/skills/generate-datasheet
-
-# Global
-git clone https://github.com/thiago-a11y/claude-skill-generate-datasheet.git \
-  ~/.claude/skills/generate-datasheet
 ```
 
 ### Option C — Manual download
 
 1. Download [SKILL.md](https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/SKILL.md)
-2. Place it in `.claude/skills/generate-datasheet/SKILL.md` (project) or `~/.claude/skills/generate-datasheet/SKILL.md` (global)
+2. Place in `.claude/skills/generate-datasheet/SKILL.md`
 
 > **No restart needed.** Claude Code detects new skills automatically.
 
 ## Usage
 
-In Claude Code, type:
-
 ```
 /generate-datasheet
 ```
 
-Or describe what you want:
+Or in natural language:
 
 ```
-Generate a sales datasheet and technical specification for this project
+Generate complete documentation for this project
+Document this codebase
+Create a sales datasheet and technical spec
+Generate security documentation pack
 ```
 
 The skill will:
-1. Scan your codebase (endpoints, tables, integrations, configs, docs)
-2. Ask branding decisions (AI naming, audience, hidden providers)
-3. Generate the sales datasheet HTML
-4. Generate the technical spec HTML
-5. Report what was included and what needs human input
+1. **Scan** your codebase (endpoints, tables, integrations, auth, configs)
+2. **Present** findings for your confirmation (never generates without approval)
+3. **Ask** branding decisions (AI naming, audience, language)
+4. **Generate** selected documentation layers
+5. **Report** what needs human input (`[MANUAL]` markers)
 
-## Design Philosophy
+## How It Works (Anti-Hallucination)
 
-### Sales Datasheet
-- **3 layers per module**: Title + value line (5s scan) → Feature bullets (30s read) → Technical accordion (deep dive)
-- **Persona filters**: Chips dim irrelevant sections — doesn't hide, just guides the eye
-- **Honest limitations**: Mandatory section. Builds more trust than hiding gaps.
-- **AI branding**: External providers abstracted under proprietary brand (like HubSpot's "Breeze AI")
+```
+Phase 0: Ask what docs are needed
+Phase 1: Discovery — 11 scans (identity, structure, DB, endpoints, 
+         auth, integrations, tests, CI/CD, code health, git, existing docs)
+Phase 2: Present inventory — user confirms before generation
+Phase 3: Branding decisions — AI naming, audience, language
+Phase 4: Generate internal MD docs — every fact has source citation
+Phase 5: Generate security pack — controls with status tags
+Phase 6: Generate sales HTML — dark theme, persona filters, metrics
+Phase 7: Generate technical HTML — architecture, API, SLA, gaps
+Phase 8: Validation — cross-check, count markers, report
+```
 
-### Technical Spec
-- **6 questions in 10 minutes**: Where does it run? How does data flow? How to integrate? What security exists? What are the SLAs? What must IT provision?
-- **Status tags on everything**: Implemented (green) / Partial (amber) / Not available (gray)
-- **Gaps section**: Brutally honest. Documents what's missing with ETAs.
-- **Subprocessors table**: Exact data types and regions per external service
+## Key Principles
+
+1. **Evidence over inference** — can't point to file:line? don't write it
+2. **Uncertainty is honest** — `[NOT DETECTED]` beats a guess
+3. **Humans provide context** — skill provides structure, humans verify
+4. **Security by transparency** — document gaps, don't hide them
+5. **No AI washing** — show what AI does, don't say "AI-powered"
+6. **Docs-as-code** — markdown, versionable, diffable
+7. **Built to cure vibe-coding** — code nobody can explain is a liability
 
 ## Best Practices Applied
 
-Based on research into how best-in-class B2B SaaS companies document their products:
+Based on documentation from best-in-class B2B SaaS companies:
 
-| Company | What we learned |
-|---------|----------------|
-| Salesforce | Trust documentation structure: separate architecture/security/infrastructure |
-| Rippling | Security datasheets: frameworks first, then plain language, then crypto details |
-| Databricks | Security whitepapers: "designed for security teams to quickly review" |
-| Stripe | Security pages: anticipate developer questions about fraud/encryption |
-| 1Password | Walk through the security model step-by-step, not just "we're encrypted" |
+| Reference | What we learned |
+|-----------|----------------|
+| Salesforce | Trust docs: separate architecture/security/infrastructure |
+| Rippling | Security datasheets: frameworks → plain language → crypto details |
+| Databricks | "Designed for security teams to quickly review" |
+| Stripe | Anticipate developer questions about security |
+| 1Password | Walk through the model, don't just claim "encrypted" |
+| FastAPI / Supabase / Cal.com | Well-documented open source standards |
+| CAIQ / SIG | Questionnaire standards for mid-market SaaS |
 
-## Output Examples
+## Works With Any Stack
 
-### Sales Datasheet
-- Dark theme (almost black background, amber/blue accent)
-- Space Grotesk headlines, Inter body text
-- Sticky navigation with persona chips
-- Accordion sections with chevron animation
-- Print-friendly (white background, all sections expanded)
+The discovery phase adapts to your project:
 
-### Technical Spec
-- Same dark theme, blue accent (distinguishes from sales doc)
-- JetBrains Mono for code blocks and ASCII diagrams
-- Status tags (Implemented / Partial / Not available)
-- Callout boxes for warnings and important notes
-- "Confidential — Evaluation use" classification
+| Stack | What it detects |
+|-------|----------------|
+| React / Vue / Angular | Components, routes, state management |
+| PHP / Laravel | Endpoints, migrations, middleware |
+| Node / Express | Routes, middleware, models |
+| Python / Django / FastAPI | Views, models, serializers |
+| Go | Handlers, models, middleware |
+| Rust | Handlers, structs, configs |
+| Any | Git history, configs, external APIs, TODOs |
 
 ## License
 
@@ -126,5 +202,6 @@ MIT — Use freely, modify as needed, no attribution required.
 
 ## Credits
 
-Created by [Objetiva Solucao Empresarial](https://objetivasolucao.com.br) for the SyneriumX project.
-Methodology derived from Perplexity research on B2B SaaS documentation best practices (Salesforce, Rippling, Databricks, Stripe, 1Password, Freshworks).
+Created by [Objetiva Solucao Empresarial](https://objetivasolucao.com.br) for the [SyneriumX](https://github.com/SineriumX/syneriumx) project.
+
+Methodology based on research into B2B SaaS documentation best practices (Salesforce, Rippling, Databricks, Stripe, 1Password, Freshworks) and the vibe-coding documentation crisis (Addy Osmani/Google, Veracode 2025).
