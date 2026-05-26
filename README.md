@@ -22,21 +22,40 @@ Both are standalone HTML files with zero dependencies. Responsive, print-friendl
 
 ## Install
 
-### Option A — Project-level (recommended)
+### Option A — One-liner from GitHub (recommended)
 
-Copy to your project's `.claude/skills/` directory:
-
+**Project-level** (this project only):
 ```bash
-mkdir -p .claude/skills/generate-datasheet
-cp SKILL.md .claude/skills/generate-datasheet/
+mkdir -p .claude/skills/generate-datasheet && \
+curl -sL -o .claude/skills/generate-datasheet/SKILL.md \
+  https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/SKILL.md
 ```
 
-### Option B — Global (all projects)
+**Global** (all your projects):
+```bash
+mkdir -p ~/.claude/skills/generate-datasheet && \
+curl -sL -o ~/.claude/skills/generate-datasheet/SKILL.md \
+  https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/SKILL.md
+```
+
+### Option B — Clone the repo
 
 ```bash
-mkdir -p ~/.claude/skills/generate-datasheet
-cp SKILL.md ~/.claude/skills/generate-datasheet/
+# Project-level
+git clone https://github.com/thiago-a11y/claude-skill-generate-datasheet.git \
+  .claude/skills/generate-datasheet
+
+# Global
+git clone https://github.com/thiago-a11y/claude-skill-generate-datasheet.git \
+  ~/.claude/skills/generate-datasheet
 ```
+
+### Option C — Manual download
+
+1. Download [SKILL.md](https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/SKILL.md)
+2. Place it in `.claude/skills/generate-datasheet/SKILL.md` (project) or `~/.claude/skills/generate-datasheet/SKILL.md` (global)
+
+> **No restart needed.** Claude Code detects new skills automatically.
 
 ## Usage
 
