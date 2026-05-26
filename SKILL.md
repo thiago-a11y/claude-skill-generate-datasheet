@@ -1,31 +1,28 @@
 ---
 name: generate-datasheet
-version: 3.0.0
+version: 4.0.0
 description: |
-  Turns any codebase into onboarding, architecture, contracts, runbooks, 
-  compliance evidence, and a change-planning system — with every claim 
-  traced to code. Zero hallucination by design.
+  Turns any codebase into operational understanding + fixes it with your approval.
+  Scans → Documents → Diagnoses → Proposes fixes → You approve → It corrects.
+  Every claim traced to code. Zero hallucination. Zero unauthorized changes.
   
-  Generates 5 layers + 3 operational packs:
+  6 layers:
   Layer 1 (Internal/MD): architecture, data-dictionary, glossary, changelog, 
     endpoints, security, roadmap, contributing, bugs-known, backlog, pendencies
-  Layer 2 (External/HTML): Sales datasheet — persona filters, 3-layer depth, 
-    dark theme, CTA sections
-  Layer 3 (External/HTML): Technical specification — architecture, security, 
-    API, SLA, known gaps for CTOs/IT
-  Layer 4 (Evolution/MD): Tech radar, dependency audit, migration recommendations, 
-    security gaps, test coverage, cost-of-change estimates
-  Layer 5 (Operational/MD): Role-based onboarding packs, incident runbooks, 
-    bus-factor report, project health score
+  Layer 2 (External/HTML): Sales datasheet — persona filters, 3-layer depth
+  Layer 3 (External/HTML): Technical specification — for CTOs/IT
+  Layer 4 (Evolution/MD): Tech radar, dependency audit, migrations, gaps
+  Layer 5 (Operational/MD): Onboarding packs, runbooks, bus-factor, health score
+  Layer 6 (Correction): Scan → diagnose → propose → approve → fix → verify.
+    Branch-based safety. Per-item approval. Confidence labels. Post-fix verification.
+    Never touches main. Every fix = 1 commit = 1 revert.
   
   Plus: Security Pack (whitepaper, data-residency, subprocessors, 
     incident-response, backup-dr-policy)
   
-  Built to cure the vibe-coding documentation crisis.
-  
-  Use when: "generate docs", "document this project", "create datasheet", 
-  "onboarding guide", "runbook", "bus factor", "project health", "tech debt", 
-  "evolution report", "security docs", "ficha técnica", "documentar projeto".
+  Use when: "generate docs", "document this project", "fix issues", "scan and fix",
+  "onboarding guide", "runbook", "bus factor", "project health", "tech debt",
+  "evolution report", "security docs", "ficha técnica", "corrigir problemas".
 allowed-tools:
   - Bash
   - Read
@@ -35,11 +32,11 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-# Generate Datasheet v3 — Operational Understanding from Code
+# Generate Datasheet v4 — Understand, Document, and Fix
 
 ## What this skill produces
 
-Five layers of documentation + operational packs from a single codebase scan:
+Six layers from a single codebase scan — from documentation to correction:
 
 ### Layer 1 — Internal Documentation (Markdown)
 
@@ -317,6 +314,174 @@ For compliance, infosec reviews, and procurement.
 | `docs/incident-response.md` | Response plan template + current capabilities | Monitoring, logging, alerting code |
 | `docs/backup-dr-policy.md` | Backup frequency, RPO, RTO, restore process | Cron jobs, backup configs, hosting |
 
+### Layer 6 — Assisted Correction Engine
+
+The skill doesn't just document problems — it fixes them with your explicit approval.
+
+**How it works:**
+
+```
+SCAN ──→ DIAGNOSE ──→ PROPOSE ──→ APPROVE ──→ FIX ──→ VERIFY
+  │          │            │           │          │         │
+  │          │            │           │          │         └─ lint + typecheck + tests
+  │          │            │           │          └─ 1 fix = 1 commit on branch
+  │          │            │           └─ user picks which fixes to apply
+  │          │            └─ diff preview + rationale + blast radius
+  │          └─ categorize by severity + confidence
+  └─ reuse Phase 1 discovery data
+```
+
+**Safety guarantees:**
+
+| Guarantee | Implementation |
+|-----------|---------------|
+| Never touches main | Creates branch `fix/datasheet-corrections` |
+| Per-item approval | User approves each fix individually or by category |
+| Diff before apply | Shows exact changes with rationale before writing |
+| Confidence labels | HIGH (lint/format) / MEDIUM (security fix) / LOW (multi-file refactor) |
+| 1 fix = 1 commit | Every correction is a separate commit → individual revert possible |
+| Post-fix verification | Runs available checks after each fix (lint, typecheck, test) |
+| Blast radius shown | "This fix touches 3 files. 0 tests exist for them. Risk: MEDIUM" |
+| Rollback plan | Every fix commit message includes revert instructions |
+
+**Issue categories detected:**
+
+| Category | Examples | Confidence | Auto-fixable? |
+|----------|----------|------------|---------------|
+| **Formatting & lint** | Missing semicolons, import order, trailing spaces | HIGH | Yes — deterministic |
+| **Dependency updates** | Patch/minor bumps with no breaking changes | HIGH | Yes — update + verify |
+| **Security (single-file)** | `==` instead of `===`, missing input validation, SQL injection risk | MEDIUM | Yes — with review |
+| **Security (multi-file)** | Missing rate limiter, CORS misconfigured, headers absent | MEDIUM | Yes — creates files + wires them |
+| **Missing tests** | Critical paths with 0 test files | MEDIUM | Yes — generates test skeletons |
+| **Tech debt** | TODO/FIXME in critical paths, dead code, unused imports | MEDIUM | Partial — simple ones yes |
+| **Dependency major** | Major version bumps with breaking changes | LOW | Proposes plan, doesn't auto-apply |
+| **Architecture** | Module restructuring, pattern changes | LOW | Proposes plan only — never auto-applies |
+
+**Presentation format (what the user sees):**
+
+```
+## Correction Plan — 14 issues found
+
+### HIGH confidence (safe to auto-fix)
+  
+  #1 [LINT] 23 files with trailing whitespace
+     Fix: remove trailing spaces
+     Blast radius: cosmetic only, 0 logic changes
+     [ ] Approve
+
+  #2 [DEPENDENCY] lodash 4.17.20 → 4.17.21 (security patch)
+     Fix: update package.json + lockfile
+     Blast radius: 0 breaking changes, patch version
+     [ ] Approve
+
+### MEDIUM confidence (review recommended)
+
+  #3 [SECURITY] api/auth.php:45 — password compared with == 
+     Fix: change to password_verify($input, $hash)
+     Blast radius: 1 file, 1 line, auth flow affected
+     Rationale: == allows type juggling bypass
+     [ ] Approve
+
+  #4 [SECURITY] 3 API endpoints without rate limiting
+     Fix: create middleware/rate-limiter.php + wire to 3 routes
+     Blast radius: 1 new file + 3 modified files
+     Files: api/auth.php, api/register.php, api/reset.php
+     [ ] Approve
+
+  #5 [MISSING-TEST] api/auth/ has 0 test files (23 changes in 90d)
+     Fix: generate test skeleton with key assertions
+     Blast radius: 1 new file, 0 existing files modified
+     [ ] Approve
+
+### LOW confidence (plan only, no auto-fix)
+
+  #6 [ARCHITECTURE] api/ has 47 files in flat directory
+     Suggestion: group by domain (api/crm/, api/marketing/, api/auth/)
+     Estimated effort: 47 files, ~2 days
+     ⚠ This is a suggestion, not an auto-fix. Requires human planning.
+
+  #7 [DEPENDENCY-MAJOR] express 4.18.2 → 5.x (breaking changes)
+     Suggestion: 15 files use express.Router, 3 breaking changes identified
+     Estimated effort: 15 files, ~3 days + testing
+     ⚠ Migration plan generated in evolution-report.md
+
+─────────────────────────────────────
+Approve which? (numbers, "all-high", "all-medium", "all", or "none")
+```
+
+**Execution flow after approval:**
+
+```bash
+# 1. Create safety branch
+git checkout -b fix/datasheet-corrections
+
+# 2. For each approved fix:
+#    a. Apply the change (Edit tool)
+#    b. Run verification:
+npm run lint 2>/dev/null || true          # lint check
+npx tsc --noEmit 2>/dev/null || true      # typecheck  
+npm test 2>/dev/null || true              # tests
+#    c. Commit with descriptive message:
+git commit -m "fix(security): password_verify instead of == in auth.php
+
+Applied by generate-datasheet skill (Layer 6).
+Issue: #3 [SECURITY] password compared with == allows type juggling.
+Confidence: MEDIUM
+Revert: git revert {hash}"
+
+# 3. After all fixes applied:
+#    Report results
+```
+
+**Post-fix report:**
+
+```
+## Correction Results
+
+### Applied (7/14)
+| # | Category | File | Status | Verification |
+|---|----------|------|--------|-------------|
+| 1 | LINT | 23 files | ✓ Applied | lint: pass |
+| 2 | DEPENDENCY | package.json | ✓ Applied | install: pass, tests: pass |
+| 3 | SECURITY | api/auth.php | ✓ Applied | lint: pass |
+| 4 | SECURITY | 3 files + 1 new | ✓ Applied | lint: pass |
+| 5 | MISSING-TEST | tests/auth.test.php | ✓ Created | skeleton only |
+
+### Skipped (5/14)
+| # | Reason |
+|---|--------|
+| 6 | Architecture — plan only, user did not approve |
+| 7 | Major dependency — plan only |
+
+### Not approved (2/14)
+| # | Category |
+|---|----------|
+| 8 | User declined |
+| 9 | User declined |
+
+### Branch
+All changes on: `fix/datasheet-corrections`
+Merge when ready: `git checkout main && git merge fix/datasheet-corrections`
+Or revert all: `git branch -D fix/datasheet-corrections`
+
+### Docs updated
+- evolution-report.md — 7 items marked as resolved
+- health-score.md — recalculated: 62 → 71 (+9 points)
+- bugs-known.md — 3 items removed (fixed)
+```
+
+**What Layer 6 NEVER does:**
+
+- Never commits to main — always uses a dedicated branch
+- Never applies LOW confidence fixes automatically — only generates plans
+- Never modifies database schemas or migrations
+- Never changes environment variables or secrets
+- Never deletes files without explicit approval
+- Never installs new dependencies without showing what and why
+- Never applies a fix if verification fails (lint/typecheck/test)
+- Never applies a fix without showing the diff first
+- Never combines multiple fixes in one commit — 1 fix = 1 commit
+
 ---
 
 ## Anti-Hallucination Protocol
@@ -381,15 +546,17 @@ Every section includes a comment with where the data came from:
 Ask the user what they need:
 
 ```
-What documentation do you need?
+What do you need?
 
-1. Full pack (all 5 layers + security pack) — recommended for first run
-2. Internal only (Layer 1: MD files for the dev team)
-3. External only (Layer 2+3: sales + technical HTML)
-4. Evolution report (Layer 4: tech debt, migrations, dependency audit)
-5. Operational pack (Layer 5: onboarding, bus-factor, runbooks, health score)
-6. Security pack only
-7. Specific files (I'll tell you which)
+1. Full pack (all 6 layers + security pack) — recommended for first run
+2. Document only (Layers 1-5: all docs, no corrections)
+3. Internal only (Layer 1: MD files for the dev team)
+4. External only (Layer 2+3: sales + technical HTML)
+5. Evolution report (Layer 4: tech debt, migrations, dependency audit)
+6. Operational pack (Layer 5: onboarding, bus-factor, runbooks, health score)
+7. Scan & fix only (Layer 6: diagnose + propose + fix with approval)
+8. Security pack only
+9. Specific files (I'll tell you which)
 ```
 
 ### Phase 1 — Discovery (read-only, no output)
@@ -865,31 +1032,139 @@ Design: dark theme, accent blue (#3b82f6), JetBrains Mono for code, status tags,
 - Module coverage: X/Y documented
 ```
 
+### Phase 9 — Correction Engine (Layer 6)
+
+Only runs if user selected Layer 6 (option 1 or 7 in Phase 0).
+
+**9.1 — Compile issue list from previous phases**
+
+Gather all issues found during Phases 1, 4 (Evolution), and 5 (Operational):
+- Security gaps from security.md
+- Outdated dependencies from evolution-report.md
+- TODOs/FIXMEs from bugs-known.md
+- Missing tests from health-score.md
+- Lint/format issues from code scan
+
+**9.2 — Classify each issue**
+
+For each issue, determine:
+```
+- Category: LINT | DEPENDENCY | SECURITY | MISSING-TEST | TECH-DEBT | ARCHITECTURE
+- Confidence: HIGH | MEDIUM | LOW
+- Blast radius: files affected, tests exist?, contracts changed?
+- Auto-fixable: yes | plan-only
+- Evidence: file:line where issue was detected
+```
+
+Classification rules:
+- **HIGH confidence**: deterministic fixes — formatting, import order, patch dependencies, unused imports
+- **MEDIUM confidence**: single-file security fixes, missing test skeletons, simple TODO resolutions
+- **LOW confidence**: multi-file refactors, major dependency upgrades, architecture changes
+
+**9.3 — Present correction plan**
+
+Use AskUserQuestion tool to present the plan grouped by confidence level.
+User must explicitly approve which fixes to apply.
+
+IMPORTANT:
+- LOW confidence items are NEVER auto-fixable — only plans/suggestions
+- Show blast radius for every item
+- Show diff preview for MEDIUM items
+- Group by category for easy batch approval ("all-high", "all-medium")
+
+**9.4 — Create safety branch**
+
+```bash
+git checkout -b fix/datasheet-corrections
+```
+
+If branch already exists from a previous run, ask user whether to continue or start fresh.
+
+**9.5 — Apply approved fixes**
+
+For each approved fix, in order of confidence (HIGH first, then MEDIUM):
+
+1. Apply the change using Edit tool
+2. Run available verification:
+   ```bash
+   # Adapt to detected stack
+   npm run lint 2>/dev/null || npx eslint . 2>/dev/null || true
+   npx tsc --noEmit 2>/dev/null || true
+   npm test 2>/dev/null || true
+   php -l {file} 2>/dev/null || true
+   python -m py_compile {file} 2>/dev/null || true
+   ```
+3. If verification FAILS:
+   - Revert the change: `git checkout -- {files}`
+   - Report: "Fix #N failed verification: {error}. Reverted."
+   - Continue to next fix
+4. If verification PASSES:
+   - Commit with descriptive message:
+   ```
+   fix({category}): {short description}
+   
+   Applied by generate-datasheet skill (Layer 6).
+   Issue: #{number} [{CATEGORY}] {description}
+   Confidence: {HIGH|MEDIUM}
+   Evidence: {file}:{line}
+   Revert: git revert {hash}
+   ```
+
+**9.6 — Post-fix actions**
+
+After all approved fixes are applied:
+
+1. Regenerate affected docs:
+   - Update health-score.md (recalculate)
+   - Update bugs-known.md (remove fixed items)
+   - Update evolution-report.md (mark resolved items)
+2. Report results to user (applied, failed, skipped, not approved)
+3. Provide merge and revert instructions
+
+**9.7 — Rules the correction engine MUST follow**
+
+1. NEVER commit to main — always dedicated branch
+2. NEVER apply LOW confidence fixes — only generate plans
+3. NEVER modify database schemas, migrations, or seed files
+4. NEVER change .env files, secrets, or credentials
+5. NEVER delete files without explicit per-file approval
+6. NEVER install new dependencies without showing what and why
+7. NEVER apply a fix if ANY verification step fails — revert immediately
+8. NEVER combine fixes in one commit — 1 fix = 1 commit
+9. NEVER apply fixes the user didn't explicitly approve
+10. NEVER skip the diff preview for MEDIUM confidence fixes
+11. ALWAYS show blast radius before applying
+12. ALWAYS include revert instructions in commit message
+
 ---
 
 ## Key Principles
 
 1. **Evidence over inference** — can't point to file:line? don't write it
 2. **Uncertainty is honest** — `[NOT DETECTED]` beats a guess
-3. **Humans provide context** — skill provides structure, humans verify
+3. **Humans approve, AI executes** — skill proposes, human decides, skill applies
 4. **Security by transparency** — document gaps, don't hide them
 5. **Scan-to-signal ratio** — tables not paragraphs
 6. **The champion test** — non-technical person forwards to IT with confidence
 7. **The audit test** — infosec reviews risk from security pack alone
-8. **The evolution test** — tech lead can prioritize next quarter from the report alone
-9. **No AI washing** — show what AI does, don't say "AI-powered"
-10. **Docs-as-code** — markdown, versionable, diffable
-11. **Cure for vibe-coding** — code nobody can explain is a liability
-12. **Recommendations need evidence** — "migrate X→Y" requires file count, EOL date, breaking changes
+8. **The evolution test** — tech lead prioritizes next quarter from the report
+9. **The correction test** — every fix is revertible, verifiable, and explainable
+10. **No AI washing** — show what AI does, don't say "AI-powered"
+11. **Docs-as-code** — markdown, versionable, diffable
+12. **Cure for vibe-coding** — code nobody can explain is a liability
+13. **Fixes need evidence** — no fix without file:line, blast radius, and confidence label
+14. **1 fix = 1 commit** — atomic, revertible, traceable
 
 ## What This Skill Is NOT
 
 - Not a marketing copy generator — it documents reality
 - Not SonarQube — it explains WHY, not just WHAT is wrong
-- Not a replacement for human judgment — it structures, humans verify
+- Not a replacement for human judgment — it structures, humans decide
 - Not a one-time tool — re-run when codebase changes
 - Not opinionated about your stack — works with any language/framework
-- Not noisy — every recommendation has evidence or gets `[VERIFY]` marker
+- Not noisy — every finding has evidence or gets `[VERIFY]` marker
+- Not an autonomous agent — never applies changes without approval
+- Not destructive — never deletes, never touches main, never skips verification
 
 ## References
 
@@ -900,6 +1175,11 @@ Design: dark theme, accent blue (#3b82f6), JetBrains Mono for code, status tags,
 - 1Password Enterprise Datasheet (walk the model)
 - Thoughtworks Technology Radar (Adopt/Trial/Assess/Hold format)
 - FastAPI, Supabase, Cal.com (well-documented OSS)
+- GitHub Copilot Autofix (responsible-use guidance, failure modes)
+- Snyk Agent Fix (candidate fix generation, single-file limitation)
+- CodeRabbit Autofix (PR-driven correction workflow)
+- Dependabot (noise management, auto-merge patterns)
+- ESLint safe-fix vs unsafe-fix (scope of automated changes)
 - CAIQ, SIG questionnaire standards
 - Technical Debt Master (`tdm`) — evidence-based debt discovery
 - Vibe-coding crisis research (Osmani/Google, Veracode 2025)

@@ -3,9 +3,10 @@
 [![GitHub stars](https://img.shields.io/github/stars/thiago-a11y/claude-skill-generate-datasheet?style=flat&color=f59e0b)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/stargazers)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-skill-f59e0b?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PHBhdGggZD0iTTEyIDJMMiAyMmgyMEwxMiAyeiIgZmlsbD0iI2Y1OWUwYiIvPjwvc3ZnPg==)](https://docs.anthropic.com/en/docs/claude-code)
-[![Version](https://img.shields.io/badge/version-3.0.0-green.svg)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/releases)
+[![Version](https://img.shields.io/badge/version-4.0.0-green.svg)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/releases)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#)
 [![Docs Generated](https://img.shields.io/badge/docs_generated-30+_files-purple.svg)](#what-it-generates)
+[![Scan & Fix](https://img.shields.io/badge/scan_%26_fix-with_approval-f59e0b.svg)](#layer-6--assisted-correction-engine-new-in-v4)
 
 > The cure for vibe-coding without documentation.
 
@@ -130,6 +131,35 @@ The "can't go back" layer. No other tool generates this.
 | `runbooks/*.md` | "If database fails → check this. If queue stalls → do that." |
 | `health-score.md` | Explainable 0-100 score: tests, debt, bus factor, security, docs |
 
+### Layer 6 — Assisted Correction Engine `NEW in v4`
+
+The full cycle no other tool does: **scan → diagnose → propose → approve → fix → verify**.
+
+```
+Found 14 issues:
+
+#1 [HIGH] 23 files with trailing whitespace
+   Fix: remove spaces | Blast radius: cosmetic only
+   [ ] Approve
+
+#3 [MEDIUM] api/auth.php:45 — password compared with ==
+   Fix: change to password_verify() | Blast radius: 1 file, auth flow
+   [ ] Approve
+
+#7 [LOW] express 4.x → 5.x (15 files, breaking changes)
+   ⚠ Plan only — requires human planning
+   
+Approve which? (1,3 or "all-high" or "all")
+```
+
+**Safety guarantees:**
+- Never touches main — dedicated branch `fix/datasheet-corrections`
+- 1 fix = 1 commit = 1 revert
+- Verification after every fix (lint + typecheck + tests)
+- If verification fails → auto-revert, skip to next
+- LOW confidence = plan only, never auto-applied
+- Never modifies DB schemas, secrets, or env files
+
 ## Zero Hallucination
 
 **Core differentiator.** Every claim traces to a file and line number.
@@ -222,6 +252,7 @@ Phase 5.5: Generate evolution report — tech radar, migrations, debt, gaps
 Phase 6: Generate sales HTML — dark theme, persona filters, metrics
 Phase 7: Generate technical HTML — architecture, API, SLA, gaps
 Phase 8: Validation — cross-check, count markers, report
+Phase 9: Correction engine — classify issues, propose fixes, approve, apply, verify
 ```
 
 ## Key Principles
