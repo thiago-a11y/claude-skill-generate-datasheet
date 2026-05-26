@@ -1,5 +1,12 @@
 # claude-skill-generate-datasheet
 
+[![GitHub stars](https://img.shields.io/github/stars/thiago-a11y/claude-skill-generate-datasheet?style=flat&color=f59e0b)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/stargazers)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Claude Code](https://img.shields.io/badge/Claude_Code-skill-f59e0b?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PHBhdGggZD0iTTEyIDJMMiAyMmgyMEwxMiAyeiIgZmlsbD0iI2Y1OWUwYiIvPjwvc3ZnPg==)](https://docs.anthropic.com/en/docs/claude-code)
+[![Version](https://img.shields.io/badge/version-2.1.0-green.svg)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/releases)
+[![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#)
+[![Docs Generated](https://img.shields.io/badge/docs_generated-20_files-purple.svg)](#what-it-generates)
+
 > The cure for vibe-coding without documentation.
 
 A Claude Code skill that scans your codebase and generates a **complete documentation pack** — evidence-based, zero hallucination. Only documents what it can prove from actual files, configs, and code.
