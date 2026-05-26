@@ -3,15 +3,41 @@
 [![GitHub stars](https://img.shields.io/github/stars/thiago-a11y/claude-skill-generate-datasheet?style=flat&color=f59e0b)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/stargazers)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-skill-f59e0b?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PHBhdGggZD0iTTEyIDJMMiAyMmgyMEwxMiAyeiIgZmlsbD0iI2Y1OWUwYiIvPjwvc3ZnPg==)](https://docs.anthropic.com/en/docs/claude-code)
-[![Version](https://img.shields.io/badge/version-2.1.0-green.svg)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/releases)
+[![Version](https://img.shields.io/badge/version-3.0.0-green.svg)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/releases)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#)
-[![Docs Generated](https://img.shields.io/badge/docs_generated-20_files-purple.svg)](#what-it-generates)
+[![Docs Generated](https://img.shields.io/badge/docs_generated-30+_files-purple.svg)](#what-it-generates)
 
 > The cure for vibe-coding without documentation.
 
 A Claude Code skill that scans your codebase and generates a **complete documentation pack** — evidence-based, zero hallucination. Only documents what it can prove from actual files, configs, and code.
 
-## The Problem
+---
+
+## Para que serve? (PT-BR)
+
+Transforma qualquer código em um **manual de operações completo** — com zero invenção, tudo rastreável ao código real.
+
+**Para o dev novo que entrou no time:**
+> "Leia esses 12 arquivos primeiro, rode esses comandos pra configurar, não mexa nessa pasta porque é crítica, e aqui estão 5 tarefas seguras pra você começar."
+
+**Para o CTO que precisa avaliar um software antes de comprar:**
+> "O sistema roda aqui, os dados vão pra lá, a segurança cobre isso mas falta aquilo, a API funciona assim, e esses são os riscos reais."
+
+**Para o gerente que quer saber onde o projeto está frágil:**
+> "Esse módulo só uma pessoa mexe, não tem teste, é crítico pro negócio, e se essa pessoa sair ninguém sabe como funciona."
+
+**Para o time que precisa responder quando o sistema cai:**
+> "Se o banco cair, faça isso. Se a fila travar, olhe aqui. Se o login parar, o problema provavelmente está nesse arquivo."
+
+**Para quem precisa vender o produto:**
+> "Aqui está uma ficha técnica profissional pronta pra enviar pro cliente, com tudo que o TI dele vai perguntar já respondido."
+
+**Para quem quer evoluir o sistema:**
+> "Essas 5 dependências estão velhas, esse módulo tem dívida técnica crítica, e essa migração afeta 15 arquivos com esforço estimado de 2 dias."
+
+---
+
+## The Problem (EN)
 
 AI-assisted coding tools (Cursor, Claude Code, Copilot, Windsurf, Bolt) are creating a generation of **functional projects that nobody can explain, maintain, or audit**:
 
@@ -89,6 +115,20 @@ What SonarQube and CodeClimate can't do: explain WHY you should change, not just
 | `Architecture Suggestions` | Structural improvements with effort estimates |
 
 Each recommendation includes: **what was found** (file:line) → **why change** (EOL, CVE, performance) → **files affected** (grep count) → **effort estimate** → `[VERIFY]` if uncertain.
+
+### Layer 5 — Operational Intelligence (Markdown) `NEW in v3`
+
+The "can't go back" layer. No other tool generates this.
+
+| File | Content |
+|------|---------|
+| `onboarding-backend.md` | "Read these 12 files first, run these commands, don't touch this module" |
+| `onboarding-frontend.md` | Component tree, routing, state, design system, first safe PRs |
+| `onboarding-sre.md` | Deploy process, cron jobs, health checks, monitoring, backups |
+| `onboarding-product.md` | Module map, user flows, feature flags, config options |
+| `bus-factor-report.md` | Single-owner modules, knowledge silos, action items |
+| `runbooks/*.md` | "If database fails → check this. If queue stalls → do that." |
+| `health-score.md` | Explainable 0-100 score: tests, debt, bus factor, security, docs |
 
 ## Zero Hallucination
 

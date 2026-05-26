@@ -1,32 +1,31 @@
 ---
 name: generate-datasheet
-version: 2.1.0
+version: 3.0.0
 description: |
-  Complete documentation pack generator for any codebase. Scans your project 
-  and generates evidence-based documentation — only documents what it can prove 
-  from actual files, configs, and code. Zero hallucination by design.
+  Turns any codebase into onboarding, architecture, contracts, runbooks, 
+  compliance evidence, and a change-planning system — with every claim 
+  traced to code. Zero hallucination by design.
   
-  Generates 4 layers:
-  Layer 1 (Internal/MD): architecture.md, data-dictionary.md, glossary.md, 
-    changelog.md, endpoints.md, security.md, roadmap.md, contributing.md, 
-    bugs-known.md, backlog.md, pendencies.md
-  Layer 2 (External/HTML): Sales datasheet with persona filters, 3-layer 
-    progressive disclosure, dark theme
-  Layer 3 (External/HTML): Technical specification for CTOs/IT with 
-    architecture diagrams, security controls, API reference, SLA, known gaps
-  Layer 4 (Evolution/MD): evolution-report.md — tech debt radar, migration 
-    recommendations, dependency audit, security gaps, test coverage gaps, 
-    performance suggestions. Thoughtworks Radar format (Adopt/Trial/Assess/Hold).
+  Generates 5 layers + 3 operational packs:
+  Layer 1 (Internal/MD): architecture, data-dictionary, glossary, changelog, 
+    endpoints, security, roadmap, contributing, bugs-known, backlog, pendencies
+  Layer 2 (External/HTML): Sales datasheet — persona filters, 3-layer depth, 
+    dark theme, CTA sections
+  Layer 3 (External/HTML): Technical specification — architecture, security, 
+    API, SLA, known gaps for CTOs/IT
+  Layer 4 (Evolution/MD): Tech radar, dependency audit, migration recommendations, 
+    security gaps, test coverage, cost-of-change estimates
+  Layer 5 (Operational/MD): Role-based onboarding packs, incident runbooks, 
+    bus-factor report, project health score
   
-  Plus: Security Pack (security-whitepaper.md, data-residency.md, 
-    subprocessors.md, incident-response.md, backup-dr-policy.md)
+  Plus: Security Pack (whitepaper, data-residency, subprocessors, 
+    incident-response, backup-dr-policy)
   
-  Built to cure the vibe-coding documentation crisis: functional projects 
-  that nobody can explain, maintain, or audit.
+  Built to cure the vibe-coding documentation crisis.
   
   Use when: "generate docs", "document this project", "create datasheet", 
-  "generate documentation", "security docs", "tech debt", "evolution report",
-  "ficha técnica", "escopo técnico", "documentar projeto", "what should I upgrade".
+  "onboarding guide", "runbook", "bus factor", "project health", "tech debt", 
+  "evolution report", "security docs", "ficha técnica", "documentar projeto".
 allowed-tools:
   - Bash
   - Read
@@ -36,11 +35,11 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-# Generate Datasheet v2.1 — Complete Documentation Pack
+# Generate Datasheet v3 — Operational Understanding from Code
 
 ## What this skill produces
 
-Four layers of documentation from a single codebase scan:
+Five layers of documentation + operational packs from a single codebase scan:
 
 ### Layer 1 — Internal Documentation (Markdown)
 
@@ -118,6 +117,193 @@ Each recommendation MUST include:
 3. What files are affected (grep count)
 4. Estimated effort (file count × complexity)
 5. `[VERIFY]` marker if the recommendation might be wrong
+
+### Layer 5 — Operational Intelligence (Markdown)
+
+The "can't go back" layer. Answers: who knows this, what breaks if I change it, how do I onboard, what do I do when it fails?
+
+#### 5a. Role-Based Onboarding Packs
+
+| File | Audience | Content |
+|------|----------|---------|
+| `docs/onboarding-backend.md` | Backend developer | Critical API files, auth flow, DB patterns, first 5 safe PRs |
+| `docs/onboarding-frontend.md` | Frontend developer | Component tree, routing, state management, design system |
+| `docs/onboarding-sre.md` | SRE / DevOps | Deploy process, cron jobs, health checks, monitoring, backups |
+| `docs/onboarding-product.md` | Product / Support | Module map, user flows, feature flags, config options |
+
+Each onboarding pack includes:
+- "Read these N files first" ranked by centrality and churn (git log evidence)
+- Local setup: exact commands from package.json scripts, .env.example, migrations
+- "Don't touch" zones: high-risk modules with low test coverage
+- First 5 safe tasks: small, well-tested areas for first contribution
+- Domain glossary: terms extracted from code specific to this role
+- Key contacts: top contributors per module (from git blame)
+
+**Evidence sources:**
+```bash
+# Most changed files (high churn = important to understand)
+git log --since="90 days ago" --pretty=format: --name-only | sort | uniq -c | sort -rn | head -20
+
+# Files by contributor concentration (bus factor per file)
+git log --pretty=format:"%an" -- {file} | sort -u | wc -l
+
+# Critical paths: auth, payment, data mutation
+find . -path "*/auth/*" -o -path "*/payment/*" -o -path "*/middleware/*" | head -20
+
+# Setup commands
+cat package.json | grep -A20 '"scripts"'
+cat Makefile 2>/dev/null | head -30
+cat docker-compose.yml 2>/dev/null | head -20
+```
+
+#### 5b. Bus-Factor & Knowledge Silo Report
+
+`docs/bus-factor-report.md` — identifies where knowledge is concentrated in one person.
+
+| Column | Source | Meaning |
+|--------|--------|---------|
+| Module/Directory | Directory scan | Functional area |
+| Dominant contributor | `git log --format="%an"` per dir | Who owns this |
+| Contributor count | `git shortlog -sn -- {path}` | How many people know it |
+| Change frequency | `git log --since="90d" -- {path}` | How often it changes |
+| Test coverage | Test file count vs source file count | Safety net |
+| Documentation | Doc file existence check | Is it documented? |
+| Risk level | Composite of above | Critical / High / Medium / Low |
+
+**Output format:**
+```markdown
+## Bus-Factor Report
+
+### Critical Risk (single owner + high churn + low tests)
+| Module | Owner | Contributors | Changes (90d) | Tests | Risk |
+|--------|-------|-------------|---------------|-------|------|
+| api/auth/ | dev-a | 1 | 23 | 0 | CRITICAL |
+| api/payments/ | dev-b | 1 | 15 | 2 | CRITICAL |
+
+### Action Items
+1. "api/auth/ has 23 changes in 90 days by 1 contributor with 0 tests.
+    Pair another developer on this module next sprint."
+2. "api/payments/ handles financial transactions with no test coverage.
+    Write integration tests before next release."
+```
+
+**Evidence commands:**
+```bash
+# Top contributors per directory
+for dir in $(find . -maxdepth 2 -type d -not -path "*node_modules*" -not -path "*.git*"); do
+  count=$(git log --format="%an" -- "$dir" 2>/dev/null | sort -u | wc -l | tr -d ' ')
+  echo "$count $dir"
+done | sort -n | head -20
+
+# Files with single contributor
+git log --format="%an" -- {file} | sort -u
+
+# Churn per directory (last 90 days)
+git log --since="90 days ago" --pretty=format: --name-only | grep "^{dir}" | wc -l
+```
+
+#### 5c. Incident Runbooks (from Code Paths)
+
+Scan error handling, retry logic, health endpoints, and cron jobs to generate actionable runbooks.
+
+**Detection sources:**
+```bash
+# Error handling patterns
+grep -rn "catch\|except\|rescue\|on_error\|fallback\|retry\|circuit.breaker" --include="*.ts" --include="*.php" --include="*.py" | head -30
+
+# Health endpoints
+grep -rn "health\|ping\|status\|readiness\|liveness" --include="*.ts" --include="*.php" --include="*.py" | head -15
+
+# Cron jobs and background workers
+grep -rn "cron\|schedule\|worker\|queue\|consumer\|job" --include="*.ts" --include="*.php" --include="*.py" --include="*.yml" | head -20
+
+# External service calls that can fail
+grep -rn "curl_exec\|fetch\|axios\|requests\.\|http\.Get" --include="*.ts" --include="*.php" --include="*.py" | head -20
+
+# Timeouts configured
+grep -rn "timeout\|TIMEOUT\|time_limit\|deadline" --include="*.ts" --include="*.php" --include="*.py" | head -15
+```
+
+**Generated runbooks** (one per failure domain detected):
+
+```markdown
+# Runbook: Database Connection Failure
+<!-- source: config.php:12, api/helpers/db.php:5-15 -->
+
+## Symptoms
+- HTTP 500 on all API endpoints
+- Error log: "SQLSTATE[HY000] [2002] Connection refused" (from db.php:8)
+
+## Likely Causes
+1. MySQL service down on hosting
+2. Max connections exceeded (shared hosting limit)
+3. Credentials changed
+
+## Diagnosis
+1. Check error log: `tail -100 /path/to/error.log | grep -i "mysql\|pdo\|sql"`
+2. Test connection: access health endpoint if available
+3. Check hosting: cPanel → MySQL → process list
+
+## Mitigation
+- Restart MySQL via cPanel if possible
+- Contact hosting support for connection limit issues
+- Verify credentials in config.php:12
+
+## Blast Radius
+- All API endpoints depend on database (47 PHP files use PDO)
+- Frontend shows loading/error states
+- Cron jobs will fail silently
+
+## Owner
+- Primary: {top contributor to config.php and db.php from git blame}
+```
+
+Generate runbooks for each detected failure domain:
+- Database failures (PDO/connection errors)
+- External API failures (timeout, auth, rate limit)
+- Queue/cron failures (stuck jobs, missed schedules)
+- Auth failures (JWT expiry, token issues)
+- File/storage failures (upload, disk space)
+- Email delivery failures (bounce, throttle)
+
+#### 5d. Project Health Score
+
+`docs/health-score.md` — explainable composite score, not a vanity number.
+
+**Dimensions (each scored 0-100 with evidence):**
+
+| Dimension | How it's measured | Weight |
+|-----------|------------------|--------|
+| **Test Coverage** | Test files / source files ratio | 20% |
+| **Dependency Health** | Outdated packages / total packages | 15% |
+| **Documentation Coverage** | Documented modules / total modules | 15% |
+| **Bus Factor** | Avg contributors per critical module | 15% |
+| **Tech Debt** | TODOs+FIXMEs per 1000 lines of code | 10% |
+| **Security Posture** | Controls implemented / controls expected | 10% |
+| **Runbook Readiness** | Failure domains with runbooks / total domains | 10% |
+| **Dependency Freshness** | Packages on latest major / total packages | 5% |
+
+**Output:**
+```markdown
+# Project Health Score: 62/100
+
+## Breakdown
+| Dimension | Score | Evidence | Action |
+|-----------|-------|----------|--------|
+| Test Coverage | 25/100 | 12 test files / 203 source files (6%) | Add tests for auth/ and payments/ first |
+| Dependency Health | 70/100 | 8 outdated / 45 total | Update 3 critical (see evolution-report) |
+| Documentation | 80/100 | 10/12 modules documented | Document api/webhooks/ and api/cron/ |
+| Bus Factor | 40/100 | 3 critical modules with single owner | Pair on auth/, payments/, email/ |
+| Tech Debt | 55/100 | 47 TODOs in 15k LOC (3.1/KLOC) | Resolve 12 critical TODOs (see bugs-known) |
+| Security | 75/100 | 9/12 controls implemented | Add rate limiting, SSO evaluation |
+| Runbook Readiness | 50/100 | 3/6 failure domains covered | Generate runbooks for queue, email, auth |
+| Dep Freshness | 85/100 | 38/45 on latest major | 7 packages need major upgrade |
+
+## Top 3 Actions to Improve Score
+1. Add tests for api/auth/ (+15 points) — 0 tests, 23 changes/90d, single owner
+2. Pair developer on payments module (+10 points) — bus factor = 1
+3. Update 3 critical dependencies (+5 points) — see evolution-report.md
+```
 
 ### Security Pack (Markdown)
 
@@ -197,12 +383,13 @@ Ask the user what they need:
 ```
 What documentation do you need?
 
-1. Full pack (internal MD + sales HTML + technical HTML + security + evolution report)
-2. Internal only (MD files for the dev team)
-3. External only (sales + technical HTML)
-4. Security pack only
-5. Evolution report only (tech debt, migrations, dependency audit, gaps)
-6. Specific files (I'll tell you which)
+1. Full pack (all 5 layers + security pack) — recommended for first run
+2. Internal only (Layer 1: MD files for the dev team)
+3. External only (Layer 2+3: sales + technical HTML)
+4. Evolution report (Layer 4: tech debt, migrations, dependency audit)
+5. Operational pack (Layer 5: onboarding, bus-factor, runbooks, health score)
+6. Security pack only
+7. Specific files (I'll tell you which)
 ```
 
 ### Phase 1 — Discovery (read-only, no output)
@@ -286,6 +473,37 @@ find . -name "*.md" -not -path "*/node_modules/*" -not -path "*/.git/*" | head -
 find ./docs -type f 2>/dev/null | head -20
 ```
 
+**1.12 — Ownership & Bus Factor (for Layer 5)**
+```bash
+# Top contributors
+git shortlog -sn --no-merges | head -10
+
+# Contributor count per top-level directory
+for dir in $(find . -maxdepth 1 -type d -not -name ".*" -not -name "node_modules"); do
+  contributors=$(git log --format="%an" -- "$dir" 2>/dev/null | sort -u | wc -l | tr -d ' ')
+  changes=$(git log --since="90 days ago" --oneline -- "$dir" 2>/dev/null | wc -l | tr -d ' ')
+  echo "$contributors contributors, $changes changes (90d): $dir"
+done
+
+# Most changed files (churn = importance)
+git log --since="90 days ago" --pretty=format: --name-only | sort | uniq -c | sort -rn | head -20
+```
+
+**1.13 — Error Handling & Failure Domains (for Runbooks)**
+```bash
+# Try/catch patterns
+grep -rn "try\s*{\\|catch\s*(\|except\s\|rescue\s" --include="*.ts" --include="*.php" --include="*.py" 2>/dev/null | wc -l
+
+# Retry/fallback patterns
+grep -rn "retry\|fallback\|circuit.breaker\|backoff" --include="*.ts" --include="*.php" --include="*.py" 2>/dev/null | head -10
+
+# Health endpoints
+grep -rn "health\|ping\|status\|readiness" --include="*.ts" --include="*.php" --include="*.py" 2>/dev/null | head -10
+
+# External service calls that can fail
+grep -rn "curl_exec\|fetch(\|axios\.\|requests\.\|http\.Get" --include="*.ts" --include="*.php" --include="*.py" 2>/dev/null | wc -l
+```
+
 ### Phase 2 — Inventory Presentation
 
 Present ALL findings to the user in a structured table. Ask for confirmation BEFORE generating anything.
@@ -342,7 +560,7 @@ Ask:
 3. AI branding: proprietary name or list providers?
 4. Integrations to hide from sales materials?
 5. Language? (pt-BR / en / es)
-6. Which layers? (internal MD / sales HTML / technical HTML / security pack / evolution report)
+6. Which layers? (internal MD / sales HTML / technical HTML / evolution / operational / security)
 ```
 
 ### Phase 4 — Generate Internal Documentation (Markdown)
@@ -617,6 +835,15 @@ Design: dark theme, accent blue (#3b82f6), JetBrains Mono for code, status tags,
   - Test coverage: X% estimated
   - Tech debt items: X (Y critical)
   - Tech Radar: X Adopt / Y Trial / Z Assess / W Hold
+
+### Layer 5 — Operational Intelligence
+- docs/onboarding-backend.md (X critical files, Y setup commands)
+- docs/onboarding-frontend.md
+- docs/onboarding-sre.md
+- docs/onboarding-product.md
+- docs/bus-factor-report.md (X critical-risk modules, Y single-owner)
+- docs/runbooks/ (X runbooks for Y failure domains)
+- docs/health-score.md (score: X/100, top 3 actions)
 
 ### Security Pack
 - docs/security-whitepaper.md
