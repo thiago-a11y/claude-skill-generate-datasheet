@@ -67,6 +67,22 @@ For compliance, infosec reviews, and procurement.
 | `incident-response.md` | Current capabilities + gaps |
 | `backup-dr-policy.md` | RPO, RTO, restore process |
 
+### Layer 4 — Evolution Report (Markdown) `NEW`
+
+What SonarQube and CodeClimate can't do: explain WHY you should change, not just WHAT is wrong.
+
+| Section | Content |
+|---------|---------|
+| `Tech Radar` | Adopt / Trial / Assess / Hold for your current stack |
+| `Dependency Audit` | Outdated packages with upgrade impact and files affected |
+| `Migration Recommendations` | "Migrate from X to Y because Z" with evidence |
+| `Security Gaps` | Missing controls ranked by risk |
+| `Test Coverage Gaps` | Source dirs with zero tests |
+| `Tech Debt Prioritized` | TODOs/FIXMEs ranked by location criticality (auth > UI) |
+| `Architecture Suggestions` | Structural improvements with effort estimates |
+
+Each recommendation includes: **what was found** (file:line) → **why change** (EOL, CVE, performance) → **files affected** (grep count) → **effort estimate** → `[VERIFY]` if uncertain.
+
 ## Zero Hallucination
 
 **Core differentiator.** Every claim traces to a file and line number.
@@ -134,6 +150,8 @@ Generate complete documentation for this project
 Document this codebase
 Create a sales datasheet and technical spec
 Generate security documentation pack
+What should I upgrade? Generate an evolution report
+Analyze tech debt in this project
 ```
 
 The skill will:
@@ -153,6 +171,7 @@ Phase 2: Present inventory — user confirms before generation
 Phase 3: Branding decisions — AI naming, audience, language
 Phase 4: Generate internal MD docs — every fact has source citation
 Phase 5: Generate security pack — controls with status tags
+Phase 5.5: Generate evolution report — tech radar, migrations, debt, gaps
 Phase 6: Generate sales HTML — dark theme, persona filters, metrics
 Phase 7: Generate technical HTML — architecture, API, SLA, gaps
 Phase 8: Validation — cross-check, count markers, report
