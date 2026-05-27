@@ -16,7 +16,7 @@ Six layers from a single codebase scan:
 | 1 — Internal Docs | Architecture, data dictionary, endpoints, glossary, changelog, security, roadmap, contributing, bugs, backlog, pendencies | 12 MD files |
 | 2 — Sales Datasheet | Dark theme HTML, persona filters, 3-layer depth, credibility metrics, honest limitations | 1 HTML file |
 | 3 — Technical Spec | "6 answers in 60 seconds", architecture diagrams, security controls matrix, API reference, SLA, known gaps | 1 HTML file |
-| 4 — Evolution Report | Tech radar (Adopt/Trial/Assess/Hold), dependency audit, migration recommendations, security gaps, test coverage gaps, tech debt prioritized, architecture suggestions | 1 MD file |
+| 4 — Evolution Report | Tech radar, dependency audit, migrations, security gaps, test gaps, tech debt, architecture suggestions, **AI API cost audit** (callsite inventory, model mapping, downgrade recommendations) | 1 MD file |
 | 5 — Operational Intelligence | Role-based onboarding (backend, frontend, SRE, product), bus-factor report, incident runbooks, health score 0-100 | 7+ MD files |
 | 6 — Correction Engine | Scan → diagnose → propose → approve → fix → verify. Branch-based safety, per-item approval, confidence labels, 1 fix = 1 commit | Commits on branch |
 

@@ -65,7 +65,7 @@ The generate-datasheet skill's core value is evidence-based documentation. When 
 
 | Skill | Version | Purpose |
 |-------|---------|---------|
-| `generate-datasheet` | v4.0.0 | Scan → Document → Diagnose → Fix (6 layers) |
+| `generate-datasheet` | v4.1.0 | Scan → Document → Diagnose → Fix (6 layers + AI cost audit) |
 
 ### Version history (generate-datasheet)
 - v1.0 — 2 HTML files (sales datasheet + technical spec)
@@ -73,3 +73,4 @@ The generate-datasheet skill's core value is evidence-based documentation. When 
 - v2.1 — + Layer 4 evolution report (tech radar, dependency audit)
 - v3.0 — + Layer 5 operational intelligence (onboarding, bus-factor, runbooks, health score)
 - v4.0 — + Layer 6 assisted correction engine (scan → propose → approve → fix → verify)
+- v4.1 — + AI API Cost Audit in Layer 4 (callsite inventory, model mapping, downgrade recommendations)

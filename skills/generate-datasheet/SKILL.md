@@ -1,6 +1,6 @@
 ---
 name: generate-datasheet
-version: 4.0.0
+version: 4.1.0
 description: |
   Turns any codebase into operational understanding + fixes it with your approval.
   Scans → Documents → Diagnoses → Proposes fixes → You approve → It corrects.
@@ -11,7 +11,7 @@ description: |
     endpoints, security, roadmap, contributing, bugs-known, backlog, pendencies
   Layer 2 (External/HTML): Sales datasheet — persona filters, 3-layer depth
   Layer 3 (External/HTML): Technical specification — for CTOs/IT
-  Layer 4 (Evolution/MD): Tech radar, dependency audit, migrations, gaps
+  Layer 4 (Evolution/MD): Tech radar, dependency audit, migrations, gaps, AI API cost audit
   Layer 5 (Operational/MD): Onboarding packs, runbooks, bus-factor, health score
   Layer 6 (Correction): Scan → diagnose → propose → approve → fix → verify.
     Branch-based safety. Per-item approval. Confidence labels. Post-fix verification.
@@ -22,7 +22,8 @@ description: |
   
   Use when: "generate docs", "document this project", "fix issues", "scan and fix",
   "onboarding guide", "runbook", "bus factor", "project health", "tech debt",
-  "evolution report", "security docs", "ficha técnica", "corrigir problemas".
+  "evolution report", "security docs", "ficha técnica", "corrigir problemas",
+  "AI cost", "LLM audit", "model optimization", "custo de IA".
 allowed-tools:
   - Bash
   - Read
@@ -97,6 +98,7 @@ For tech leads, CTOs, and engineering managers. The document SonarQube/CodeClima
 | **Performance Suggestions** | Bundle size, N+1 patterns, heavy imports | Build output, code pattern grep |
 | **Tech Debt Prioritized** | TODOs/FIXMEs ranked by location criticality | grep + file path analysis (auth > UI) |
 | **Architecture Evolution** | Structural improvements with effort estimate | Module coupling, file count per dir |
+| **AI API Cost Audit** | LLM callsite inventory, model mapping, downgrade recommendations | grep SDK/HTTP patterns, model resolution, cost estimation |
 
 **Anti-hallucination for recommendations:**
 ```
@@ -671,6 +673,33 @@ grep -rn "health\|ping\|status\|readiness" --include="*.ts" --include="*.php" --
 grep -rn "curl_exec\|fetch(\|axios\.\|requests\.\|http\.Get" --include="*.ts" --include="*.php" --include="*.py" 2>/dev/null | wc -l
 ```
 
+**1.14 — AI API Detection (for Cost Audit)**
+```bash
+# LLM SDK imports
+grep -rn "openai\|anthropic\|google.generativeai\|google.cloud.aiplatform\|cohere\|mistralai\|groq\|together\|replicate" --include="*.ts" --include="*.js" --include="*.py" --include="*.php" --include="*.go" --include="*.rs" 2>/dev/null | head -30
+
+# Model names hardcoded or configured
+grep -rn "gpt-4o\|gpt-4\|gpt-3.5\|gpt-4o-mini\|o1-mini\|o1-preview\|o3-mini\|claude-3\|claude-opus\|claude-sonnet\|claude-haiku\|gemini-pro\|gemini-flash\|gemini-2\|command-r\|mistral-large\|mistral-small\|llama\|mixtral\|deepseek" --include="*.ts" --include="*.js" --include="*.py" --include="*.php" --include="*.env*" --include="*.yml" --include="*.yaml" --include="*.json" 2>/dev/null | grep -v "node_modules\|vendor\|\.lock" | head -40
+
+# API endpoint calls to LLM providers
+grep -rn "api.openai.com\|api.anthropic.com\|generativelanguage.googleapis.com\|api.cohere.ai\|api.mistral.ai\|api.groq.com\|api.together.xyz" --include="*.ts" --include="*.js" --include="*.py" --include="*.php" 2>/dev/null | head -20
+
+# SDK method calls (chat completions, messages, generate)
+grep -rn "chat\.completions\.create\|messages\.create\|generate_content\|responses\.create\|chat\.create\|completions\.create" --include="*.ts" --include="*.js" --include="*.py" --include="*.php" 2>/dev/null | head -20
+
+# Wrapper/abstraction patterns
+grep -rn "llm\.\|LLM\.\|runPrompt\|askModel\|callAI\|aiClient\|model_call\|invoke_model\|generate_response" --include="*.ts" --include="*.js" --include="*.py" --include="*.php" 2>/dev/null | head -20
+
+# Model selection config (env vars, config files)
+grep -rn "MODEL\|_MODEL\|model_name\|modelName\|model_id\|modelId" --include="*.env*" --include="*.yml" --include="*.yaml" --include="*.json" --include="*.toml" 2>/dev/null | grep -v "node_modules\|vendor\|\.lock" | head -20
+
+# Gateway/router patterns (LiteLLM, Portkey, OpenRouter)
+grep -rn "litellm\|portkey\|openrouter\|ai-gateway\|model.*router\|model.*cascade\|model.*fallback" --include="*.ts" --include="*.js" --include="*.py" --include="*.php" --include="*.yml" 2>/dev/null | head -15
+
+# Cost/token tracking already in place
+grep -rn "token.*count\|token.*usage\|usage\.\|cost.*track\|billing\|metering\|rate.*limit.*ai\|budget" --include="*.ts" --include="*.js" --include="*.py" --include="*.php" 2>/dev/null | head -15
+```
+
 ### Phase 2 — Inventory Presentation
 
 Present ALL findings to the user in a structured table. Ask for confirmation BEFORE generating anything.
@@ -713,6 +742,13 @@ Present ALL findings to the user in a structured table. Ask for confirmation BEF
 
 ### Existing Documentation
 - [list of .md files found]
+
+### AI API Usage
+- LLM providers detected: [list with file evidence]
+- Models used: [list with file:line]
+- Callsites: [count] detected
+- Cost tracking: [detected / NOT DETECTED]
+- Gateway/router: [detected / NOT DETECTED]
 
 Is this accurate? Anything to add or correct?
 ```
@@ -926,6 +962,163 @@ Suggestions must include:
 - Estimated effort
 - `[VERIFY]` if the current structure might be intentional
 
+#### 5.5.8 — AI API Cost Audit
+
+Scan all LLM API callsites, map models used, identify cost optimization opportunities.
+
+**No tool does this from static code analysis.** Runtime tools (Langfuse, Helicone, Portkey) monitor what ran. This section analyzes code to find what COULD be optimized before execution.
+
+**Step 1 — Build callsite inventory**
+
+For each LLM API call detected in Phase 1.14, resolve:
+
+```markdown
+## AI API Callsite Inventory
+
+| # | File:Line | Provider | Model | Resolution | Task Pattern | Confidence |
+|---|-----------|----------|-------|------------|-------------|------------|
+| 1 | src/agents/title.ts:42 | OpenAI | gpt-4o | hardcoded | Short prompt, JSON schema | RESOLVED |
+| 2 | api/ai/analyze.php:18 | Anthropic | claude-sonnet-4-20250514 | env var (AI_MODEL) | Long context, reasoning | RESOLVED |
+| 3 | lib/classify.py:55 | OpenAI | gpt-4 | config.yml:12 | Classification, low temp | RESOLVED |
+| 4 | utils/helpers.ts:90 | unknown | unknown | dynamic (wrapper) | Cannot determine | UNRESOLVED |
+```
+
+Resolution types:
+- **RESOLVED**: model name found in code, config, or env example
+- **PARTIAL**: provider detected but model is dynamic or parameterized
+- **UNRESOLVED**: wrapper/abstraction hides provider and model — mark `[VERIFY]`
+
+**Step 2 — Classify task complexity per callsite**
+
+For each RESOLVED callsite, analyze the surrounding code to infer task type:
+
+| Signal | Points to simple task | Points to complex task |
+|--------|----------------------|----------------------|
+| Prompt length | < 200 tokens estimated | > 1000 tokens, multi-turn |
+| Temperature | 0 or low (< 0.3) | High (> 0.7) or absent |
+| Output format | JSON schema, structured, enum | Free text, creative |
+| Tool use | None | Function calling, tool chains |
+| Context window | Small, single document | RAG, multi-document, long context |
+| Error handling | Simple retry | Cascade, fallback chain |
+| Business criticality | Formatting, tagging, extraction | Auth decisions, financial, safety |
+
+Classification:
+- **SIMPLE**: Short prompt + low temperature + structured output + no tool use → cheaper model candidate
+- **MODERATE**: Medium prompt + some structure + moderate complexity → evaluate case by case
+- **COMPLEX**: Long context + tool use + high stakes + creative output → keep current model
+- **UNKNOWN**: Cannot determine from code alone → mark `[VERIFY]`
+
+**Step 3 — Generate cost optimization recommendations**
+
+```markdown
+## AI API Cost Audit — {Project Name}
+<!-- source: Phase 1.14 scan results -->
+
+### Provider & Model Summary
+| Provider | Models Used | Callsites | Files |
+|----------|-----------|-----------|-------|
+| OpenAI | gpt-4o (3), gpt-4o-mini (1) | 4 | 4 |
+| Anthropic | claude-sonnet-4-20250514 (2) | 2 | 2 |
+| **Total** | **5 distinct models** | **6 callsites** | **6 files** |
+
+### Cost Optimization Opportunities
+
+#### #1 [HIGH confidence] gpt-4o → gpt-4o-mini
+<!-- source: src/agents/title.ts:42 -->
+- **Current**: gpt-4o ($2.50/1M input, $10.00/1M output)
+- **Proposed**: gpt-4o-mini ($0.15/1M input, $0.60/1M output)
+- **Why safe**: Prompt is < 100 tokens, temperature 0, JSON schema output, classification task
+- **Estimated savings**: 90%+ per call at this callsite
+- **Blast radius**: 1 file, title generation only
+- **Risk**: LOW — task is deterministic, schema-constrained
+- **Action**: Change model parameter at src/agents/title.ts:42
+- **Validate**: Test with 50+ historical inputs before rollout
+
+#### #2 [MEDIUM confidence] claude-sonnet-4-20250514 → claude-haiku for extraction
+<!-- source: api/ai/extract.php:31 -->
+- **Current**: claude-sonnet-4-20250514 ($3.00/1M input, $15.00/1M output)
+- **Proposed**: claude-haiku-4-5-20251001 ($0.80/1M input, $4.00/1M output)
+- **Why possible**: Prompt extracts structured data from fixed templates
+- **Estimated savings**: ~70% per call
+- **Blast radius**: 1 file, data extraction pipeline
+- **Risk**: MEDIUM — extraction accuracy may degrade for edge cases
+- **Action**: Change model + validate extraction accuracy
+- **Validate**: Run against 100+ sample documents, compare field accuracy
+- `[VERIFY]` — confirm extraction quality meets business requirements
+
+#### #3 [LOW confidence] Consider model routing for mixed workloads
+<!-- source: lib/ai-client.ts:15 (single model for all tasks) -->
+- **Observation**: All 4 AI calls in this service use the same model (gpt-4o)
+- **Suggestion**: Implement model routing — simple tasks (classify, extract, format) 
+  to cheaper model, complex tasks (analyze, reason, generate) to frontier model
+- **Pattern**: callAIWithFallback() at lib/ai-client.ts:15 already has fallback logic
+- **Estimated savings**: 40-70% if 60% of calls are simple tasks
+- **Risk**: Requires task classification logic + quality validation
+- ⚠ Plan only — requires human architecture decisions
+
+### What This Project Does NOT Have
+<!-- Absence is evidence too -->
+| Control | Status | Recommendation |
+|---------|--------|---------------|
+| Model routing / tiering | [NOT DETECTED] | Route simple tasks to cheaper models |
+| Semantic caching | [NOT DETECTED] | Cache similar prompts to reduce API calls |
+| Token/cost tracking | [NOT DETECTED] | Add per-call cost logging for visibility |
+| Budget alerts | [NOT DETECTED] | Set spend limits per feature/environment |
+| Prompt optimization | [NOT DETECTED] | Review prompt lengths for unnecessary context |
+| Environment isolation | [VERIFY] | Confirm staging doesn't use production API keys |
+
+### Cost Awareness Score: X/100
+| Dimension | Score | Evidence |
+|-----------|-------|----------|
+| Model right-sizing | X/100 | Y callsites use frontier model for simple tasks |
+| Cost visibility | X/100 | Token tracking: detected / not detected |
+| Caching | X/100 | Semantic cache: detected / not detected |
+| Routing | X/100 | Model router: detected / not detected |
+| Environment isolation | X/100 | Staging API keys separate from prod: detected / not detected |
+```
+
+**Anti-hallucination for AI cost audit:**
+
+```
+WRONG: "You're spending too much on AI APIs"
+RIGHT: "6 callsites detected using gpt-4o. 3 callsites have short prompts (<100 tokens),
+        temperature 0, and JSON schema output — candidate for gpt-4o-mini at 90% lower cost.
+        Evidence: src/agents/title.ts:42, src/classify.ts:18, api/format.php:55"
+
+WRONG: "Switch to a cheaper model"
+RIGHT: "src/agents/title.ts:42 uses gpt-4o for a classification task.
+        Prompt is 47 tokens, temperature 0, output is JSON enum.
+        gpt-4o-mini handles this class of task reliably.
+        Validate on historical samples before switching.
+        [VERIFY] — confirm output quality meets requirements"
+```
+
+Each recommendation MUST include:
+1. Current model with file:line evidence
+2. Proposed model with reasoning (task type, prompt characteristics)
+3. Estimated savings range (based on published pricing)
+4. Blast radius (files affected, downstream dependencies)
+5. Risk level with explanation
+6. Validation steps before rollout
+7. `[VERIFY]` if task complexity cannot be determined from code alone
+
+**Model pricing reference (for estimation, not hard claims):**
+
+Use current published pricing from provider documentation. Mark estimates as approximate:
+```
+"Estimated savings: ~70% per call (based on published pricing as of scan date).
+ Actual savings depend on token volume, caching, and retry patterns.
+ [VERIFY] — confirm current pricing at provider's pricing page."
+```
+
+NEVER claim exact monthly savings without runtime data. Use ranges and assumptions:
+```
+WRONG: "You'll save $500/month"
+RIGHT: "If this callsite handles ~1000 requests/day at avg 200 tokens,
+        switching from gpt-4o to gpt-4o-mini could save approximately
+        $X-$Y/month. [VERIFY] — actual volume unknown from code alone."
+```
+
 ### Phase 6 — Generate Sales Datasheet (HTML)
 
 Structure:
@@ -1044,12 +1237,13 @@ Gather all issues found during Phases 1, 4 (Evolution), and 5 (Operational):
 - TODOs/FIXMEs from bugs-known.md
 - Missing tests from health-score.md
 - Lint/format issues from code scan
+- AI model downgrades from AI API Cost Audit (HIGH confidence only — single-line model parameter changes)
 
 **9.2 — Classify each issue**
 
 For each issue, determine:
 ```
-- Category: LINT | DEPENDENCY | SECURITY | MISSING-TEST | TECH-DEBT | ARCHITECTURE
+- Category: LINT | DEPENDENCY | SECURITY | MISSING-TEST | TECH-DEBT | ARCHITECTURE | AI-COST
 - Confidence: HIGH | MEDIUM | LOW
 - Blast radius: files affected, tests exist?, contracts changed?
 - Auto-fixable: yes | plan-only
