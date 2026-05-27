@@ -190,14 +190,14 @@ When the skill can't determine something:
 ```bash
 mkdir -p .claude/skills/generate-datasheet && \
 curl -sL -o .claude/skills/generate-datasheet/SKILL.md \
-  https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/SKILL.md
+  https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/skills/generate-datasheet/SKILL.md
 ```
 
 **Global** (all your projects):
 ```bash
 mkdir -p ~/.claude/skills/generate-datasheet && \
 curl -sL -o ~/.claude/skills/generate-datasheet/SKILL.md \
-  https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/SKILL.md
+  https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/skills/generate-datasheet/SKILL.md
 ```
 
 ### Option B — Clone the repo
@@ -209,7 +209,7 @@ git clone https://github.com/thiago-a11y/claude-skill-generate-datasheet.git \
 
 ### Option C — Manual download
 
-1. Download [SKILL.md](https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/SKILL.md)
+1. Download [SKILL.md](https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/skills/generate-datasheet/SKILL.md)
 2. Place in `.claude/skills/generate-datasheet/SKILL.md`
 
 > **No restart needed.** Claude Code detects new skills automatically.
