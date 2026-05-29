@@ -3,7 +3,8 @@
 [![GitHub stars](https://img.shields.io/github/stars/thiago-a11y/claude-skill-generate-datasheet?style=flat&color=f59e0b)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/stargazers)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-skill-f59e0b?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PHBhdGggZD0iTTEyIDJMMiAyMmgyMEwxMiAyeiIgZmlsbD0iI2Y1OWUwYiIvPjwvc3ZnPg==)](https://docs.anthropic.com/en/docs/claude-code)
-[![Version](https://img.shields.io/badge/version-4.0.0-green.svg)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/releases)
+[![Version](https://img.shields.io/badge/version-4.1.0-green.svg)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/releases)
+[![Skills](https://img.shields.io/badge/skills-4-f59e0b.svg)](#skills-catalog)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#)
 [![Docs Generated](https://img.shields.io/badge/docs_generated-30+_files-purple.svg)](#what-it-generates)
 [![Scan & Fix](https://img.shields.io/badge/scan_%26_fix-with_approval-f59e0b.svg)](#layer-6--assisted-correction-engine-new-in-v4)
@@ -214,29 +215,109 @@ git clone https://github.com/thiago-a11y/claude-skill-generate-datasheet.git \
 
 > **No restart needed.** Claude Code detects new skills automatically.
 
-## Usage
+### Install individual skills
+
+Each skill can be installed separately:
+
+```bash
+# generate-api-client — Postman collection + integration guides
+mkdir -p .claude/skills/generate-api-client && \
+curl -sL -o .claude/skills/generate-api-client/SKILL.md \
+  https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/skills/generate-api-client/SKILL.md
+
+# generate-compliance — CAIQ/SIG/LGPD questionnaires from code
+mkdir -p .claude/skills/generate-compliance && \
+curl -sL -o .claude/skills/generate-compliance/SKILL.md \
+  https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/skills/generate-compliance/SKILL.md
+
+# health-badges — SVG badges for README
+mkdir -p .claude/skills/health-badges && \
+curl -sL -o .claude/skills/health-badges/SKILL.md \
+  https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/skills/health-badges/SKILL.md
+```
+
+### Install all skills at once
+
+```bash
+for skill in generate-datasheet generate-api-client generate-compliance health-badges; do
+  mkdir -p .claude/skills/$skill && \
+  curl -sL -o .claude/skills/$skill/SKILL.md \
+    https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/skills/$skill/SKILL.md
+done
+```
+
+## Skills Catalog
+
+### generate-datasheet (v4.1)
+The main skill — 6 layers from a single codebase scan. [Full documentation above](#what-it-generates).
 
 ```
 /generate-datasheet
+```
+
+### generate-api-client (v1.0) `NEW`
+
+Generates an API integration pack from your codebase:
+- **Postman Collection** (JSON) — importable, with auth, body examples, environment variables
+- **Integration Guides** — per-stack "connect in 5 minutes" (React, Python, PHP, Node.js)
+- **Webhook Documentation** — event types, payloads, signature verification, receiver examples
+- **Auth Setup Guide** — step-by-step authentication flow with code examples
+
+```
+/generate-api-client
+```
+
+### generate-compliance (v1.0) `NEW`
+
+Pre-fills security questionnaires from code evidence:
+- **CAIQ** (Consensus Assessments Initiative Questionnaire) — 260+ controls with file:line evidence
+- **SIG Lite** (Standardized Information Gathering) — vendor risk assessment
+- **LGPD/GDPR Data Mapping** — personal data inventory, data flows, data subject rights status
+- **Evidence Manifest** (JSON) — machine-readable mapping of every control to code proof
+- **Unsupported Claims** — what code CANNOT prove (organizational policies, physical security)
+
+```
+/generate-compliance
+```
+
+### health-badges (v1.0) `NEW`
+
+Generates SVG badges for your README from real codebase metrics:
+- Health Score (0-100), Test Coverage, Dependency Freshness, Bus Factor, Doc Coverage, Tech Debt, AI Cost Awareness
+- shields.io visual style, color-coded (green/yellow/red)
+- Static SVG files — no external service dependency
+- Auto-insert into README
+
+```
+/health-badges
+```
+
+## Usage
+
+Each skill works standalone. Use slash commands or natural language:
+
+```
+/generate-datasheet          — Full documentation + operations pack
+/generate-api-client         — Postman + integration guides
+/generate-compliance         — Security questionnaires from code
+/health-badges               — SVG badges for README
 ```
 
 Or in natural language:
 
 ```
 Generate complete documentation for this project
-Document this codebase
-Create a sales datasheet and technical spec
-Generate security documentation pack
+Create a Postman collection for my API
+Fill the CAIQ questionnaire from my code
+Generate health badges for the README
 What should I upgrade? Generate an evolution report
-Analyze tech debt in this project
 ```
 
-The skill will:
+The skills will:
 1. **Scan** your codebase (endpoints, tables, integrations, auth, configs)
 2. **Present** findings for your confirmation (never generates without approval)
-3. **Ask** branding decisions (AI naming, audience, language)
-4. **Generate** selected documentation layers
-5. **Report** what needs human input (`[MANUAL]` markers)
+3. **Generate** selected outputs with evidence
+4. **Report** what needs human input (`[MANUAL]` markers)
 
 ## How It Works (Anti-Hallucination)
 

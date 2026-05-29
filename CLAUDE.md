@@ -18,8 +18,13 @@ that give Claude Code specialized capabilities for any codebase.
 ```
 skills/
   generate-datasheet/
-    SKILL.md          — v4.0: scan → document → diagnose → fix (6 layers)
-  (future skills go here as new directories)
+    SKILL.md          — v4.1: scan → document → diagnose → fix (6 layers + AI cost audit)
+  generate-api-client/
+    SKILL.md          — v1.0: Postman collection + integration guides + webhooks + auth
+  generate-compliance/
+    SKILL.md          — v1.0: CAIQ/SIG/LGPD questionnaires from code evidence
+  health-badges/
+    SKILL.md          — v1.0: SVG badges for README from real metrics
 docs/
   research-perplexity-results.md  — 9 research queries that shaped every layer
   planning-layers-roadmap.md      — Detailed planning: layers, SaaS tiers, skill priorities
@@ -66,6 +71,9 @@ The generate-datasheet skill's core value is evidence-based documentation. When 
 | Skill | Version | Purpose |
 |-------|---------|---------|
 | `generate-datasheet` | v4.1.0 | Scan → Document → Diagnose → Fix (6 layers + AI cost audit) |
+| `generate-api-client` | v1.0.0 | Postman collection + integration guides + webhook docs + auth setup |
+| `generate-compliance` | v1.0.0 | CAIQ/SIG pre-filled from code evidence + LGPD/GDPR data mapping |
+| `health-badges` | v1.0.0 | SVG health badges for README (test coverage, deps, bus factor, etc.) |
 
 ### Version history (generate-datasheet)
 - v1.0 — 2 HTML files (sales datasheet + technical spec)
