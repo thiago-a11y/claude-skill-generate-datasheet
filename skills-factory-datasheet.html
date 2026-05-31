@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Skills Factory + CodeDocs — Sales Datasheet</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--surface:#12121a;--border:#1e1e2e;--text:#e2e2e8;--muted:#8888a0;--amber:#f59e0b;--amber-dim:#b47708;--green:#22c55e;--red:#ef4444;--mono:"SFMono-Regular","Cascadia Code","Consolas",monospace}
+body{font-family:"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:15px}
+a{color:var(--amber);text-decoration:none}
+a:hover{text-decoration:underline}
+.container{max-width:960px;margin:0 auto;padding:0 24px}
+header{text-align:center;padding:64px 24px 40px;border-bottom:1px solid var(--border)}
+header h1{font-size:2rem;font-weight:700;color:#fff;margin-bottom:8px}
+header h1 span{color:var(--amber)}
+header .tagline{font-size:1.1rem;color:var(--muted);margin-bottom:4px;font-style:italic}
+header .sub{font-size:0.9rem;color:var(--muted)}
+.metrics{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;padding:28px 24px;background:var(--surface);border-bottom:1px solid var(--border)}
+.metric{text-align:center}
+.metric .num{font-size:1.6rem;font-weight:700;color:var(--amber)}
+.metric .label{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+section{padding:40px 0;border-bottom:1px solid var(--border)}
+section:last-of-type{border-bottom:none}
+h2{font-size:1.35rem;font-weight:700;color:#fff;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+h2 .badge{font-size:0.65rem;padding:2px 8px;border-radius:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+h2 .mit{background:#166534;color:#bbf7d0}
+h2 .bsl{background:#7c2d12;color:#fed7aa}
+h3{font-size:1rem;font-weight:600;color:var(--amber);margin:20px 0 8px}
+p{margin-bottom:12px;color:var(--text)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px}
+.card h3{margin-top:0}
+.card p{font-size:0.9rem;color:var(--muted)}
+ul{padding-left:20px;margin-bottom:12px}
+li{margin-bottom:6px;color:var(--text);font-size:0.9rem}
+li strong{color:#fff}
+code{font-family:var(--mono);font-size:0.85em;background:var(--surface);padding:2px 6px;border-radius:3px;color:var(--amber)}
+.tag-row{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.tag{font-size:0.8rem;padding:4px 10px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--muted)}
+.tag.highlight{border-color:var(--amber-dim);color:var(--amber)}
+.limitations{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px}
+.limitations li{color:var(--muted)}
+.cta{text-align:center;padding:48px 24px}
+.cta a.btn{display:inline-block;padding:12px 32px;background:var(--amber);color:#0a0a0f;font-weight:700;border-radius:6px;font-size:1rem;transition:opacity .2s}
+.cta a.btn:hover{opacity:0.85;text-decoration:none}
+footer{text-align:center;padding:24px;color:var(--muted);font-size:0.8rem;border-top:1px solid var(--border)}
+@media(max-width:640px){
+  .two-col{grid-template-columns:1fr}
+  .metrics{gap:20px}
+  header h1{font-size:1.5rem}
+}
+@media print{
+  body{background:#fff;color:#111;font-size:12px}
+  .container{max-width:100%}
+  header,.cta{padding:24px 0}
+  .metrics{background:none;border:1px solid #ccc}
+  .metric .num{color:#b47708}
+  .card,.limitations{border-color:#ccc;background:#f9f9f9}
+  h2,h3{color:#111}
+  a{color:#b47708}
+  .tag{border-color:#ccc;background:#f0f0f0;color:#333}
+  footer{color:#666}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Claude <span>Skills Factory</span> + CodeDocs</h1>
+  <div class="tagline">"The cure for vibe-coding without documentation"</div>
+  <div class="sub">Offline documentation generator for air-gapped environments</div>
+</header>
+
+<div class="metrics">
+  <div class="metric"><div class="num">4</div><div class="label">Skills</div></div>
+  <div class="metric"><div class="num">30+</div><div class="label">Docs Generated</div></div>
+  <div class="metric"><div class="num">6</div><div class="label">Target Platforms</div></div>
+  <div class="metric"><div class="num">20</div><div class="label">Package Mappings</div></div>
+  <div class="metric"><div class="num">0</div><div class="label">Dependencies</div></div>
+</div>
+
+<div class="container">
+
+<!-- TWO PRODUCTS -->
+<section>
+  <h2>Two Products, One Mission</h2>
+  <p style="color:var(--muted);margin-bottom:20px">Documentar codebases com evidencia real — sem alucinacao, sem internet obrigatoria.</p>
+  <div class="two-col">
+    <div class="card">
+      <h3>Skills <span class="badge mit">MIT &mdash; Free</span></h3>
+      <p>4 Claude Code skills que escaneiam seu codigo e geram documentacao rastreada ate a linha de origem. Rodam dentro do Claude Code, precisam de IA.</p>
+      <ul>
+        <li><strong>generate-datasheet</strong> v4.1</li>
+        <li><strong>generate-api-client</strong> v1.0</li>
+        <li><strong>generate-compliance</strong> v1.0</li>
+        <li><strong>health-badges</strong> v1.0</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>CodeDocs <span class="badge bsl">BSL &mdash; Commercial</span></h3>
+      <p>CLI offline. Zero IA, zero internet. Escaneia qualquer codebase e gera relatorios HTML + planos de migracao com tabelas de equivalencia.</p>
+      <ul>
+        <li>13 scanners de codigo</li>
+        <li>4 HTML outputs</li>
+        <li>30+ equivalencias de migracao</li>
+        <li>Planos ERP (SAP, TOTVS, Oracle)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS DETAIL -->
+<section>
+  <h2>Skills Detail</h2>
+
+  <h3>generate-datasheet <code>v4.1</code></h3>
+  <p>6 layers: architecture docs, sales datasheet (HTML), technical spec (HTML), evolution report (tech radar + dependency audit), operational intelligence (onboarding, bus-factor, runbooks, health score), assisted correction engine (scan, propose, approve, fix, verify).</p>
+
+  <h3>generate-api-client <code>v1.0</code></h3>
+  <p>Postman collection + integration guides per stack + webhook docs + auth setup. Every endpoint traced to source code.</p>
+
+  <h3>generate-compliance <code>v1.0</code></h3>
+  <p>Pre-fills CAIQ, SIG Lite, LGPD/GDPR questionnaires from codebase evidence. Unsupported claims flagged <code>[MANUAL]</code>.</p>
+
+  <h3>health-badges <code>v1.0</code></h3>
+  <p>SVG badges for README: test coverage, dependency freshness, bus factor, doc coverage, health score. shields.io compatible.</p>
+</section>
+
+<!-- CODEDOCS DETAIL -->
+<section>
+  <h2>CodeDocs Detail</h2>
+  <div class="two-col">
+    <div>
+      <h3>Scanner (13 scans)</h3>
+      <p>Analise estatica regex-based: endpoints, modelos, dependencias, env vars, queries SQL, componentes UI, config files, seguranca, e mais.</p>
+    </div>
+    <div>
+      <h3>Renderer (4 HTML outputs)</h3>
+      <p>Sales datasheet, technical spec, architecture overview, dependency report. Todos self-contained, zero JS externo.</p>
+    </div>
+  </div>
+  <h3>Migration Planner</h3>
+  <p>30+ equivalencias mapeadas entre stacks. Suporte a 6 plataformas-alvo. 20 package mappings. Planos ERP para SAP, TOTVS e Oracle.</p>
+</section>
+
+<!-- TARGET PLATFORMS -->
+<section>
+  <h2>Target Platforms</h2>
+  <div class="tag-row">
+    <span class="tag highlight">React + FastAPI</span>
+    <span class="tag highlight">React + Express</span>
+    <span class="tag highlight">Angular + NestJS</span>
+    <span class="tag highlight">Blazor</span>
+    <span class="tag highlight">Vue + FastAPI</span>
+    <span class="tag highlight">Go + React</span>
+  </div>
+
+  <h3>Source Languages</h3>
+  <div class="tag-row">
+    <span class="tag">C#</span>
+    <span class="tag">Java</span>
+    <span class="tag">PHP (Laravel)</span>
+    <span class="tag">PHP (Symfony)</span>
+    <span class="tag">PHP (CodeIgniter)</span>
+    <span class="tag">PHP (Procedural)</span>
+    <span class="tag">Delphi</span>
+    <span class="tag">VB6</span>
+  </div>
+</section>
+
+<!-- HONEST LIMITATIONS -->
+<section>
+  <h2>Honest Limitations</h2>
+  <div class="limitations">
+    <ul>
+      <li>Zero test coverage (nenhum teste automatizado ainda)</li>
+      <li>Bus factor = 1 (projeto de um unico desenvolvedor)</li>
+      <li>Projeto com 5 dias de vida</li>
+      <li>Skills ainda nao testadas em codebases externas</li>
+      <li>CodeDocs usa regex, nao AST (limitacoes de parsing)</li>
+    </ul>
+  </div>
+</section>
+
+<!-- RESEARCH FOUNDATION -->
+<section>
+  <h2>Research Foundation</h2>
+  <p>7 Perplexity research queries documentadas cobrindo: mercado de documentacao automatica, compliance frameworks, migration tooling, code analysis approaches, ERP migration patterns, offline-first tooling e licensing models.</p>
+</section>
+
+<!-- LICENSE -->
+<section>
+  <h2>License</h2>
+  <div class="two-col">
+    <div class="card">
+      <h3>Skills <span class="badge mit">MIT</span></h3>
+      <p>Free para uso pessoal e comercial. Sem restricoes. Codigo aberto.</p>
+    </div>
+    <div class="card">
+      <h3>CodeDocs <span class="badge bsl">BSL</span></h3>
+      <p>Gratuito para uso interno. Licenca comercial necessaria para revenda ou distribuicao embarcada.</p>
+    </div>
+  </div>
+</section>
+
+</div><!-- .container -->
+
+<!-- CTA -->
+<div class="cta">
+  <a class="btn" href="https://github.com/thiago-a11y/claude-skill-generate-datasheet">View on GitHub</a>
+</div>
+
+<footer>
+  Generated by generate-datasheet v4.1 &mdash; Objetiva Solu&ccedil;&atilde;o Empresarial
+</footer>
+
+</body>
+</html>

@@ -9,3 +9,4 @@ launch-post-*
 
 # CodeDocs output
 codedocs-output/
+__pycache__/

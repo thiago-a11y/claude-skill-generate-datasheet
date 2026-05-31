@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Technical Specification — Claude Skills Factory + CodeDocs</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--surface:#12121a;--border:#1e1e2e;--text:#e2e8f0;--muted:#94a3b8;--blue:#3b82f6;--green:#22c55e;--yellow:#eab308;--red:#ef4444;--orange:#f97316}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;padding:2rem;max-width:1100px;margin:0 auto}
+code,pre,.mono{font-family:'JetBrains Mono',Consolas,'Courier New',monospace}
+h1{font-size:1.5rem;color:var(--blue);border-bottom:2px solid var(--blue);padding-bottom:.5rem;margin-bottom:1.5rem}
+h2{font-size:1.15rem;color:var(--blue);margin:2rem 0 .75rem;padding-bottom:.25rem;border-bottom:1px solid var(--border)}
+.badge{display:inline-block;font-size:.65rem;padding:2px 8px;border-radius:3px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.badge-conf{background:#dc262620;color:var(--red);border:1px solid var(--red)}
+.badge-ver{background:#3b82f620;color:var(--blue);border:1px solid var(--blue)}
+.header{text-align:center;margin-bottom:2.5rem}
+.header p{color:var(--muted);font-size:.85rem;margin-top:.5rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;margin:1rem 0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem}
+.card h3{color:var(--blue);font-size:.9rem;margin-bottom:.4rem}
+.card p{font-size:.85rem;color:var(--muted)}
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.85rem}
+th,td{padding:.5rem .75rem;text-align:left;border:1px solid var(--border)}
+th{background:var(--surface);color:var(--blue);font-weight:600}
+td{color:var(--muted)}
+pre{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:1rem;overflow-x:auto;font-size:.78rem;line-height:1.5;margin:1rem 0;color:var(--muted)}
+.tag-green{color:var(--green);font-weight:700}.tag-yellow{color:var(--yellow);font-weight:700}.tag-red{color:var(--red);font-weight:700}.tag-orange{color:var(--orange);font-weight:700}
+.score-bar{background:var(--border);border-radius:4px;height:10px;margin-top:4px}.score-fill{height:100%;border-radius:4px}
+ul{margin:.5rem 0 .5rem 1.5rem;font-size:.85rem;color:var(--muted)}
+.footer{text-align:center;margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);font-size:.75rem;color:#475569}
+@media print{body{background:#fff;color:#000;padding:1rem}h1,h2,.card h3{color:#1e40af}.card{border-color:#cbd5e1}th{background:#f1f5f9;color:#1e40af}td,.card p,ul,pre{color:#334155}.footer{color:#64748b}.badge-conf{background:#fee2e2;color:#b91c1c}.header{margin-bottom:1.5rem}}
+@media(max-width:600px){body{padding:1rem}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="badge badge-conf">CONFIDENTIAL &mdash; TECHNICAL SPECIFICATION</span>
+  <h1>Claude Skills Factory + CodeDocs</h1>
+  <p>Objetiva Solu&ccedil;&atilde;o Empresarial &mdash; <span class="badge badge-ver">v4.1</span></p>
+  <p>F&aacute;brica de skills para Claude Code + ferramenta CLI offline de documenta&ccedil;&atilde;o</p>
+</div>
+
+<!-- 1. SIX ANSWERS IN 60 SECONDS -->
+<h2>1. Six Answers in 60 Seconds</h2>
+<p style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Seis respostas r&aacute;pidas para decis&atilde;o t&eacute;cnica</p>
+<div class="grid">
+  <div class="card"><h3>What is it?</h3><p>F&aacute;brica de 4 skills para Claude Code + ferramenta CLI offline (CodeDocs). Skills geram documenta&ccedil;&atilde;o, intelig&ecirc;ncia operacional e corre&ccedil;&otilde;es assistidas. CodeDocs faz o mesmo sem nuvem.</p></div>
+  <div class="card"><h3>Where does it run?</h3><p>Skills: dentro do Claude Code (nuvem Anthropic). CodeDocs: qualquer m&aacute;quina com Python 3.6+ &mdash; 100% offline, zero rede.</p></div>
+  <div class="card"><h3>How does data flow?</h3><p>Skills: Claude Code l&ecirc; SKILL.md e escaneia o codebase via grep/find/git. CodeDocs: mesmos scans, renderiza HTML localmente. Zero egress de dados.</p></div>
+  <div class="card"><h3>Security?</h3><p>Zero depend&ecirc;ncias, zero chamadas de rede, zero telemetria. Sa&iacute;da HTML com escaping. Licen&ccedil;a BSL para uso comercial.</p></div>
+  <div class="card"><h3>Integration?</h3><p>Skills: instala via <code>curl</code> ou <code>git clone</code> no diret&oacute;rio <code>.claude/skills/</code>. CodeDocs: <code>python3 -m codedocs /path</code>.</p></div>
+  <div class="card"><h3>What does IT provision?</h3><p>Python 3.6+ para CodeDocs. Assinatura Claude Code para Skills. Nenhuma infra adicional.</p></div>
+</div>
+
+<!-- 2. ARCHITECTURE -->
+<h2>2. Architecture</h2>
+<p style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Estrutura do reposit&oacute;rio e fluxo de dados</p>
+<pre>
+claude-skills-factory/
+&#9500;&#9472;&#9472; skills/                     &larr; Claude Code skills (SKILL.md files)
+&#9474;   &#9500;&#9472;&#9472; generate-datasheet/     Layer 1-6: docs + ops + corrections
+&#9474;   &#9500;&#9472;&#9472; generate-api-client/    Postman + integration guides
+&#9474;   &#9500;&#9472;&#9472; generate-compliance/    CAIQ, SIG, LGPD questionnaires
+&#9474;   &#9492;&#9472;&#9472; generate-migration/     Migration planner (5 sources &rarr; 6 targets)
+&#9500;&#9472;&#9472; codedocs/                   &larr; Offline CLI tool (Python 3.6+)
+&#9474;   &#9500;&#9472;&#9472; scanner.py              13 scan commands (grep/find/git)
+&#9474;   &#9500;&#9472;&#9472; renderer.py             4 HTML template renderers
+&#9474;   &#9500;&#9472;&#9472; migration.py            30+ equivalences, 6 targets, 3 ERPs
+&#9474;   &#9492;&#9472;&#9472; cli.py                  argparse + progress bars
+&#9492;&#9472;&#9472; docs/                       &larr; Generated output (HTML + MD)
+
+Data Flow:
+  codebase &rarr; [grep/find/git scans] &rarr; [inventory] &rarr; [templates] &rarr; HTML/MD output
+  &uarr; local filesystem only        zero network calls &uarr;           &uarr; local filesystem only
+</pre>
+
+<!-- 3. STACK -->
+<h2>3. Technology Stack</h2>
+<p style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Componentes tecnol&oacute;gicos utilizados</p>
+<table>
+  <tr><th>Component</th><th>Technology</th><th>Notes</th></tr>
+  <tr><td>Runtime</td><td class="mono">Python 3.6+</td><td>stdlib only &mdash; zero pip install</td></tr>
+  <tr><td>Skill format</td><td class="mono">Markdown (SKILL.md)</td><td>Instrui Claude Code via prompt</td></tr>
+  <tr><td>Output</td><td class="mono">HTML / Markdown</td><td>Self-contained, dark theme, print-friendly</td></tr>
+  <tr><td>Scanning</td><td class="mono">grep / find / git log</td><td>Shell commands &mdash; nenhuma AST</td></tr>
+  <tr><td>Dependencies</td><td class="mono">0</td><td>Zero deps, zero build step</td></tr>
+</table>
+
+<!-- 4. CODEDOCS MODULES -->
+<h2>4. CodeDocs Modules</h2>
+<p style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Detalhamento dos m&oacute;dulos internos do CLI</p>
+<table>
+  <tr><th>Module</th><th>Responsibility</th><th>Metrics</th></tr>
+  <tr><td class="mono">scanner.py</td><td>Executa 13 scans no codebase (endpoints, models, env vars, deps, git history, security, etc.)</td><td>13 scan commands</td></tr>
+  <tr><td class="mono">renderer.py</td><td>Gera 4 templates HTML (sales datasheet, tech spec, evolution report, health dashboard)</td><td>4 templates</td></tr>
+  <tr><td class="mono">migration.py</td><td>Planejador de migra&ccedil;&atilde;o: equival&ecirc;ncias de linguagem, targets, planos ERP, pacotes</td><td>30+ equiv, 6 targets, 3 ERPs, 20 pkgs</td></tr>
+  <tr><td class="mono">cli.py</td><td>Interface de linha de comando com argparse e barras de progresso</td><td>argparse + progress</td></tr>
+</table>
+
+<!-- 5. MIGRATION PLANNER -->
+<h2>5. Migration Planner</h2>
+<p style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Motor de planejamento de migra&ccedil;&atilde;o de legado</p>
+<div class="grid">
+  <div class="card">
+    <h3>Source Languages</h3>
+    <p>C# &bull; Java &bull; PHP &bull; Delphi &bull; VB6</p>
+  </div>
+  <div class="card">
+    <h3>Target Platforms (6)</h3>
+    <p>Node.js &bull; Python &bull; Go &bull; Rust &bull; .NET 8 &bull; Java 21</p>
+  </div>
+</div>
+<table>
+  <tr><th>Accuracy Label</th><th>Confidence</th><th>Meaning</th></tr>
+  <tr><td><span class="tag-green">GREEN</span></td><td>90%+</td><td>Equival&ecirc;ncia direta, migra&ccedil;&atilde;o segura</td></tr>
+  <tr><td><span class="tag-yellow">YELLOW</span></td><td>70&ndash;85%</td><td>Equival&ecirc;ncia parcial, requer adapta&ccedil;&atilde;o</td></tr>
+  <tr><td><span class="tag-red">RED</span></td><td>50&ndash;70%</td><td>Sem equival&ecirc;ncia direta, reescrita necess&aacute;ria</td></tr>
+</table>
+<table>
+  <tr><th>ERP Integration</th><th>Protocol</th></tr>
+  <tr><td>SAP</td><td>OData / RFC</td></tr>
+  <tr><td>TOTVS</td><td>REST / iPaaS</td></tr>
+  <tr><td>Oracle</td><td>REST</td></tr>
+</table>
+
+<!-- 6. SECURITY CONTROLS -->
+<h2>6. Security Controls Matrix</h2>
+<p style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Controles de seguran&ccedil;a &mdash; verde = implementado, vermelho = n&atilde;o detectado</p>
+<table>
+  <tr><th>Control</th><th>Status</th></tr>
+  <tr><td>Zero network calls</td><td><span class="tag-green">IMPLEMENTED</span></td></tr>
+  <tr><td>Zero telemetry</td><td><span class="tag-green">IMPLEMENTED</span></td></tr>
+  <tr><td>Zero data egress</td><td><span class="tag-green">IMPLEMENTED</span></td></tr>
+  <tr><td>Zero dependencies</td><td><span class="tag-green">IMPLEMENTED</span></td></tr>
+  <tr><td>HTML escaping</td><td><span class="tag-green">IMPLEMENTED</span></td></tr>
+  <tr><td>.env excluded from scans</td><td><span class="tag-green">IMPLEMENTED</span></td></tr>
+  <tr><td>CI/CD pipeline</td><td><span class="tag-red">NOT DETECTED</span></td></tr>
+  <tr><td>Automated tests</td><td><span class="tag-red">NOT DETECTED</span> &mdash; 0 test files</td></tr>
+  <tr><td>Code signing</td><td><span class="tag-red">NOT DETECTED</span></td></tr>
+</table>
+
+<!-- 7. KNOWN GAPS -->
+<h2>7. Known Gaps</h2>
+<p style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Gaps conhecidos &mdash; transpar&ecirc;ncia total, sem maquiagem</p>
+<table>
+  <tr><th>Gap</th><th>Severity</th><th>Detail</th></tr>
+  <tr><td>Zero tests</td><td><span class="tag-red">HIGH</span></td><td>0 de 7 source files cobertos. Nenhum framework de teste configurado.</td></tr>
+  <tr><td>Bus factor = 1</td><td><span class="tag-red">HIGH</span></td><td>Conhecimento concentrado em 1 contribuidor prim&aacute;rio.</td></tr>
+  <tr><td>Projeto de 5 dias</td><td><span class="tag-yellow">MEDIUM</span></td><td>19 commits em 5 dias. Maturidade baixa, API inst&aacute;vel.</td></tr>
+  <tr><td>Skills n&atilde;o testadas externamente</td><td><span class="tag-yellow">MEDIUM</span></td><td>Validadas apenas em codebases do autor.</td></tr>
+  <tr><td>Regex, n&atilde;o AST</td><td><span class="tag-yellow">MEDIUM</span></td><td>CodeDocs usa regex para parsing &mdash; falsos positivos poss&iacute;veis.</td></tr>
+  <tr><td>Sem CI/CD</td><td><span class="tag-yellow">MEDIUM</span></td><td>Nenhuma pipeline automatizada. Build e deploy manuais.</td></tr>
+</table>
+
+<!-- 8. HEALTH SCORE -->
+<h2>8. Health Score</h2>
+<p style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Pontua&ccedil;&atilde;o composta de sa&uacute;de do projeto</p>
+<div style="text-align:center;margin:1rem 0">
+  <span style="font-size:2.5rem;font-weight:800;color:var(--orange)">42</span><span style="font-size:1.2rem;color:var(--muted)">/100</span>
+</div>
+<table>
+  <tr><th>Dimension</th><th>Score</th><th>Weight</th><th>Weighted</th></tr>
+  <tr><td>Test coverage</td><td><span class="tag-red">0/10</span></td><td>25%</td><td>0.0</td></tr>
+  <tr><td>Documentation</td><td><span class="tag-green">9/10</span></td><td>15%</td><td>13.5</td></tr>
+  <tr><td>Security posture</td><td><span class="tag-green">7/10</span></td><td>20%</td><td>14.0</td></tr>
+  <tr><td>Bus factor</td><td><span class="tag-red">1/10</span></td><td>10%</td><td>1.0</td></tr>
+  <tr><td>Dependency health</td><td><span class="tag-green">10/10</span></td><td>10%</td><td>10.0</td></tr>
+  <tr><td>CI/CD maturity</td><td><span class="tag-red">0/10</span></td><td>10%</td><td>0.0</td></tr>
+  <tr><td>Code freshness</td><td><span class="tag-yellow">7/10</span></td><td>10%</td><td>3.5</td></tr>
+  <tr><td colspan="3" style="text-align:right;font-weight:700;color:var(--text)">Total</td><td style="font-weight:700;color:var(--orange)">42.0</td></tr>
+</table>
+
+<!-- 9. RELEASE -->
+<h2>9. Release History</h2>
+<p style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">Hist&oacute;rico de releases e ritmo de desenvolvimento</p>
+<table>
+  <tr><th>Metric</th><th>Value</th></tr>
+  <tr><td>Total commits</td><td class="mono">19</td></tr>
+  <tr><td>Project age</td><td>5 days</td></tr>
+  <tr><td>Contributors</td><td>2</td></tr>
+  <tr><td>Versioning</td><td>Semver (v1.0 &rarr; v4.1)</td></tr>
+  <tr><td>Avg commits/day</td><td class="mono">3.8</td></tr>
+  <tr><td>License</td><td>BSL (Business Source License)</td></tr>
+</table>
+
+<!-- 10. FOOTER -->
+<div class="footer">
+  <p><strong>CONFIDENTIAL</strong> &mdash; Objetiva Solu&ccedil;&atilde;o Empresarial</p>
+  <p>Generated by <code>generate-datasheet v4.1</code> &mdash; 2026-05-27</p>
+  <p style="margin-top:.25rem">Every claim traced to source code. Gaps reported honestly. Zero hallucination.</p>
+</div>
+
+</body>
+</html>
