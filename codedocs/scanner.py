@@ -50,7 +50,10 @@ LANG_EXTENSIONS = {
 EXCLUDE_DIRS = {
     "node_modules", "vendor", ".git", "dist", "build", "__pycache__",
     ".next", ".nuxt", "target", "bin", "obj", "venv", ".venv",
+    ".claude", "worktrees",
 }
+
+GREP_EXCLUDE = "--exclude-dir=node_modules --exclude-dir=vendor --exclude-dir=.git --exclude-dir=dist --exclude-dir=build --exclude-dir=__pycache__ --exclude-dir=.claude --exclude-dir=worktrees --exclude-dir=bin --exclude-dir=obj --exclude-dir=.next --exclude-dir=.nuxt --exclude-dir=target --exclude-dir=venv --exclude-dir=.venv"
 
 
 def scan(project_path, progress_callback=None):
@@ -116,7 +119,7 @@ def _scan_languages(data, cwd):
     for lang, exts in LANG_EXTENSIONS.items():
         for ext in exts:
             find_cmd = f"find . -name '*{ext}' -not -path '*/{'/'.join(f'-not -path \"*/{d}/*\"' for d in EXCLUDE_DIRS).replace('-not -path ', '')}'"
-            simple_cmd = f"find . -name '*{ext}' | grep -v node_modules | grep -v vendor | grep -v '.git/' | grep -v __pycache__"
+            simple_cmd = f"find . -name '*{ext}' | grep -v node_modules | grep -v vendor | grep -v '.git/' | grep -v __pycache__ | grep -v '/dist/' | grep -v '/.claude/' | grep -v '/worktrees/' | grep -v '/bin/' | grep -v '/obj/'"
             out = _run(simple_cmd, cwd)
             files = _lines(out)
             if files:
@@ -140,19 +143,11 @@ def _scan_structure(data, cwd):
 
 
 def _scan_endpoints(data, cwd):
-    patterns = [
-        (r"router\.", "router"),
-        (r"app\.(get|post|put|delete|patch)\(", "express"),
-        (r"Route::", "laravel"),
-        (r"@app\.(get|post|put|delete|patch)", "flask/fastapi"),
-        (r"@(Get|Post|Put|Delete|Patch)\(", "nestjs/spring"),
-        (r"r\.HandleFunc\(", "go-mux"),
-        (r"http\.HandleFunc\(", "go-stdlib"),
-    ]
-
     include = "--include='*.ts' --include='*.js' --include='*.py' --include='*.php' --include='*.go' --include='*.rs' --include='*.java' --include='*.rb'"
+
+    # Framework-based routing (Laravel, Express, Flask, Spring, Go, NestJS)
     out = _run(
-        f"grep -rn 'router\\.\\.\\|app\\.get\\|app\\.post\\|app\\.put\\|app\\.delete\\|app\\.patch\\|Route::\\|@app\\.\\|@Get\\|@Post\\|@Put\\|@Delete\\|HandleFunc' {include} 2>/dev/null | grep -v node_modules | grep -v vendor | head -100",
+        f"grep -rn 'router\\.\\.\\|app\\.get\\|app\\.post\\|app\\.put\\|app\\.delete\\|app\\.patch\\|Route::\\|@app\\.\\|@Get\\|@Post\\|@Put\\|@Delete\\|HandleFunc' {include} {GREP_EXCLUDE} 2>/dev/null | head -100",
         cwd,
     )
     for line in _lines(out):
@@ -182,6 +177,33 @@ def _scan_endpoints(data, cwd):
                 "raw": content[:120],
             })
 
+    # PHP file-based routing (api/*.php, no framework router)
+    php_api_files = _run(
+        f"find . -path '*/api/*.php' -o -path '*/api/*/*.php' | grep -v node_modules | grep -v vendor | grep -v '.git/' | grep -v dist | grep -v '.claude/' | grep -v worktrees | sort",
+        cwd,
+    )
+    for filepath in _lines(php_api_files):
+        filepath = filepath.lstrip("./")
+        if any(filepath == ep["file"] for ep in data["endpoints"]):
+            continue
+        method = "API"
+        if "get" in filepath.lower() or "list" in filepath.lower() or "fetch" in filepath.lower():
+            method = "GET"
+        elif "create" in filepath.lower() or "add" in filepath.lower() or "insert" in filepath.lower():
+            method = "POST"
+        elif "update" in filepath.lower() or "edit" in filepath.lower() or "save" in filepath.lower():
+            method = "PUT"
+        elif "delete" in filepath.lower() or "remove" in filepath.lower():
+            method = "DELETE"
+        path = "/" + filepath.replace(".php", "")
+        data["endpoints"].append({
+            "method": method,
+            "path": path,
+            "file": filepath,
+            "line": 1,
+            "raw": f"PHP file-based endpoint: {filepath}",
+        })
+
 
 def _scan_database(data, cwd):
     migrations = _run(
@@ -192,16 +214,24 @@ def _scan_database(data, cwd):
 
     include = "--include='*.sql' --include='*.php' --include='*.py' --include='*.ts' --include='*.prisma'"
     tables_out = _run(
-        f"grep -rn 'CREATE TABLE\\|Schema::create\\|createTable\\|class.*Migration' {include} 2>/dev/null | grep -v node_modules | grep -v vendor | head -50",
+        f"grep -rn 'CREATE TABLE\\|Schema::create\\|createTable\\|class.*Migration' {include} {GREP_EXCLUDE} 2>/dev/null | head -80",
         cwd,
     )
+    seen_tables = set()
     for line in _lines(tables_out):
         parts = line.split(":", 2)
         if len(parts) >= 3:
             filepath = parts[0].lstrip("./")
             content = parts[2].strip()
-            table_match = re.search(r"""(?:CREATE TABLE|Schema::create|createTable)\s*\(?[`'"]*(\w+)""", content, re.IGNORECASE)
-            table_name = table_match.group(1) if table_match else "[VERIFY]"
+            table_match = re.search(r"""CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`'"]*(\w+)""", content, re.IGNORECASE)
+            if not table_match:
+                table_match = re.search(r"""(?:Schema::create|createTable)\s*\(\s*[`'"]+(\w+)""", content, re.IGNORECASE)
+            table_name = table_match.group(1) if table_match else None
+            if not table_name or table_name.upper() in ("IF", "NOT", "EXISTS", "TABLE"):
+                continue
+            if table_name.lower() in seen_tables:
+                continue
+            seen_tables.add(table_name.lower())
             data["database"]["tables"].append({
                 "name": table_name,
                 "file": filepath,
@@ -250,7 +280,7 @@ def _scan_security(data, cwd):
         "security_headers": "X-Frame-Options\\|X-Content-Type\\|Content-Security-Policy\\|Referrer-Policy",
     }
     for control, pattern in checks.items():
-        out = _run(f"grep -rln '{pattern}' {include} 2>/dev/null | grep -v node_modules | grep -v vendor | head -5", cwd)
+        out = _run(f"grep -rln '{pattern}' {include} 2>/dev/null | grep -v node_modules | grep -v vendor | grep -v '/dist/' | grep -v '/.claude/' | grep -v '/worktrees/' | head -5", cwd)
         files = _lines(out)
         data["security"][control] = {"detected": len(files) > 0, "files": files}
 
@@ -258,7 +288,7 @@ def _scan_security(data, cwd):
 def _scan_integrations(data, cwd):
     include = "--include='*.ts' --include='*.js' --include='*.py' --include='*.php' --include='*.go' --include='*.env*'"
     out = _run(
-        f"grep -rn 'https://.*api\\|amazonaws\\|googleapis\\|graph\\.facebook\\|api\\.openai\\|api\\.anthropic\\|stripe\\|twilio\\|sendgrid\\|mailgun\\|api\\.slack\\|mqtt\\|rabbitmq\\|redis\\|sap\\|oracle' {include} 2>/dev/null | grep -v node_modules | grep -v vendor | head -40",
+        f"grep -rn 'https://.*api\\|amazonaws\\|googleapis\\|graph\\.facebook\\|api\\.openai\\|api\\.anthropic\\|stripe\\|twilio\\|sendgrid\\|mailgun\\|api\\.slack\\|mqtt\\|rabbitmq\\|redis\\|sap\\|oracle' {include} 2>/dev/null | grep -v node_modules | grep -v vendor | grep -v '/dist/' | grep -v '/.claude/' | grep -v '/worktrees/' | head -40",
         cwd,
     )
     seen = set()
@@ -286,7 +316,7 @@ def _scan_integrations(data, cwd):
     }
     for kw, name in keywords.items():
         if not any(name.lower() in i["service"].lower() for i in data["integrations"]):
-            check = _run(f"grep -rln '{kw}' --include='*.ts' --include='*.js' --include='*.py' --include='*.php' --include='*.go' --include='*.yml' --include='*.yaml' --include='*.json' 2>/dev/null | grep -v node_modules | grep -v vendor | head -3", cwd)
+            check = _run(f"grep -rln '{kw}' --include='*.ts' --include='*.js' --include='*.py' --include='*.php' --include='*.go' --include='*.yml' --include='*.yaml' --include='*.json' 2>/dev/null | grep -v node_modules | grep -v vendor | grep -v '/dist/' | grep -v '/.claude/' | grep -v '/worktrees/' | head -3", cwd)
             files = _lines(check)
             if files:
                 data["integrations"].append({"service": name, "file": files[0].lstrip("./"), "line": "—"})
@@ -318,10 +348,10 @@ def _scan_git(data, cwd):
 
 def _scan_health(data, cwd):
     include = "--include='*.ts' --include='*.js' --include='*.py' --include='*.php' --include='*.go' --include='*.rs' --include='*.java'"
-    todo_count = _run(f"grep -rn 'TODO\\|FIXME\\|HACK\\|XXX\\|WORKAROUND' {include} 2>/dev/null | grep -v node_modules | grep -v vendor | wc -l", cwd)
+    todo_count = _run(f"grep -rn 'TODO[^S]\\|TODO$\\|FIXME\\|HACK[^a-z]\\|XXX[^a-z]\\|WORKAROUND' {include} {GREP_EXCLUDE} 2>/dev/null | wc -l", cwd)
     data["health"]["todos"] = _count_lines(todo_count)
 
-    todo_items = _run(f"grep -rn 'TODO\\|FIXME\\|HACK' {include} 2>/dev/null | grep -v node_modules | grep -v vendor | head -20", cwd)
+    todo_items = _run(f"grep -rn 'TODO[^S]\\|TODO$\\|FIXME\\|HACK[^a-z]' {include} {GREP_EXCLUDE} 2>/dev/null | head -20", cwd)
     for line in _lines(todo_items):
         parts = line.split(":", 2)
         if len(parts) >= 3:
