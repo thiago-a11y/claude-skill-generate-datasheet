@@ -60,11 +60,29 @@ def _score_color(score):
     return "red"
 
 
-def _health_score(data):
+def _risk_score(data):
     scores = []
     sf = max(1, data["tests"]["source_files"])
-    test_ratio = data["tests"]["test_files"] / sf
-    scores.append(("Test Coverage", min(100, int(test_ratio * 200)), f"{data['tests']['test_files']}/{sf} files"))
+    tf = data["tests"]["test_files"]
+    test_ratio = tf / sf
+    test_score = min(100, int(test_ratio * 200))
+    if tf == 0 and sf > 50:
+        test_label = f"CRITICAL — 0 tests for {sf} source files"
+    elif test_ratio < 0.05:
+        test_label = f"HIGH RISK — {tf}/{sf} files ({int(test_ratio*100)}%)"
+    else:
+        test_label = f"{tf}/{sf} files ({int(test_ratio*100)}%)"
+    scores.append(("Test Coverage", test_score, test_label))
+
+    contributors = len(data["git"]["contributors"])
+    bus_score = min(100, contributors * 25) if contributors > 0 else 0
+    if contributors <= 1:
+        bus_label = "CRITICAL — single point of failure"
+    elif contributors <= 2:
+        bus_label = f"HIGH RISK — only {contributors} contributors"
+    else:
+        bus_label = f"{contributors} contributors"
+    scores.append(("Bus Factor", bus_score, bus_label))
 
     sec_count = sum(1 for v in data["security"].values() if v["detected"])
     sec_total = max(1, len(data["security"]))
@@ -73,22 +91,22 @@ def _health_score(data):
     loc = max(1, data["health"]["loc"])
     debt = data["health"]["todos"] / (loc / 1000)
     debt_score = max(0, 100 - int(debt * 15))
-    scores.append(("Tech Debt", debt_score, f"{data['health']['todos']} items in {loc:,} LOC"))
+    scores.append(("Tech Debt Density", debt_score, f"{data['health']['todos']} items in {loc:,} LOC ({debt:.1f}/KLOC)"))
 
     doc_score = min(100, len(data["existing_docs"]) * 12)
-    scores.append(("Documentation", doc_score, f"{len(data['existing_docs'])} markdown files"))
-
-    contributors = len(data["git"]["contributors"])
-    git_score = min(100, contributors * 20) if contributors > 0 else 0
-    scores.append(("Team Health", git_score, f"{contributors} contributors"))
+    scores.append(("Documentation", doc_score, f"{len(data['existing_docs'])} files"))
 
     dep_score = 80 if data["dependencies"]["manager"] != "NOT DETECTED" else 20
     scores.append(("Dependency Mgmt", dep_score, data["dependencies"]["manager"]))
 
-    weights = [0.30, 0.15, 0.10, 0.10, 0.15, 0.10]
+    weights = [0.35, 0.25, 0.15, 0.10, 0.08, 0.07]
     composite = min(100, int(sum(s[1] * w for s, w in zip(scores, weights))))
-    if data["tests"]["test_files"] == 0 and data["tests"]["source_files"] > 50:
-        composite = min(composite, 45)
+
+    if tf == 0 and sf > 50:
+        composite = min(composite, 30)
+    if contributors <= 1 and sf > 50:
+        composite = min(composite, 35)
+
     return composite, scores
 
 
@@ -117,7 +135,7 @@ Zero AI · Zero internet · Zero data egress<br>
 def render_scan_report(data):
     name = _e(data["project"]["name"])
     date = _e(data["project"]["scan_date"])
-    score, score_details = _health_score(data)
+    score, score_details = _risk_score(data)
     sc = _score_color(score)
 
     langs_rows = ""
@@ -168,14 +186,14 @@ def render_scan_report(data):
     <h1>{name}</h1>
     <p class="subtitle">Codebase Scan Report — {date}</p>
     <div class="grid" style="max-width:600px;margin:20px auto 0">
-        <div class="metric"><div class="metric-value" style="color:var(--{sc})">{score}</div><div class="metric-label">Health Score</div></div>
+        <div class="metric"><div class="metric-value" style="color:var(--{sc})">{score}</div><div class="metric-label">Risk Score</div></div>
         <div class="metric"><div class="metric-value">{total_files}</div><div class="metric-label">Source Files</div></div>
         <div class="metric"><div class="metric-value">{total_loc:,}</div><div class="metric-label">Lines of Code</div></div>
         <div class="metric"><div class="metric-value">{len(data['endpoints'])}</div><div class="metric-label">Endpoints</div></div>
     </div>
 </div>
 
-<h2>Health Score Breakdown</h2>
+<h2>Risk Score Breakdown</h2>
 <table><tr><th>Dimension</th><th>Score</th><th>Evidence</th></tr>{score_rows}</table>
 
 <h2>Languages</h2>
@@ -230,7 +248,7 @@ def render_sales_datasheet(data):
     name = _e(data["project"]["name"])
     company = _e(data["project"].get("company", ""))
     date = _e(data["project"]["scan_date"])
-    score, _ = _health_score(data)
+    score, _ = _risk_score(data)
 
     total_files = sum(v["files"] for v in data["languages"].values())
     total_loc = sum(v["lines"] for v in data["languages"].values())
@@ -274,7 +292,7 @@ def render_sales_datasheet(data):
     contributors = len(data["git"]["contributors"])
     if contributors <= 2:
         limitations += f"<li>Bus factor: {contributors} contributor(s) — knowledge concentration risk</li>"
-    limitations += "<li>SLA, RPO/RTO, hosting details: Requires organizational input</li>"
+    limitations += "<li>SLA, RPO/RTO, hosting: not defined in code — requires business agreement before client presentation</li>"
 
     body = f"""
 <div class="hero" style="border-color:var(--accent)">
@@ -285,7 +303,7 @@ def render_sales_datasheet(data):
         <div class="metric"><div class="metric-value" style="color:var(--accent)">{len(data['endpoints'])}</div><div class="metric-label">API Endpoints</div></div>
         <div class="metric"><div class="metric-value" style="color:var(--accent)">{len(data['database']['tables'])}</div><div class="metric-label">Data Tables</div></div>
         <div class="metric"><div class="metric-value" style="color:var(--accent)">{len(data['integrations'])}</div><div class="metric-label">Integrations</div></div>
-        <div class="metric"><div class="metric-value" style="color:var(--accent)">{score}/100</div><div class="metric-label">Health Score</div></div>
+        <div class="metric"><div class="metric-value" style="color:var(--accent)">{score}/100</div><div class="metric-label">Risk Score</div></div>
     </div>
 </div>
 
@@ -302,11 +320,11 @@ def render_sales_datasheet(data):
 </div>
 
 <h2>Modules</h2>
-{features if features else '<p class="note">Requires organizational input — describe product modules</p>'}
+{features if features else '<p class="note">Module details detected from code structure — add business descriptions before client presentation</p>'}
 
 <h2>Integrations</h2>
 <div class="card">
-    {integrations_list if integrations_list else '<p>Requires organizational input — list integrations</p>'}
+    {integrations_list if integrations_list else '<p>No external integrations detected from source code scan</p>'}
 </div>
 
 <h2>Security Overview</h2>
@@ -327,10 +345,10 @@ def render_sales_datasheet(data):
 </div>
 
 <h2>Commercial Model</h2>
-<p class="note">Requires organizational input — pricing, licensing, and support tiers</p>
+<p class="note">Pricing model requires business decision. Common models for B2B SaaS: per-seat, per-company, flat fee + usage-based, or enterprise agreement.</p>
 
 <h2>Next Steps</h2>
-<p class="note">Requires organizational input — demo link, contact, CTA</p>
+<p class="note">Add demo scheduling link, contact email, and call-to-action before distributing this document.</p>
 """
     return _wrap_html(f"{name} — Sales Datasheet", body)
 
@@ -339,7 +357,7 @@ def render_technical_spec(data):
     name = _e(data["project"]["name"])
     company = _e(data["project"].get("company", ""))
     date = _e(data["project"]["scan_date"])
-    score, score_details = _health_score(data)
+    score, score_details = _risk_score(data)
 
     total_files = sum(v["files"] for v in data["languages"].values())
     total_loc = sum(v["lines"] for v in data["languages"].values())
@@ -386,16 +404,25 @@ def render_technical_spec(data):
     for dep in data["dependencies"]["items"][:30]:
         dep_rows += f"<tr><td>{_e(dep['name'])}</td><td>{_e(dep['version'])}</td></tr>"
 
-    # Known gaps
+    # Known gaps — always show real gaps, never "no gaps detected"
     gaps = ""
     gap_items = []
+    tf = data["tests"]["test_files"]
+    sf = data["tests"]["source_files"]
+    if tf == 0 and sf > 0:
+        gap_items.append(("Automated Tests", f"0 tests / {sf} source files", "CRITICAL — no regression safety net"))
+    elif sf > 0 and tf / sf < 0.1:
+        gap_items.append(("Test Coverage", f"{int(tf/sf*100)}% ({tf}/{sf})", "Below industry minimum (60%+)"))
     if not data["auth"]["mfa"]:
-        gap_items.append(("MFA/2FA", "Not Detected", "Critical for enterprise"))
+        gap_items.append(("MFA/2FA", "Not detected in codebase", "Required for enterprise compliance"))
     for control, info in data["security"].items():
         if not info["detected"]:
-            gap_items.append((control.replace("_", " ").title(), "Not Detected", "Security gap"))
-    if data["tests"]["test_files"] == 0:
-        gap_items.append(("Automated Tests", "0 test files", "Quality risk"))
+            gap_items.append((control.replace("_", " ").title(), "Not detected — may exist outside code or scanner limitation", "Verify manually"))
+    contributors = len(data["git"]["contributors"])
+    if contributors <= 2:
+        gap_items.append(("Bus Factor", f"{contributors} contributor(s)", "Knowledge concentration risk — key-person dependency"))
+    gap_items.append(("SLA / DR Policy", "Not defined in code", "Required before enterprise deployment"))
+    gap_items.append(("Hosting Documentation", "Not defined in code", "Infrastructure details needed for IT review"))
 
     for label, status, note in gap_items:
         gaps += f"<tr><td>{label}</td><td><span class='badge badge-red'>{status}</span></td><td>{note}</td></tr>"
@@ -413,8 +440,8 @@ def render_technical_spec(data):
     <div class="card"><h3>How does data flow?</h3><p>{data_flow}</p></div>
     <div class="card"><h3>How do we integrate?</h3><p>{integration}</p></div>
     <div class="card"><h3>Security posture?</h3><p>{security_summary}</p></div>
-    <div class="card"><h3>SLA?</h3><p>Requires organizational input — uptime SLA, RPO, RTO</p></div>
-    <div class="card"><h3>What does IT provision?</h3><p>Requires organizational input — client IT requirements</p></div>
+    <div class="card"><h3>SLA?</h3><p>SLA terms require business agreement. Industry standard: 99.5% uptime, 4h RPO, 1h RTO for B2B SaaS</p></div>
+    <div class="card"><h3>What does IT provision?</h3><p>Depends on deployment model. Typical: web browser (Chrome/Edge), internet connection, SSO provider if enterprise</p></div>
 </div>
 
 <h2>Architecture</h2>
@@ -455,7 +482,7 @@ def render_technical_spec(data):
 <h2>Dependencies ({data['dependencies']['total']} — {_e(data['dependencies']['manager'])})</h2>
 {"<table><tr><th>Package</th><th>Version</th></tr>" + dep_rows + "</table>" if dep_rows else '<p class="note">No dependency manager detected.</p>'}
 
-<h2>Health Score: {score}/100</h2>
+<h2>Risk Score: {score}/100</h2>
 <table><tr><th>Dimension</th><th>Score</th><th>Evidence</th></tr>
 {"".join(f"<tr><td>{label}</td><td><span class='badge badge-{_score_color(val)}'>{val}/100</span></td><td class='evidence'>{_e(ev)}</td></tr>" for label, val, ev in score_details)}
 </table>
@@ -464,17 +491,17 @@ def render_technical_spec(data):
 <div class="warn">
     <strong>Transparency — what this system does NOT have:</strong>
 </div>
-{"<table><tr><th>Gap</th><th>Status</th><th>Impact</th></tr>" + gaps + "</table>" if gaps else '<p class="badge badge-green">No significant gaps detected.</p>'}
+{"<table><tr><th>Gap</th><th>Status</th><th>Impact</th></tr>" + gaps + "</table>"}
 
 <h2>SLA &amp; Disaster Recovery</h2>
-<p class="note">Requires organizational input — uptime SLA, RPO, RTO, backup frequency, restore process</p>
+<p class="note">SLA terms require business agreement. Industry standard: 99.5% uptime, 4h RPO, 1h RTO for B2B SaaS, backup frequency, restore process</p>
 
 <h2>Release &amp; Compatibility</h2>
 <div class="card">
     <p><strong>Commits:</strong> {data['git']['commits']}</p>
     <p><strong>Active contributors:</strong> {len(data['git']['contributors'])}</p>
     <p><strong>Recent activity:</strong> {data['git']['recent_commits']} commits in last 30 days</p>
-    <p>Requires organizational input — release cadence, versioning, backward compatibility</p>
+    <p>Release cadence and versioning policy should be documented before enterprise sales. Recommended: semantic versioning, quarterly releases, 12-month backward compatibility</p>
 </div>
 """
     return _wrap_html(f"{name} — Technical Specification", body)
@@ -608,11 +635,11 @@ def render_migration_plan(data, plan):
     <ul>{"".join(f"<li>{_e(c)}</li>" for c in summary.get("target_info", {}).get("cons", []))}</ul>
 </div>'''}
 
-<h2>{"Migration Options — Compare All Platforms" if summary.get("is_neutral") else "Alternative Targets"}</h2>
-{"<div class='note'><strong>No target selected.</strong> Compare all platforms below and choose the best fit for your codebase, team, and business goals.</div>" if summary.get("is_neutral") else ""}
+<h2>{"Migration Options — Platform Comparison" if summary.get("is_neutral") else "Alternative Targets"}</h2>
+{"<div class='card' style='border-left:3px solid var(--green)'><h3 style='margin-top:0;color:var(--green)'>Recommended: " + _e(summary.get('recommended_info', {}).get('label', '')) + "</h3><p>" + _e(summary.get('recommended_reason', '')) + "</p></div>" if summary.get("is_neutral") else ""}
 <table>
     <tr><th>Platform</th><th>Frontend</th><th>Backend</th><th>Best For</th><th>Pros</th><th>Cons</th></tr>
-    {"".join(f'''<tr><td><strong>{_e(t.get("label", k))}</strong>{"  ← selected" if k == summary.get("target_key") and not summary.get("is_neutral") else ""}</td><td>{_e(t.get("frontend", "—"))}</td><td>{_e(t.get("backend", "—"))}</td><td>{_e(t.get("best_for", "—"))}</td><td style="font-size:12px">{"<br>".join(_e(p) for p in t.get("pros", []))}</td><td style="font-size:12px">{"<br>".join(_e(c) for c in t.get("cons", []))}</td></tr>''' for k, t in plan.get("all_targets", {}).items())}
+    {"".join(f'''<tr><td><strong>{_e(t.get("label", k))}</strong>{"  ★ RECOMMENDED" if k == summary.get("recommended_key") and summary.get("is_neutral") else "  ← selected" if k == summary.get("target_key") and not summary.get("is_neutral") else ""}</td><td>{_e(t.get("frontend", "—"))}</td><td>{_e(t.get("backend", "—"))}</td><td>{_e(t.get("best_for", "—"))}</td><td style="font-size:12px">{"<br>".join(_e(p) for p in t.get("pros", []))}</td><td style="font-size:12px">{"<br>".join(_e(c) for c in t.get("cons", []))}</td></tr>''' for k, t in plan.get("all_targets", {}).items())}
 </table>
 
 <h2>Technology Equivalence Map</h2>

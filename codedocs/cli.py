@@ -73,7 +73,7 @@ def _print_summary(data):
     # Health score
     score = _calc_health_score(data)
     score_color = GREEN if score >= 70 else YELLOW if score >= 40 else RED
-    print(f"\n  {BOLD}Health Score:     {score_color}{score}/100{RESET}")
+    print(f"\n  {BOLD}Risk Score:     {score_color}{score}/100{RESET}")
     print()
 
 

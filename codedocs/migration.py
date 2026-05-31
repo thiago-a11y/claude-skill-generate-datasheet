@@ -626,6 +626,26 @@ ACCURACY_LABELS = {
 }
 
 
+def _recommend_target(data):
+    langs = data.get("languages", {})
+    has_ts = "typescript" in langs
+    has_php = "php" in langs
+    has_cs = "csharp" in langs
+    has_java = "java" in langs
+
+    if has_cs:
+        return "blazor", "Current stack is C#/.NET — Blazor keeps the same language, reuses existing libraries, and has the shortest migration path."
+    if has_ts and has_php:
+        return "react+express", "Current stack is PHP + TypeScript — migrating PHP backend to Node/NestJS unifies on a single language (TypeScript) and reuses the existing React frontend."
+    if has_java:
+        return "angular+express", "Current stack is Java — Angular's structure (DI, modules, services) is closest to Spring MVC, easing team transition."
+    if has_ts:
+        return "react+express", "Current stack includes TypeScript — full-stack TypeScript with React + NestJS maximizes code sharing and hiring pool."
+    if has_php:
+        return "react+fastapi", "Current stack is PHP — FastAPI (Python) offers the fastest modern backend with automatic API documentation, paired with React for the frontend."
+    return "react+fastapi", "Default recommendation — React + FastAPI offers the largest ecosystem, strongest typing, and broadest talent pool."
+
+
 def analyze_migration(data, target_platform="all", target_erps=None):
     if target_erps is None:
         target_erps = []
@@ -633,6 +653,9 @@ def analyze_migration(data, target_platform="all", target_erps=None):
     target_key = _resolve_target(target_platform)
     is_neutral = target_key == "all"
     target_info = None if is_neutral else TARGET_PLATFORMS.get(target_key, TARGET_PLATFORMS["react+fastapi"])
+
+    recommended_key, recommended_reason = _recommend_target(data)
+    recommended_info = TARGET_PLATFORMS.get(recommended_key, {})
 
     detected_erps = [i["service"] for i in data.get("integrations", []) if i["service"] in ERP_INTEGRATION_PLANS]
     seen = set()
@@ -678,6 +701,9 @@ def analyze_migration(data, target_platform="all", target_erps=None):
             "current_frameworks": [f["name"] for f in data.get("migration", {}).get("frameworks", [])],
             "target_framework": data.get("migration", {}).get("target_framework", "NOT DETECTED"),
             "erp_integrations": all_erps,
+            "recommended_key": recommended_key,
+            "recommended_info": recommended_info,
+            "recommended_reason": recommended_reason,
         },
         "modules": modules,
         "phases": phases,
