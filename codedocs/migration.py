@@ -272,6 +272,165 @@ TECH_EQUIVALENCES = {
         "vue+fastapi": (".env + python-dotenv", "GREEN"),
         "go+react": (".env + godotenv", "GREEN"),
     },
+    # Java source
+    "Spring MVC Controller": {
+        "react+fastapi": ("FastAPI router + Pydantic models", "GREEN"),
+        "react+express": ("NestJS controller (decorators)", "GREEN"),
+        "angular+express": ("NestJS controller (decorators)", "GREEN"),
+        "blazor": ("ASP.NET Core Controller", "GREEN"),
+        "vue+fastapi": ("FastAPI router + Pydantic models", "GREEN"),
+        "go+react": ("Gin handler + struct binding", "GREEN"),
+    },
+    "Spring Data JPA": {
+        "react+fastapi": ("Prisma ORM or SQLAlchemy", "GREEN"),
+        "react+express": ("Prisma ORM or TypeORM", "GREEN"),
+        "angular+express": ("Prisma ORM or TypeORM", "GREEN"),
+        "blazor": ("EF Core", "GREEN"),
+        "vue+fastapi": ("SQLAlchemy or Prisma", "GREEN"),
+        "go+react": ("GORM", "YELLOW"),
+    },
+    "Thymeleaf / JSP Views": {
+        "react+fastapi": ("React TSX components", "GREEN"),
+        "react+express": ("React TSX components", "GREEN"),
+        "angular+express": ("Angular components + templates", "GREEN"),
+        "blazor": ("Razor Components", "GREEN"),
+        "vue+fastapi": ("Vue 3 SFC (.vue)", "GREEN"),
+        "go+react": ("React TSX components", "GREEN"),
+    },
+    # PHP source
+    "Laravel Eloquent ORM": {
+        "react+fastapi": ("Prisma ORM or SQLAlchemy", "GREEN"),
+        "react+express": ("Prisma ORM", "GREEN"),
+        "angular+express": ("Prisma ORM or TypeORM", "GREEN"),
+        "blazor": ("EF Core", "YELLOW"),
+        "vue+fastapi": ("SQLAlchemy or Prisma", "GREEN"),
+        "go+react": ("GORM", "YELLOW"),
+    },
+    "Blade Templates": {
+        "react+fastapi": ("React TSX components", "GREEN"),
+        "react+express": ("React TSX components", "GREEN"),
+        "angular+express": ("Angular components", "GREEN"),
+        "blazor": ("Razor Components", "GREEN"),
+        "vue+fastapi": ("Vue 3 SFC (.vue)", "GREEN"),
+        "go+react": ("React TSX components", "GREEN"),
+    },
+    "Laravel Middleware": {
+        "react+fastapi": ("FastAPI Depends + middleware", "GREEN"),
+        "react+express": ("Express middleware", "GREEN"),
+        "angular+express": ("NestJS Guards + Interceptors", "GREEN"),
+        "blazor": ("ASP.NET Core middleware", "GREEN"),
+        "vue+fastapi": ("FastAPI Depends + middleware", "GREEN"),
+        "go+react": ("Gin middleware", "GREEN"),
+    },
+    # Delphi source
+    "Delphi VCL/FMX Forms": {
+        "react+fastapi": ("React SPA (extract logic, rewrite UI)", "RED"),
+        "react+express": ("React SPA (extract logic, rewrite UI)", "RED"),
+        "angular+express": ("Angular SPA (extract logic, rewrite UI)", "RED"),
+        "blazor": ("Blazor components (rewrite, same paradigm)", "YELLOW"),
+        "vue+fastapi": ("Vue SPA (extract logic, rewrite UI)", "RED"),
+        "go+react": ("React SPA (extract logic, rewrite UI)", "RED"),
+    },
+    "Delphi ADO/BDE": {
+        "react+fastapi": ("SQLAlchemy or Prisma", "RED"),
+        "react+express": ("Prisma ORM", "RED"),
+        "angular+express": ("Prisma ORM", "RED"),
+        "blazor": ("EF Core", "YELLOW"),
+        "vue+fastapi": ("SQLAlchemy", "RED"),
+        "go+react": ("GORM", "RED"),
+    },
+    # VB6 source
+    "VB6 Forms": {
+        "react+fastapi": ("React SPA (full rewrite)", "RED"),
+        "react+express": ("React SPA (full rewrite)", "RED"),
+        "angular+express": ("Angular SPA (full rewrite)", "RED"),
+        "blazor": ("Blazor components (rewrite, same language family)", "YELLOW"),
+        "vue+fastapi": ("Vue SPA (full rewrite)", "RED"),
+        "go+react": ("React SPA (full rewrite)", "RED"),
+    },
+    "VB6 ADO/DAO": {
+        "react+fastapi": ("SQLAlchemy or Prisma", "RED"),
+        "react+express": ("Prisma ORM", "RED"),
+        "angular+express": ("Prisma ORM", "RED"),
+        "blazor": ("EF Core", "YELLOW"),
+        "vue+fastapi": ("SQLAlchemy", "RED"),
+        "go+react": ("GORM", "RED"),
+    },
+    "ActiveX Controls": {
+        "react+fastapi": ("Web components (AG Grid, Chart.js, etc.)", "RED"),
+        "react+express": ("Web components (AG Grid, Chart.js, etc.)", "RED"),
+        "angular+express": ("Angular components (AG Grid, etc.)", "RED"),
+        "blazor": ("Blazor components (limited equivalents)", "RED"),
+        "vue+fastapi": ("Vue components", "RED"),
+        "go+react": ("Web components", "RED"),
+    },
+    # Database
+    "SQL Server": {
+        "react+fastapi": ("PostgreSQL (pgLoader: 70-80% schema, 95% data)", "YELLOW"),
+        "react+express": ("PostgreSQL (pgLoader: 70-80% schema, 95% data)", "YELLOW"),
+        "angular+express": ("PostgreSQL", "YELLOW"),
+        "blazor": ("SQL Server or PostgreSQL (EF Core supports both)", "GREEN"),
+        "vue+fastapi": ("PostgreSQL", "YELLOW"),
+        "go+react": ("PostgreSQL", "YELLOW"),
+    },
+    "Oracle DB": {
+        "react+fastapi": ("PostgreSQL (ora2pg: 65-75% schema)", "RED"),
+        "react+express": ("PostgreSQL (ora2pg: 65-75% schema)", "RED"),
+        "angular+express": ("PostgreSQL", "RED"),
+        "blazor": ("PostgreSQL or Oracle (EF Core supports both)", "YELLOW"),
+        "vue+fastapi": ("PostgreSQL", "RED"),
+        "go+react": ("PostgreSQL", "RED"),
+    },
+    # Infrastructure
+    "IIS (Web Server)": {
+        "react+fastapi": ("Nginx or Caddy (reverse proxy)", "YELLOW"),
+        "react+express": ("Nginx or Caddy", "YELLOW"),
+        "angular+express": ("Nginx or Caddy", "YELLOW"),
+        "blazor": ("Kestrel (built-in) + Nginx reverse proxy", "GREEN"),
+        "vue+fastapi": ("Nginx or Caddy", "YELLOW"),
+        "go+react": ("Built-in Go HTTP server + Nginx", "GREEN"),
+    },
+    "Azure DevOps CI/CD": {
+        "react+fastapi": ("GitHub Actions (80% automated)", "GREEN"),
+        "react+express": ("GitHub Actions (80% automated)", "GREEN"),
+        "angular+express": ("GitHub Actions", "GREEN"),
+        "blazor": ("GitHub Actions or Azure DevOps (keep)", "GREEN"),
+        "vue+fastapi": ("GitHub Actions", "GREEN"),
+        "go+react": ("GitHub Actions", "GREEN"),
+    },
+    "Windows Server": {
+        "react+fastapi": ("Linux + Docker (Alpine ~50MB)", "YELLOW"),
+        "react+express": ("Linux + Docker", "YELLOW"),
+        "angular+express": ("Linux + Docker", "YELLOW"),
+        "blazor": ("Linux + Docker (.NET 8 cross-platform)", "GREEN"),
+        "vue+fastapi": ("Linux + Docker", "YELLOW"),
+        "go+react": ("Linux + Docker (Go static binary)", "GREEN"),
+    },
+    # UI Libraries
+    "DevExpress Controls": {
+        "react+fastapi": ("MUI + AG Grid + Recharts (Report Viewer: custom)", "YELLOW"),
+        "react+express": ("MUI + AG Grid + Recharts", "YELLOW"),
+        "angular+express": ("Ant Design + AG Grid", "YELLOW"),
+        "blazor": ("DevExpress Blazor (same vendor)", "GREEN"),
+        "vue+fastapi": ("PrimeVue + AG Grid", "YELLOW"),
+        "go+react": ("MUI + AG Grid", "YELLOW"),
+    },
+    "Telerik Controls": {
+        "react+fastapi": ("Ant Design + AG Grid + Chart.js (Scheduler: custom)", "YELLOW"),
+        "react+express": ("Ant Design + AG Grid", "YELLOW"),
+        "angular+express": ("Kendo UI Angular (same vendor)", "GREEN"),
+        "blazor": ("Telerik Blazor (same vendor)", "GREEN"),
+        "vue+fastapi": ("PrimeVue + AG Grid", "YELLOW"),
+        "go+react": ("Ant Design + AG Grid", "YELLOW"),
+    },
+    "SignalR (Real-Time)": {
+        "react+fastapi": ("FastAPI WebSocket + Socket.io client", "YELLOW"),
+        "react+express": ("Socket.io", "GREEN"),
+        "angular+express": ("Socket.io", "GREEN"),
+        "blazor": ("SignalR (keep as-is)", "GREEN"),
+        "vue+fastapi": ("FastAPI WebSocket + Socket.io client", "YELLOW"),
+        "go+react": ("gorilla-websocket + Socket.io client", "YELLOW"),
+    },
 }
 
 PACKAGE_EQUIVALENCES = {
@@ -343,6 +502,69 @@ PACKAGE_EQUIVALENCES = {
         "npm": "class-transformer",
         "pip": "pydantic (built-in)",
         "go": "github.com/jinzhu/copier",
+        "accuracy": "YELLOW",
+    },
+    "Email": {
+        "nuget": "System.Net.Mail / MailKit",
+        "npm": "nodemailer",
+        "pip": "smtplib (stdlib) / python-emails",
+        "go": "gomail",
+        "accuracy": "GREEN",
+    },
+    "PDF Generation": {
+        "nuget": "iTextSharp / QuestPDF",
+        "npm": "puppeteer-pdf / pdfkit",
+        "pip": "reportlab / weasyprint",
+        "go": "gofpdf / unipdf",
+        "accuracy": "GREEN",
+    },
+    "Excel": {
+        "nuget": "EPPlus / ClosedXML",
+        "npm": "exceljs / sheetjs",
+        "pip": "openpyxl / pandas",
+        "go": "excelize",
+        "accuracy": "GREEN",
+    },
+    "Image Processing": {
+        "nuget": "SixLabors.ImageSharp (NOT System.Drawing)",
+        "npm": "sharp",
+        "pip": "Pillow",
+        "go": "disintegration/imaging",
+        "accuracy": "GREEN",
+    },
+    "Real-Time": {
+        "nuget": "SignalR",
+        "npm": "socket.io",
+        "pip": "FastAPI WebSocket / websockets",
+        "go": "gorilla/websocket",
+        "accuracy": "YELLOW",
+    },
+    "Scheduling": {
+        "nuget": "Quartz.NET / Hangfire",
+        "npm": "node-cron / bull",
+        "pip": "APScheduler / celery",
+        "go": "robfig/cron",
+        "accuracy": "YELLOW",
+    },
+    "File Storage": {
+        "nuget": "Azure.Storage.Blobs / AWSSDK.S3",
+        "npm": "aws-sdk / @google-cloud/storage",
+        "pip": "boto3 / google-cloud-storage",
+        "go": "aws-sdk-go-v2 / go-storage",
+        "accuracy": "GREEN",
+    },
+    "Serialization": {
+        "nuget": "System.Text.Json (NOT Newtonsoft)",
+        "npm": "JSON (built-in) / class-transformer",
+        "pip": "pydantic / json (stdlib)",
+        "go": "encoding/json (stdlib)",
+        "accuracy": "GREEN",
+    },
+    "DI Container": {
+        "nuget": "Microsoft.Extensions.DI",
+        "npm": "NestJS @Injectable / tsyringe",
+        "pip": "FastAPI Depends()",
+        "go": "google/wire / uber/fx",
         "accuracy": "YELLOW",
     },
 }
@@ -475,6 +697,46 @@ def _build_equivalence_map(data, target_key):
 
     if data.get("endpoints"):
         detected_techs.add("ASP.NET MVC Controller")
+
+    for fw in migration.get("frameworks", []):
+        fw_name = fw["name"]
+        if "Spring MVC" in fw_name:
+            detected_techs.add("Spring MVC Controller")
+        if "Spring Data JPA" in fw_name:
+            detected_techs.add("Spring Data JPA")
+        if "Thymeleaf" in fw_name or "JSP" in fw_name:
+            detected_techs.add("Thymeleaf / JSP Views")
+        if "Laravel" == fw_name:
+            detected_techs.add("Laravel Eloquent ORM")
+            detected_techs.add("Laravel Middleware")
+        if "Blade" in fw_name:
+            detected_techs.add("Blade Templates")
+        if "Delphi" in fw_name:
+            detected_techs.add("Delphi VCL/FMX Forms")
+            detected_techs.add("Delphi ADO/BDE")
+        if "VB6" == fw_name:
+            detected_techs.add("VB6 Forms")
+            detected_techs.add("VB6 ADO/DAO")
+        if "SQL Server" == fw_name:
+            detected_techs.add("SQL Server")
+        if "Oracle DB" == fw_name:
+            detected_techs.add("Oracle DB")
+        if "IIS" == fw_name:
+            detected_techs.add("IIS (Web Server)")
+        if "Azure DevOps" in fw_name:
+            detected_techs.add("Azure DevOps CI/CD")
+        if "Windows" in fw_name:
+            detected_techs.add("Windows Server")
+        if "DevExpress" in fw_name:
+            detected_techs.add("DevExpress Controls")
+        if "Telerik" in fw_name:
+            detected_techs.add("Telerik Controls")
+        if "SignalR" in fw_name:
+            detected_techs.add("SignalR (Real-Time)")
+
+    for blocker in migration.get("blockers", []):
+        if blocker.get("type") == "ACTIVEX":
+            detected_techs.add("ActiveX Controls")
 
     result = []
     for tech in TECH_EQUIVALENCES:

@@ -558,3 +558,94 @@ def _scan_migration(data, cwd):
         if _lines(erp_found):
             if not any(i["service"] == erp_name for i in data["integrations"]):
                 data["integrations"].append({"service": erp_name, "file": _lines(erp_found)[0].lstrip("./"), "line": "—"})
+
+    # Java Spring detection
+    spring = _run("grep -rln '@RestController\\|@RequestMapping\\|@SpringBootApplication\\|@Service\\|@Repository' --include='*.java' 2>/dev/null | grep -v target | grep -v build | head -20", cwd)
+    if _lines(spring):
+        data["migration"]["frameworks"].append({"name": "Spring MVC", "files": _lines(spring)})
+    jpa = _run("grep -rln '@Entity\\|@Table\\|JpaRepository\\|CrudRepository' --include='*.java' 2>/dev/null | grep -v target | head -10", cwd)
+    if _lines(jpa):
+        data["migration"]["frameworks"].append({"name": "Spring Data JPA", "files": _lines(jpa)})
+    thymeleaf = _run("find . -name '*.html' -path '*/templates/*' | grep -v target | wc -l", cwd)
+    jsp = _run("find . -name '*.jsp' | grep -v target | wc -l", cwd)
+    if _count_lines(thymeleaf) > 0 or _count_lines(jsp) > 0:
+        data["migration"]["frameworks"].append({"name": "Thymeleaf/JSP", "files": []})
+
+    # PHP Laravel detection
+    laravel = _run("grep -rln 'Illuminate\\\\\\|Route::get\\|Route::post\\|Eloquent\\|extends Model' --include='*.php' 2>/dev/null | grep -v vendor | head -20", cwd)
+    if _lines(laravel):
+        data["migration"]["frameworks"].append({"name": "Laravel", "files": _lines(laravel)})
+    blade = _run("find . -name '*.blade.php' | grep -v vendor | wc -l", cwd)
+    if _count_lines(blade) > 0:
+        data["migration"]["frameworks"].append({"name": "Blade Templates", "files": []})
+
+    # Delphi detection
+    delphi = _run("find . -name '*.pas' -o -name '*.dfm' -o -name '*.dpr' -o -name '*.dpk' | wc -l", cwd)
+    if _count_lines(delphi) > 0:
+        delphi_files = _lines(_run("find . -name '*.pas' -o -name '*.dfm' | head -20", cwd))
+        data["migration"]["frameworks"].append({"name": "Delphi VCL/FMX", "files": delphi_files})
+        vcl = _run("grep -rln 'TForm\\|TButton\\|TEdit\\|TDataSet\\|TADOQuery' --include='*.pas' 2>/dev/null | head -20", cwd)
+        if _lines(vcl):
+            data["migration"]["blockers"].append({
+                "type": "DELPHI_VCL", "severity": "HIGH",
+                "description": f"{len(_lines(vcl))} Delphi VCL files — UI tightly coupled to business logic",
+                "recommendation": "Extract business logic to shared library, rewrite UI as web SPA",
+                "files_affected": len(_lines(vcl)),
+            })
+        bde = _run("grep -rln 'BDE\\|TTable\\|TQuery\\|TDatabase' --include='*.pas' 2>/dev/null | head -10", cwd)
+        if _lines(bde):
+            data["migration"]["blockers"].append({
+                "type": "DELPHI_BDE", "severity": "CRITICAL",
+                "description": f"{len(_lines(bde))} files use BDE (Borland Database Engine) — discontinued, no modern equivalent",
+                "recommendation": "Replace with ADO/dbExpress first, then migrate to modern ORM",
+                "files_affected": len(_lines(bde)),
+            })
+
+    # VB6 detection
+    vb6 = _run("find . -name '*.frm' -o -name '*.bas' -o -name '*.cls' -o -name '*.vbp' | wc -l", cwd)
+    if _count_lines(vb6) > 0:
+        vb6_files = _lines(_run("find . -name '*.frm' -o -name '*.bas' -o -name '*.cls' | head -20", cwd))
+        data["migration"]["frameworks"].append({"name": "VB6", "files": vb6_files})
+        data["migration"]["blockers"].append({
+            "type": "VB6", "severity": "CRITICAL",
+            "description": f"{_count_lines(vb6)} VB6 files — language EOL, no runtime support on modern OS",
+            "recommendation": "Use Mobilize.Net for automated VB6→C# conversion (60-70% automated), then migrate to web",
+            "files_affected": _count_lines(vb6),
+        })
+        activex = _run("grep -rln 'CreateObject\\|ActiveX\\|OLE\\|COM' --include='*.frm' --include='*.bas' --include='*.cls' 2>/dev/null | head -10", cwd)
+        if _lines(activex):
+            data["migration"]["blockers"].append({
+                "type": "ACTIVEX", "severity": "CRITICAL",
+                "description": f"{len(_lines(activex))} files use ActiveX/COM — no web equivalent, requires wrapper service",
+                "recommendation": "Create REST wrapper service for COM components, replace ActiveX with web components",
+                "files_affected": len(_lines(activex)),
+            })
+
+    # Database detection (SQL Server, Oracle, MySQL, PostgreSQL)
+    sqlserver = _run("grep -rln 'SqlConnection\\|SqlCommand\\|SQLOLEDB\\|Data Source=.*\\\\' --include='*.cs' --include='*.config' --include='*.json' --include='*.pas' --include='*.frm' 2>/dev/null | grep -v bin | grep -v obj | head -10", cwd)
+    if _lines(sqlserver):
+        data["migration"]["frameworks"].append({"name": "SQL Server", "files": _lines(sqlserver)})
+    oracle_db = _run("grep -rln 'OracleConnection\\|Oracle\\.ManagedDataAccess\\|OracleClient' --include='*.cs' --include='*.config' --include='*.pas' 2>/dev/null | grep -v bin | head -10", cwd)
+    if _lines(oracle_db):
+        data["migration"]["frameworks"].append({"name": "Oracle DB", "files": _lines(oracle_db)})
+
+    # Infrastructure detection
+    iis = _run("find . -name 'web.config' -o -name 'applicationHost.config' | grep -v bin | grep -v obj | wc -l", cwd)
+    if _count_lines(iis) > 0:
+        data["migration"]["frameworks"].append({"name": "IIS", "files": []})
+    azdevops = _run("find . -name 'azure-pipelines.yml' -o -name 'azure-pipelines.yaml' | wc -l", cwd)
+    if _count_lines(azdevops) > 0:
+        data["migration"]["frameworks"].append({"name": "Azure DevOps CI/CD", "files": []})
+
+    # UI library detection
+    devexpress = _run("grep -rln 'DevExpress\\|DXGrid\\|XtraGrid\\|DxDataGrid' --include='*.cs' --include='*.cshtml' --include='*.config' --include='*.csproj' 2>/dev/null | grep -v bin | grep -v obj | head -10", cwd)
+    if _lines(devexpress):
+        data["migration"]["frameworks"].append({"name": "DevExpress Controls", "files": _lines(devexpress)})
+    telerik = _run("grep -rln 'Telerik\\|Kendo\\|RadGrid\\|TelerikGrid' --include='*.cs' --include='*.cshtml' --include='*.config' --include='*.csproj' 2>/dev/null | grep -v bin | grep -v obj | head -10", cwd)
+    if _lines(telerik):
+        data["migration"]["frameworks"].append({"name": "Telerik Controls", "files": _lines(telerik)})
+
+    # SignalR detection
+    signalr = _run("grep -rln 'SignalR\\|HubConnection\\|IHubContext' --include='*.cs' --include='*.ts' --include='*.js' --include='*.csproj' 2>/dev/null | grep -v bin | grep -v obj | head -10", cwd)
+    if _lines(signalr):
+        data["migration"]["frameworks"].append({"name": "SignalR", "files": _lines(signalr)})
