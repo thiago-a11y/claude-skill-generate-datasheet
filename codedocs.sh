@@ -1,5 +1,5 @@
 #!/bin/bash
 # CodeDocs — run from anywhere
-# Usage: codedocs /path/to/project [--migration --target react+fastapi --erp SAP TOTVS]
+# Usage: codedocs /path/to/project [--name "Product Name" --target react --erp TOTVS]
 CODEDOCS_HOME="/Users/thiagoxavier/claude-skill-generate-datasheet"
-cd "$CODEDOCS_HOME" && python3 -m codedocs "$@"
+PYTHONPATH="$CODEDOCS_HOME" python3 -m codedocs "$@"
