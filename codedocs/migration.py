@@ -626,12 +626,13 @@ ACCURACY_LABELS = {
 }
 
 
-def analyze_migration(data, target_platform="web", target_erps=None):
+def analyze_migration(data, target_platform="all", target_erps=None):
     if target_erps is None:
         target_erps = []
 
     target_key = _resolve_target(target_platform)
-    target_info = TARGET_PLATFORMS.get(target_key, TARGET_PLATFORMS["react+fastapi"])
+    is_neutral = target_key == "all"
+    target_info = None if is_neutral else TARGET_PLATFORMS.get(target_key, TARGET_PLATFORMS["react+fastapi"])
 
     detected_erps = [i["service"] for i in data.get("integrations", []) if i["service"] in ERP_INTEGRATION_PLANS]
     seen = set()
@@ -655,8 +656,9 @@ def analyze_migration(data, target_platform="web", target_erps=None):
     blockers = data.get("migration", {}).get("blockers", [])
     blockers.sort(key=lambda b: -SEVERITY_WEIGHT.get(b.get("severity", "LOW"), 1))
 
-    equivalences = _build_equivalence_map(data, target_key)
-    package_map = _build_package_map(target_key)
+    eq_key = "react+fastapi" if is_neutral else target_key
+    equivalences = _build_equivalence_map(data, eq_key)
+    package_map = _build_package_map(eq_key) if not is_neutral else []
 
     total_hours = sum(m["complexity"]["estimated_hours"] for m in modules)
     critical_blockers = sum(1 for b in blockers if b.get("severity") == "CRITICAL")
@@ -669,9 +671,10 @@ def analyze_migration(data, target_platform="web", target_erps=None):
             "total_weeks": max(1, total_hours // 40),
             "critical_blockers": critical_blockers,
             "high_blockers": high_blockers,
-            "target_platform": target_platform,
+            "target_platform": "Neutral — all options shown" if is_neutral else target_platform,
             "target_key": target_key,
             "target_info": target_info,
+            "is_neutral": is_neutral,
             "current_frameworks": [f["name"] for f in data.get("migration", {}).get("frameworks", [])],
             "target_framework": data.get("migration", {}).get("target_framework", "NOT DETECTED"),
             "erp_integrations": all_erps,
@@ -687,6 +690,8 @@ def analyze_migration(data, target_platform="web", target_erps=None):
 
 
 def _resolve_target(target_input):
+    if target_input is None or target_input.lower().strip() == "all":
+        return "all"
     t = target_input.lower().strip()
     aliases = {
         "web": "react+fastapi",

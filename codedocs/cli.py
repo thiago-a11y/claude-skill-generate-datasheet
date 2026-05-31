@@ -133,9 +133,9 @@ Examples:
     parser.add_argument("--name", default=None, help="Product name (default: directory name)")
     parser.add_argument("--company", default=None, help="Company name")
     parser.add_argument("--no-browser", action="store_true", help="Don't open report in browser after scan")
-    parser.add_argument("--migration", action="store_true", help="Generate migration plan (platform, language, ERP integration)")
-    parser.add_argument("--target", default="web", help="Migration target platform (web, blazor, react, angular)")
-    parser.add_argument("--erp", nargs="*", default=[], help="Target ERPs to integrate (SAP, TOTVS, Oracle)")
+    parser.add_argument("--no-migration", action="store_true", help="Skip migration plan generation")
+    parser.add_argument("--target", default=None, help="Focus on specific target (react, angular, blazor, go, vue). Default: show all options")
+    parser.add_argument("--erp", nargs="*", default=[], help="ERP integrations to plan (SAP, TOTVS, Sankhya, Senior, Oracle)")
     parser.add_argument("--version", action="version", version=f"codedocs {__version__}")
     parser.add_argument("--json", action="store_true", help="Output raw scan data as JSON")
     args = parser.parse_args()
@@ -180,9 +180,10 @@ Examples:
     outputs.append(("sales-datasheet.html", sales_html, "Sales Datasheet"))
     outputs.append(("technical-spec.html", tech_html, "Technical Spec"))
 
-    if args.migration:
+    if not args.no_migration:
         erp_list = [e.upper() if e.lower() == "sap" else e.title() for e in args.erp]
-        plan = analyze_migration(data, target_platform=args.target, target_erps=erp_list)
+        target = args.target or "all"
+        plan = analyze_migration(data, target_platform=target, target_erps=erp_list)
         migration_html = render_migration_plan(data, plan)
         outputs.append(("migration-plan.html", migration_html, "Migration Plan"))
 
@@ -190,7 +191,8 @@ Examples:
         print(f"    Modules: {plan['summary']['total_modules']}")
         print(f"    Estimated effort: {plan['summary']['total_hours']:,}h (~{plan['summary']['total_weeks']} weeks)")
         print(f"    Critical blockers: {plan['summary']['critical_blockers']}")
-        print(f"    ERP integrations: {', '.join(plan['summary']['erp_integrations']) or 'none'}")
+        if plan['summary']['erp_integrations']:
+            print(f"    ERP integrations: {', '.join(plan['summary']['erp_integrations'])}")
 
     for filename, content, label in outputs:
         filepath = os.path.join(output_dir, filename)

@@ -576,24 +576,25 @@ def render_migration_plan(data, plan):
     </table>
 </div>
 
-<h2>Target Platform: {_e(summary.get('target_info', {}).get('label', summary['target_platform']))}</h2>
+{"" if summary.get("is_neutral") else f'''<h2>Target Platform: {_e(summary.get("target_info", {}).get("label", summary["target_platform"]))}</h2>
 <div class="card" style="border-left:3px solid var(--accent)">
     <table style="margin:0">
-        <tr><td><strong>Frontend</strong></td><td>{_e(summary.get('target_info', {}).get('frontend', '—'))}</td></tr>
-        <tr><td><strong>Backend</strong></td><td>{_e(summary.get('target_info', {}).get('backend', '—'))}</td></tr>
-        <tr><td><strong>ORM</strong></td><td>{_e(summary.get('target_info', {}).get('orm', '—'))}</td></tr>
-        <tr><td><strong>Best for</strong></td><td>{_e(summary.get('target_info', {}).get('best_for', '—'))}</td></tr>
+        <tr><td><strong>Frontend</strong></td><td>{_e(summary.get("target_info", {}).get("frontend", "—"))}</td></tr>
+        <tr><td><strong>Backend</strong></td><td>{_e(summary.get("target_info", {}).get("backend", "—"))}</td></tr>
+        <tr><td><strong>ORM</strong></td><td>{_e(summary.get("target_info", {}).get("orm", "—"))}</td></tr>
+        <tr><td><strong>Best for</strong></td><td>{_e(summary.get("target_info", {}).get("best_for", "—"))}</td></tr>
     </table>
     <h3 style="margin-top:16px;color:var(--green)">Pros</h3>
-    <ul>{"".join(f"<li>{_e(p)}</li>" for p in summary.get('target_info', {}).get('pros', []))}</ul>
+    <ul>{"".join(f"<li>{_e(p)}</li>" for p in summary.get("target_info", {}).get("pros", []))}</ul>
     <h3 style="margin-top:12px;color:var(--red)">Cons</h3>
-    <ul>{"".join(f"<li>{_e(c)}</li>" for c in summary.get('target_info', {}).get('cons', []))}</ul>
-</div>
+    <ul>{"".join(f"<li>{_e(c)}</li>" for c in summary.get("target_info", {}).get("cons", []))}</ul>
+</div>'''}
 
-<h3>Alternative Targets</h3>
+<h2>{"Migration Options — Compare All Platforms" if summary.get("is_neutral") else "Alternative Targets"}</h2>
+{"<div class='note'><strong>No target selected.</strong> Compare all platforms below and choose the best fit for your codebase, team, and business goals.</div>" if summary.get("is_neutral") else ""}
 <table>
-    <tr><th>Platform</th><th>Frontend</th><th>Backend</th><th>Best For</th></tr>
-    {"".join(f'''<tr><td><strong>{_e(t.get("label", k))}</strong>{"  ← selected" if k == summary.get("target_key") else ""}</td><td>{_e(t.get("frontend", "—"))}</td><td>{_e(t.get("backend", "—"))}</td><td>{_e(t.get("best_for", "—"))}</td></tr>''' for k, t in plan.get("all_targets", {}).items())}
+    <tr><th>Platform</th><th>Frontend</th><th>Backend</th><th>Best For</th><th>Pros</th><th>Cons</th></tr>
+    {"".join(f'''<tr><td><strong>{_e(t.get("label", k))}</strong>{"  ← selected" if k == summary.get("target_key") and not summary.get("is_neutral") else ""}</td><td>{_e(t.get("frontend", "—"))}</td><td>{_e(t.get("backend", "—"))}</td><td>{_e(t.get("best_for", "—"))}</td><td style="font-size:12px">{"<br>".join(_e(p) for p in t.get("pros", []))}</td><td style="font-size:12px">{"<br>".join(_e(c) for c in t.get("cons", []))}</td></tr>''' for k, t in plan.get("all_targets", {}).items())}
 </table>
 
 <h2>Technology Equivalence Map</h2>
@@ -609,11 +610,11 @@ def render_migration_plan(data, plan):
 </table>
 {f'<p class="evidence">No technologies detected for mapping.</p>' if not plan.get("equivalences") else ""}
 
-<h2>Package Equivalences (NuGet → {_e(plan.get("package_map", [{}])[0].get("target_ecosystem", "target") if plan.get("package_map") else "target")})</h2>
+{f'''<h2>Package Equivalences (NuGet → {_e(plan.get("package_map", [dict()])[0].get("target_ecosystem", "target") if plan.get("package_map") else "target")})</h2>
 <table>
     <tr><th>Category</th><th>Current (NuGet)</th><th>Target</th><th>Safety</th></tr>
-    {"".join(f'''<tr><td>{_e(p["category"])}</td><td><code>{_e(p["current"])}</code></td><td><code>{_e(p["target"])}</code></td><td><span class="badge badge-{p["accuracy"].lower()}">{_e(p["accuracy"])}</span></td></tr>''' for p in plan.get("package_map", []))}
-</table>
+    {"".join(f'<tr><td>{_e(p["category"])}</td><td><code>{_e(p["current"])}</code></td><td><code>{_e(p["target"])}</code></td><td><span class="badge badge-{p["accuracy"].lower()}">{_e(p["accuracy"])}</span></td></tr>' for p in plan.get("package_map", []))}
+</table>''' if plan.get("package_map") else '<div class="note"><strong>Package equivalences:</strong> Select a specific target platform (--target react, --target angular, etc.) to see detailed package mapping from your current stack.</div>'}
 
 <h2>Migration Blockers ({len(plan['blockers'])})</h2>
 {"<div class='warn'><strong>Resolve blockers before starting migration.</strong></div>" if plan['blockers'] else ""}
