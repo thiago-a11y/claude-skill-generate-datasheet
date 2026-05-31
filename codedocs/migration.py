@@ -634,7 +634,13 @@ def analyze_migration(data, target_platform="web", target_erps=None):
     target_info = TARGET_PLATFORMS.get(target_key, TARGET_PLATFORMS["react+fastapi"])
 
     detected_erps = [i["service"] for i in data.get("integrations", []) if i["service"] in ERP_INTEGRATION_PLANS]
-    all_erps = list(set(target_erps + detected_erps))
+    seen = set()
+    all_erps = []
+    for erp in target_erps + detected_erps:
+        key = erp.upper()
+        if key not in seen:
+            seen.add(key)
+            all_erps.append(erp)
 
     modules = _build_module_inventory(data)
     for mod in modules:
