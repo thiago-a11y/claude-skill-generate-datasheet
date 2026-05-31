@@ -8,7 +8,8 @@ from pathlib import Path
 
 from codedocs import __version__
 from codedocs.scanner import scan
-from codedocs.renderer import render_sales_datasheet, render_technical_spec, render_scan_report
+from codedocs.renderer import render_sales_datasheet, render_technical_spec, render_scan_report, render_migration_plan
+from codedocs.migration import analyze_migration
 
 
 RESET = "\033[0m"
@@ -132,6 +133,9 @@ Examples:
     parser.add_argument("--name", default=None, help="Product name (default: directory name)")
     parser.add_argument("--company", default=None, help="Company name")
     parser.add_argument("--no-browser", action="store_true", help="Don't open report in browser after scan")
+    parser.add_argument("--migration", action="store_true", help="Generate migration plan (platform, language, ERP integration)")
+    parser.add_argument("--target", default="web", help="Migration target platform (web, blazor, react, angular)")
+    parser.add_argument("--erp", nargs="*", default=[], help="Target ERPs to integrate (SAP, TOTVS, Oracle)")
     parser.add_argument("--version", action="version", version=f"codedocs {__version__}")
     parser.add_argument("--json", action="store_true", help="Output raw scan data as JSON")
     args = parser.parse_args()
@@ -166,29 +170,44 @@ Examples:
 
     print(f"  {BOLD}Generating documentation...{RESET}\n")
 
+    outputs = []
+
     scan_html = render_scan_report(data)
     sales_html = render_sales_datasheet(data)
     tech_html = render_technical_spec(data)
 
-    scan_path = os.path.join(output_dir, "scan-report.html")
-    sales_path = os.path.join(output_dir, "sales-datasheet.html")
-    tech_path = os.path.join(output_dir, "technical-spec.html")
+    outputs.append(("scan-report.html", scan_html, "Scan Report"))
+    outputs.append(("sales-datasheet.html", sales_html, "Sales Datasheet"))
+    outputs.append(("technical-spec.html", tech_html, "Technical Spec"))
 
-    for path, content, label in [
-        (scan_path, scan_html, "Scan Report"),
-        (sales_path, sales_html, "Sales Datasheet"),
-        (tech_path, tech_html, "Technical Spec"),
-    ]:
-        with open(path, "w", encoding="utf-8") as f:
+    if args.migration:
+        erp_list = [e.upper() if e.lower() == "sap" else e.title() for e in args.erp]
+        plan = analyze_migration(data, target_platform=args.target, target_erps=erp_list)
+        migration_html = render_migration_plan(data, plan)
+        outputs.append(("migration-plan.html", migration_html, "Migration Plan"))
+
+        print(f"\n  {CYAN}Migration Analysis{RESET}")
+        print(f"    Modules: {plan['summary']['total_modules']}")
+        print(f"    Estimated effort: {plan['summary']['total_hours']:,}h (~{plan['summary']['total_weeks']} weeks)")
+        print(f"    Critical blockers: {plan['summary']['critical_blockers']}")
+        print(f"    ERP integrations: {', '.join(plan['summary']['erp_integrations']) or 'none'}")
+
+    for filename, content, label in outputs:
+        filepath = os.path.join(output_dir, filename)
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)
-        print(f"  {GREEN}✓{RESET} {label:<20} → {os.path.relpath(path)}")
+        print(f"  {GREEN}✓{RESET} {label:<20} → {os.path.relpath(filepath)}")
 
+    file_count = len(outputs)
     print(f"\n{BOLD}{'═' * 60}{RESET}")
-    print(f"  {GREEN}Done!{RESET} 3 files generated in {os.path.relpath(output_dir)}/")
+    print(f"  {GREEN}Done!{RESET} {file_count} files generated in {os.path.relpath(output_dir)}/")
     print(f"  {DIM}Open scan-report.html for the full inventory{RESET}")
     print(f"  {DIM}Open sales-datasheet.html for the sales document{RESET}")
     print(f"  {DIM}Open technical-spec.html for the technical spec{RESET}")
+    if args.migration:
+        print(f"  {DIM}Open migration-plan.html for the migration roadmap{RESET}")
     print(f"{BOLD}{'═' * 60}{RESET}\n")
 
+    open_file = "migration-plan.html" if args.migration else "scan-report.html"
     if not args.no_browser:
-        webbrowser.open(f"file://{os.path.abspath(scan_path)}")
+        webbrowser.open(f"file://{os.path.abspath(os.path.join(output_dir, open_file))}")

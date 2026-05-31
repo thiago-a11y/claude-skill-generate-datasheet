@@ -460,3 +460,214 @@ def render_technical_spec(data):
 </div>
 """
     return _wrap_html(f"{name} — Technical Specification", body)
+
+
+def render_migration_plan(data, plan):
+    name = _e(data["project"]["name"])
+    company = _e(data["project"].get("company", ""))
+    date = _e(data["project"]["scan_date"])
+    summary = plan["summary"]
+
+    severity_colors = {"CRITICAL": "red", "HIGH": "yellow", "MEDIUM": "amber", "LOW": "blue"}
+    complexity_colors = {"HIGH": "red", "MEDIUM": "yellow", "LOW": "green"}
+    quadrant_colors = {"QUICK_WIN": "green", "MAJOR_PROJECT": "yellow", "FILL_IN": "blue", "AVOID": "red"}
+
+    # Blockers
+    blocker_rows = ""
+    for b in plan["blockers"]:
+        sev = b.get("severity", "LOW")
+        color = severity_colors.get(sev, "blue")
+        blocker_rows += f"""<tr>
+            <td><span class="badge badge-{color}">{_e(sev)}</span></td>
+            <td><strong>{_e(b.get('type', ''))}</strong></td>
+            <td>{_e(b.get('description', ''))}</td>
+            <td>{_e(b.get('recommendation', ''))}</td>
+            <td>{b.get('files_affected', '—')}</td>
+        </tr>"""
+
+    # Module inventory
+    module_rows = ""
+    for mod in plan["modules"]:
+        cx = mod["complexity"]
+        pr = mod["priority"]
+        cx_color = complexity_colors.get(cx["level"], "blue")
+        pr_color = quadrant_colors.get(pr["quadrant"], "blue")
+        module_rows += f"""<tr>
+            <td><strong>{_e(mod['name'])}</strong><br><span class="evidence">{_e(mod['path'])}</span></td>
+            <td>{mod.get('files', '—')}</td>
+            <td>{mod.get('endpoints', 0)}</td>
+            <td><span class="badge badge-{cx_color}">{cx['level']} ({cx['score']})</span></td>
+            <td>{cx['story_points']} SP</td>
+            <td>~{cx['estimated_hours']}h</td>
+            <td><span class="badge badge-{pr_color}">{pr['quadrant'].replace('_', ' ')}</span></td>
+        </tr>"""
+
+    # Phases
+    phases_html = ""
+    for phase in plan["phases"]:
+        mod_list = ""
+        phase_hours = 0
+        for mod in phase["modules"]:
+            phase_hours += mod["complexity"]["estimated_hours"]
+            mod_list += f"<li>{_e(mod['name'])} — {mod['complexity']['estimated_hours']}h ({mod['complexity']['level']})</li>"
+
+        phases_html += f"""
+        <div class="card" style="border-left:3px solid var(--accent2)">
+            <h3 style="margin-top:0;color:var(--accent2)">Phase {phase['number']}: {_e(phase['name'])}</h3>
+            <p><strong>Duration:</strong> {_e(phase['duration'])}</p>
+            <p><strong>Goal:</strong> {_e(phase['goal'])}</p>
+            <p><strong>Success criteria:</strong> {_e(phase['success_criteria'])}</p>
+            {"<p><strong>Estimated effort:</strong> " + str(phase_hours) + "h</p>" if phase_hours else ""}
+            {"<ul>" + mod_list + "</ul>" if mod_list else "<p class='evidence'>No modules assigned — planning phase</p>"}
+        </div>"""
+
+    # ERP Integration Plans
+    erp_html = ""
+    for erp_name, plan_data in plan.get("erp_plans", {}).items():
+        apis_list = "".join(f"<li>{_e(api)}</li>" for api in plan_data.get("apis", []))
+        risks_list = "".join(f"<li>{_e(risk)}</li>" for risk in plan_data.get("risks", []))
+        erp_html += f"""
+        <div class="card">
+            <h3 style="margin-top:0;color:var(--accent)">{_e(erp_name)}</h3>
+            <table style="margin:0">
+                <tr><td><strong>Pattern</strong></td><td>{_e(plan_data.get('pattern', ''))}</td></tr>
+                <tr><td><strong>Auth</strong></td><td>{_e(plan_data.get('auth', ''))}</td></tr>
+                <tr><td><strong>Recommendation</strong></td><td>{_e(plan_data.get('recommendation', ''))}</td></tr>
+            </table>
+            <h4 style="margin-top:12px">Available APIs</h4>
+            <ul>{apis_list}</ul>
+            <h4>Risks</h4>
+            <ul>{risks_list}</ul>
+        </div>"""
+
+    # Effort summary
+    quick_wins = [m for m in plan["modules"] if m["priority"]["quadrant"] == "QUICK_WIN"]
+    major = [m for m in plan["modules"] if m["priority"]["quadrant"] == "MAJOR_PROJECT"]
+    defer = [m for m in plan["modules"] if m["priority"]["quadrant"] == "AVOID"]
+    qw_hours = sum(m["complexity"]["estimated_hours"] for m in quick_wins)
+    mj_hours = sum(m["complexity"]["estimated_hours"] for m in major)
+
+    body = f"""
+<div class="hero" style="border-color:var(--accent)">
+    <p style="color:var(--accent);font-size:11px;text-transform:uppercase;letter-spacing:3px;margin-bottom:12px">MIGRATION PLAN</p>
+    <h1>{name}</h1>
+    <p class="subtitle">{company} — Generated {date}</p>
+    <div class="grid" style="max-width:800px;margin:24px auto 0">
+        <div class="metric"><div class="metric-value" style="color:var(--accent)">{summary['total_modules']}</div><div class="metric-label">Modules</div></div>
+        <div class="metric"><div class="metric-value" style="color:var(--accent)">{summary['total_hours']:,}h</div><div class="metric-label">Estimated Effort</div></div>
+        <div class="metric"><div class="metric-value" style="color:var(--{'red' if summary['critical_blockers'] > 0 else 'green'})">{summary['critical_blockers']}</div><div class="metric-label">Critical Blockers</div></div>
+        <div class="metric"><div class="metric-value" style="color:var(--accent2)">{len(summary['erp_integrations'])}</div><div class="metric-label">ERP Integrations</div></div>
+    </div>
+</div>
+
+<h2>Executive Summary</h2>
+<div class="card">
+    <table style="margin:0">
+        <tr><td><strong>Current Platform</strong></td><td>{', '.join(summary['current_frameworks']) or 'NOT DETECTED'}</td></tr>
+        <tr><td><strong>Target Framework</strong></td><td>{_e(summary['target_framework'])}</td></tr>
+        <tr><td><strong>Target Platform</strong></td><td>{_e(summary['target_platform']).title()}</td></tr>
+        <tr><td><strong>Total Modules</strong></td><td>{summary['total_modules']}</td></tr>
+        <tr><td><strong>Estimated Effort</strong></td><td>{summary['total_hours']:,} hours (~{summary['total_weeks']} weeks)</td></tr>
+        <tr><td><strong>Quick Wins</strong></td><td>{len(quick_wins)} modules ({qw_hours}h)</td></tr>
+        <tr><td><strong>Major Projects</strong></td><td>{len(major)} modules ({mj_hours}h)</td></tr>
+        <tr><td><strong>Defer/Avoid</strong></td><td>{len(defer)} modules</td></tr>
+        <tr><td><strong>Critical Blockers</strong></td><td><span class="badge badge-{'red' if summary['critical_blockers'] > 0 else 'green'}">{summary['critical_blockers']}</span></td></tr>
+        <tr><td><strong>ERP Integrations</strong></td><td>{', '.join(summary['erp_integrations']) or 'None detected'}</td></tr>
+    </table>
+</div>
+
+<h2>Migration Blockers ({len(plan['blockers'])})</h2>
+{"<div class='warn'><strong>Resolve blockers before starting migration.</strong></div>" if plan['blockers'] else ""}
+{"<table><tr><th>Severity</th><th>Type</th><th>Description</th><th>Recommendation</th><th>Files</th></tr>" + blocker_rows + "</table>" if blocker_rows else '<p class="badge badge-green">No blockers detected.</p>'}
+
+<h2>Module Inventory &amp; Priority Matrix</h2>
+<div class="note">
+    <strong>Priority quadrants:</strong>
+    <span class="badge badge-green">QUICK WIN</span> High value, low effort — migrate first.
+    <span class="badge badge-yellow">MAJOR PROJECT</span> High value, high effort — plan carefully.
+    <span class="badge badge-blue">FILL IN</span> Low value, low effort — fit between phases.
+    <span class="badge badge-red">AVOID</span> Low value, high effort — don't migrate.
+</div>
+<table>
+    <tr><th>Module</th><th>Files</th><th>Endpoints</th><th>Complexity</th><th>Effort</th><th>Hours</th><th>Priority</th></tr>
+    {module_rows}
+</table>
+
+<h2>Phased Migration Roadmap</h2>
+<div class="note">
+    <strong>Pattern:</strong> Strangler Fig — run legacy + modern side-by-side via YARP reverse proxy.<br>
+    <strong>Migration order:</strong> Read-only lookups → Admin pages → Revenue-critical transactions.<br>
+    <strong>Rollback:</strong> Proxy config change (&lt; 1 minute).
+</div>
+{phases_html}
+
+{"<h2>ERP Integration Plans</h2>" + erp_html if erp_html else ""}
+
+<h2>Recommended Architecture</h2>
+<div class="card">
+    <h3 style="margin-top:0">Hybrid Period (Legacy + Modern)</h3>
+    <pre style="color:var(--fg2);font-size:12px">
+┌─────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│   Clients   │────▶│   YARP Reverse   │────▶│  Modern App      │
+│  (Browser)  │     │     Proxy        │     │  (API + SPA)     │
+└─────────────┘     └────────┬─────────┘     └──────────────────┘
+                             │
+                             │ routes not yet migrated
+                             ▼
+                    ┌──────────────────┐
+                    │   Legacy App     │
+                    │  (MVC/WinForms)  │
+                    └──────────────────┘
+    </pre>
+    <p class="evidence">System.Web Adapters share session/auth between old and new.</p>
+    <p class="evidence">Feature flags toggle between old/new endpoints per environment.</p>
+</div>
+
+{"<div class='card'><h3 style=\"margin-top:0\">ERP Integration Architecture</h3><pre style=\"color:var(--fg2);font-size:12px\">" + """
+┌──────────────┐     ┌──────────────────┐     ┌─────────────┐
+│  Modern App  │────▶│  API Gateway     │────▶│  SAP        │
+│  (API)       │     │  (Auth + Rate    │     │  (OData/RFC)│
+└──────────────┘     │   Limiting)      │     └─────────────┘
+                     │                  │
+                     │                  │────▶┌─────────────┐
+                     │                  │     │  TOTVS      │
+                     └──────────────────┘     │  (REST API) │
+                                              └─────────────┘
+""" + "</pre><p class='evidence'>Anti-pattern: avoid point-to-point integrations. Use API Gateway for centralized auth and monitoring.</p></div>" if plan.get("erp_plans") else ""}
+
+<h2>Effort Estimates</h2>
+<div class="card">
+    <table style="margin:0">
+        <tr><th>Category</th><th>Modules</th><th>Hours</th><th>Weeks (1 dev)</th></tr>
+        <tr><td><span class="badge badge-green">Quick Wins</span></td><td>{len(quick_wins)}</td><td>{qw_hours}</td><td>{max(1, qw_hours // 40)}</td></tr>
+        <tr><td><span class="badge badge-yellow">Major Projects</span></td><td>{len(major)}</td><td>{mj_hours}</td><td>{max(1, mj_hours // 40)}</td></tr>
+        <tr><td><strong>TOTAL</strong></td><td><strong>{summary['total_modules']}</strong></td><td><strong>{summary['total_hours']:,}</strong></td><td><strong>{summary['total_weeks']}</strong></td></tr>
+    </table>
+    <p class="evidence" style="margin-top:12px">Estimates based on complexity score × calibration factor (8h/story point). [VERIFY] — calibrate with team velocity.</p>
+</div>
+
+<h2>Recommendations</h2>
+<div class="card">
+    <ol>
+        <li><strong>Start with Quick Wins</strong> — {len(quick_wins)} modules, {qw_hours}h. Build confidence and momentum.</li>
+        <li><strong>Resolve critical blockers first</strong> — {summary['critical_blockers']} blockers must be addressed before migration.</li>
+        <li><strong>Extract shared logic</strong> — Move DAL/BLL to .NET Standard 2.0 library shared by legacy and modern.</li>
+        <li><strong>Use Strangler Fig pattern</strong> — YARP proxy for route-by-route migration with instant rollback.</li>
+        <li><strong>Don't migrate ghost features</strong> — {len(defer)} modules flagged as low-value. Validate usage before migrating.</li>
+        {"<li><strong>Plan ERP integration early</strong> — " + ', '.join(summary['erp_integrations']) + " detected. Set up API Gateway and auth before module migration.</li>" if summary['erp_integrations'] else ""}
+    </ol>
+</div>
+
+<h2>Next Steps</h2>
+<div class="note">
+    <ol>
+        <li>[MANUAL] — Validate module priority with product owner (business value may differ from code analysis)</li>
+        <li>[MANUAL] — Calibrate effort estimates with team velocity (hours per story point)</li>
+        <li>[MANUAL] — Define target platform and framework (React, Blazor, Angular)</li>
+        <li>[MANUAL] — Set up YARP proxy and System.Web Adapters for hybrid period</li>
+        {"<li>[MANUAL] — Obtain ERP API credentials and test connectivity (" + ', '.join(summary['erp_integrations']) + ")</li>" if summary['erp_integrations'] else ""}
+        <li>[MANUAL] — Define success metrics and rollback criteria per phase</li>
+    </ol>
+</div>
+"""
+    return _wrap_html(f"{name} — Migration Plan", body)

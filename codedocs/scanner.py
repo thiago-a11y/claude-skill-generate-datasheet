@@ -72,6 +72,20 @@ def scan(project_path, progress_callback=None):
         "health": {"todos": 0, "todo_items": [], "loc": 0},
         "dependencies": {"manager": "NOT DETECTED", "total": 0, "items": []},
         "existing_docs": [],
+        "migration": {
+            "blockers": [],
+            "frameworks": [],
+            "target_framework": "NOT DETECTED",
+            "views": {"razor": 0, "aspx": 0, "cshtml": 0},
+            "ef_version": "NOT DETECTED",
+            "has_edmx": False,
+            "stored_procedures": 0,
+            "com_interop": [],
+            "pinvoke": [],
+            "system_web": [],
+            "system_drawing": [],
+            "configs": [],
+        },
     }
 
     steps = [
@@ -87,6 +101,7 @@ def scan(project_path, progress_callback=None):
         ("Scanning code health", _scan_health),
         ("Scanning dependencies", _scan_dependencies),
         ("Scanning existing docs", _scan_docs),
+        ("Scanning migration blockers", _scan_migration),
     ]
 
     for i, (label, fn) in enumerate(steps):
@@ -368,3 +383,178 @@ def _scan_dependencies(data, cwd):
 def _scan_docs(data, cwd):
     out = _run("find . -name '*.md' -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/vendor/*' | sort | head -30", cwd)
     data["existing_docs"] = _lines(out)
+
+
+def _scan_migration(data, cwd):
+    inc_cs = "--include='*.cs' --include='*.csproj' --include='*.sln' --include='*.config'"
+    inc_all = "--include='*.cs' --include='*.ts' --include='*.js' --include='*.py' --include='*.php' --include='*.go' --include='*.java'"
+
+    # .NET target framework
+    tf = _run(f"grep -rn 'TargetFramework\\|TargetFrameworkVersion' --include='*.csproj' 2>/dev/null | head -5", cwd)
+    for line in _lines(tf):
+        match = re.search(r'>(net\S+|v\d+\.\d+)<', line)
+        if match:
+            data["migration"]["target_framework"] = match.group(1)
+            break
+
+    # MVC controllers
+    controllers = _run(f"grep -rln 'Controller\\|\\[HttpGet\\]\\|\\[HttpPost\\]\\|\\[Route\\]\\|\\[ApiController\\]' --include='*.cs' 2>/dev/null | grep -v bin | grep -v obj | head -30", cwd)
+    if _lines(controllers):
+        data["migration"]["frameworks"].append({"name": "ASP.NET MVC/API", "files": _lines(controllers)})
+
+    # Web Forms
+    aspx = _run("find . -name '*.aspx' -o -name '*.ascx' -o -name '*.master' | grep -v bin | grep -v obj | wc -l", cwd)
+    aspx_count = _count_lines(aspx)
+    if aspx_count > 0:
+        data["migration"]["views"]["aspx"] = aspx_count
+        data["migration"]["frameworks"].append({"name": "Web Forms", "files": _lines(_run("find . -name '*.aspx' | head -20", cwd))})
+        data["migration"]["blockers"].append({
+            "type": "WEB_FORMS", "severity": "HIGH",
+            "description": f"{aspx_count} Web Forms pages — no direct .NET Core equivalent",
+            "recommendation": "Strangler Fig pattern: YARP proxy + migrate page by page",
+            "files_affected": aspx_count,
+        })
+
+    # Razor views
+    cshtml = _run("find . -name '*.cshtml' | grep -v bin | grep -v obj | wc -l", cwd)
+    data["migration"]["views"]["cshtml"] = _count_lines(cshtml)
+    razor = _run("find . -name '*.razor' | grep -v bin | grep -v obj | wc -l", cwd)
+    data["migration"]["views"]["razor"] = _count_lines(razor)
+
+    # WinForms
+    winforms = _run(f"grep -rln 'System\\.Windows\\.Forms\\|InitializeComponent\\|partial class.*Form' --include='*.cs' 2>/dev/null | grep -v bin | grep -v obj | head -20", cwd)
+    if _lines(winforms):
+        data["migration"]["frameworks"].append({"name": "WinForms", "files": _lines(winforms)})
+        data["migration"]["blockers"].append({
+            "type": "WINFORMS", "severity": "HIGH",
+            "description": f"{len(_lines(winforms))} WinForms files — UI tightly coupled to business logic",
+            "recommendation": "Extract business logic to shared library, rewrite UI in web framework",
+            "files_affected": len(_lines(winforms)),
+        })
+
+    # WPF
+    wpf = _run("find . -name '*.xaml' | grep -v bin | grep -v obj | wc -l", cwd)
+    if _count_lines(wpf) > 0:
+        data["migration"]["frameworks"].append({"name": "WPF", "files": _lines(_run("find . -name '*.xaml' | head -20", cwd))})
+
+    # Entity Framework
+    ef6 = _run(f"grep -rln 'DbContext\\|DbSet\\|ObjectContext\\|EntityFramework' --include='*.cs' --include='*.config' --include='*.csproj' 2>/dev/null | grep -v bin | grep -v obj | head -15", cwd)
+    if _lines(ef6):
+        edmx = _run("find . -name '*.edmx' | grep -v bin | wc -l", cwd)
+        data["migration"]["has_edmx"] = _count_lines(edmx) > 0
+        if _count_lines(edmx) > 0:
+            data["migration"]["ef_version"] = "EF6 (EDMX)"
+            data["migration"]["blockers"].append({
+                "type": "EF6_EDMX", "severity": "MEDIUM",
+                "description": f"{_count_lines(edmx)} EDMX files — conceptual break migrating to EF Core",
+                "recommendation": "Migrate to EF Core Code-First with DbContext",
+                "files_affected": _count_lines(edmx),
+            })
+        else:
+            efcore = _run(f"grep -rln 'Microsoft\\.EntityFrameworkCore' --include='*.cs' --include='*.csproj' 2>/dev/null | head -5", cwd)
+            data["migration"]["ef_version"] = "EF Core" if _lines(efcore) else "EF6 (Code-First)"
+
+    # Stored procedures
+    sp = _run(f"grep -rn 'StoredProcedure\\|EXEC\\s\\|EXECUTE\\s\\|sp_\\|usp_\\|CommandType\\.StoredProcedure' --include='*.cs' --include='*.sql' --include='*.php' --include='*.py' 2>/dev/null | grep -v bin | grep -v obj | wc -l", cwd)
+    data["migration"]["stored_procedures"] = _count_lines(sp)
+    if _count_lines(sp) > 5:
+        data["migration"]["blockers"].append({
+            "type": "STORED_PROCEDURES", "severity": "MEDIUM",
+            "description": f"{_count_lines(sp)} stored procedure references — business logic trapped in DB",
+            "recommendation": "Extract SP logic to service layer before migration",
+            "files_affected": _count_lines(sp),
+        })
+
+    # COM Interop
+    com = _run(f"grep -rn 'DllImport\\|ComImport\\|TypeLib\\|Interop\\|Marshal\\.' --include='*.cs' 2>/dev/null | grep -v bin | grep -v obj | head -20", cwd)
+    for line in _lines(com):
+        parts = line.split(":", 2)
+        if len(parts) >= 3:
+            data["migration"]["com_interop"].append({"file": parts[0].lstrip("./"), "line": parts[1], "content": parts[2].strip()[:100]})
+    if data["migration"]["com_interop"]:
+        data["migration"]["blockers"].append({
+            "type": "COM_INTEROP", "severity": "CRITICAL",
+            "description": f"{len(data['migration']['com_interop'])} COM/Interop references — Windows-only, blocks containerization",
+            "recommendation": "Create wrapper service or replace with managed alternatives",
+            "files_affected": len(data["migration"]["com_interop"]),
+        })
+
+    # P/Invoke
+    pinvoke = _run(f"grep -rn 'DllImport.*kernel32\\|DllImport.*user32\\|DllImport.*gdi32\\|DllImport.*advapi32\\|DllImport.*shell32' --include='*.cs' 2>/dev/null | grep -v bin | grep -v obj | head -20", cwd)
+    for line in _lines(pinvoke):
+        parts = line.split(":", 2)
+        if len(parts) >= 3:
+            data["migration"]["pinvoke"].append({"file": parts[0].lstrip("./"), "line": parts[1], "content": parts[2].strip()[:100]})
+    if data["migration"]["pinvoke"]:
+        data["migration"]["blockers"].append({
+            "type": "PINVOKE", "severity": "CRITICAL",
+            "description": f"{len(data['migration']['pinvoke'])} P/Invoke calls — blocks Linux/container deployment",
+            "recommendation": "Replace with cross-platform .NET APIs or isolate in Windows-only service",
+            "files_affected": len(data["migration"]["pinvoke"]),
+        })
+
+    # System.Web
+    sysweb = _run(f"grep -rln 'System\\.Web\\|HttpContext\\.Current\\|HttpApplication' --include='*.cs' 2>/dev/null | grep -v bin | grep -v obj | head -30", cwd)
+    data["migration"]["system_web"] = _lines(sysweb)
+    if data["migration"]["system_web"]:
+        data["migration"]["blockers"].append({
+            "type": "SYSTEM_WEB", "severity": "HIGH",
+            "description": f"{len(data['migration']['system_web'])} files use System.Web — not available in .NET Core",
+            "recommendation": "Use System.Web Adapters for incremental migration",
+            "files_affected": len(data["migration"]["system_web"]),
+        })
+
+    # System.Drawing
+    sysdraw = _run(f"grep -rln 'System\\.Drawing\\|System\\.Drawing\\.Common' --include='*.cs' --include='*.csproj' 2>/dev/null | grep -v bin | grep -v obj | head -10", cwd)
+    data["migration"]["system_drawing"] = _lines(sysdraw)
+    if data["migration"]["system_drawing"]:
+        data["migration"]["blockers"].append({
+            "type": "SYSTEM_DRAWING", "severity": "MEDIUM",
+            "description": f"{len(data['migration']['system_drawing'])} files use System.Drawing — Windows-only in .NET 6+",
+            "recommendation": "Replace with SixLabors.ImageSharp (cross-platform)",
+            "files_affected": len(data["migration"]["system_drawing"]),
+        })
+
+    # Config files
+    configs = []
+    for cfg in ["web.config", "app.config", "appsettings.json", "Startup.cs", "Program.cs", "Global.asax"]:
+        found = _run(f"find . -name '{cfg}' -not -path '*/bin/*' -not -path '*/obj/*' | head -5", cwd)
+        if _lines(found):
+            configs.extend(_lines(found))
+    data["migration"]["configs"] = configs
+
+    # NuGet packages from .csproj
+    if data["dependencies"]["manager"] == "NOT DETECTED":
+        csproj = _run("find . -name '*.csproj' -not -path '*/bin/*' -not -path '*/obj/*' | head -5", cwd)
+        for proj_file in _lines(csproj):
+            content = _run(f"cat '{proj_file}'", cwd)
+            pkgs = re.findall(r'<PackageReference\s+Include="([^"]+)"\s+Version="([^"]+)"', content)
+            for name, version in pkgs:
+                data["dependencies"]["items"].append({"name": name, "version": version})
+        if data["dependencies"]["items"]:
+            data["dependencies"]["manager"] = "NuGet"
+            data["dependencies"]["total"] = len(data["dependencies"]["items"])
+
+    # packages.config (older .NET)
+    if data["dependencies"]["manager"] == "NOT DETECTED":
+        pkgcfg = _run("find . -name 'packages.config' -not -path '*/bin/*' | head -3", cwd)
+        for cfg_file in _lines(pkgcfg):
+            content = _run(f"cat '{cfg_file}'", cwd)
+            pkgs = re.findall(r'id="([^"]+)"\s+version="([^"]+)"', content)
+            for name, version in pkgs:
+                data["dependencies"]["items"].append({"name": name, "version": version})
+        if data["dependencies"]["items"]:
+            data["dependencies"]["manager"] = "NuGet (packages.config)"
+            data["dependencies"]["total"] = len(data["dependencies"]["items"])
+
+    # ERP-specific patterns
+    erp_patterns = {
+        "SAP": "sap\\|SAP\\|BAPI\\|RFC\\|SapNco\\|SAPConnector",
+        "TOTVS": "totvs\\|TOTVS\\|protheus\\|Protheus\\|advpl\\|ADVPL",
+        "Oracle ERP": "oracle.*erp\\|OracleERP\\|fusion.*cloud",
+    }
+    for erp_name, pattern in erp_patterns.items():
+        erp_found = _run(f"grep -rln '{pattern}' {inc_all} --include='*.config' --include='*.json' --include='*.xml' 2>/dev/null | grep -v node_modules | grep -v vendor | grep -v bin | grep -v obj | head -5", cwd)
+        if _lines(erp_found):
+            if not any(i["service"] == erp_name for i in data["integrations"]):
+                data["integrations"].append({"service": erp_name, "file": _lines(erp_found)[0].lstrip("./"), "line": "—"})
