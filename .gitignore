@@ -6,3 +6,6 @@ __pycache__/
 # Marketing / internal tooling (not user-facing)
 scripts/
 launch-post-*
+
+# CodeDocs output
+codedocs-output/
