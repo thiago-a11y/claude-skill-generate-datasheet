@@ -53,7 +53,37 @@ EXCLUDE_DIRS = {
     ".claude", "worktrees",
 }
 
-GREP_EXCLUDE = "--exclude-dir=node_modules --exclude-dir=vendor --exclude-dir=.git --exclude-dir=dist --exclude-dir=build --exclude-dir=__pycache__ --exclude-dir=.claude --exclude-dir=worktrees --exclude-dir=bin --exclude-dir=obj --exclude-dir=.next --exclude-dir=.nuxt --exclude-dir=target --exclude-dir=venv --exclude-dir=.venv"
+GREP_EXCLUDE = " ".join(f"--exclude-dir={d}" for d in [
+    "node_modules", "vendor", ".git", "dist", "build", "__pycache__",
+    ".claude", "worktrees", "bin", "obj", ".next", ".nuxt", "target",
+    "venv", ".venv", "deploy-*", "DEPLOY-*",
+]) + " --exclude='index-*.js' --exclude='*.min.js' --exclude='*.bundle.js' --exclude='*.chunk.js'"
+
+FIND_EXCLUDE = "| grep -v node_modules | grep -v vendor | grep -v '/.git/' | grep -v __pycache__ | grep -v '/dist/' | grep -v '/.claude/' | grep -v '/worktrees/' | grep -v '/bin/' | grep -v '/obj/' | grep -v '/deploy-' | grep -v '/DEPLOY-' | grep -v 'index-.*\\.js$' | grep -v '\\.min\\.js$'"
+
+
+def _detect_project_name(cwd):
+    pkg = os.path.join(cwd, "package.json")
+    if os.path.exists(pkg):
+        import json as _json
+        try:
+            with open(pkg, "r", encoding="utf-8") as f:
+                pkg_data = _json.load(f)
+            name = pkg_data.get("name", "")
+            if name and name != "." and len(name) > 1:
+                return name
+        except (ValueError, IOError):
+            pass
+    readme = os.path.join(cwd, "README.md")
+    if os.path.exists(readme):
+        try:
+            with open(readme, "r", encoding="utf-8") as f:
+                first_line = f.readline().strip()
+            if first_line.startswith("# "):
+                return first_line[2:].strip()
+        except IOError:
+            pass
+    return None
 
 
 def scan(project_path, progress_callback=None):
@@ -61,8 +91,10 @@ def scan(project_path, progress_callback=None):
     if not p.exists():
         raise FileNotFoundError(f"Path not found: {p}")
 
+    project_name = _detect_project_name(str(p)) or p.name
+
     data = {
-        "project": {"name": p.name, "path": str(p), "scan_date": datetime.now().strftime("%Y-%m-%d %H:%M")},
+        "project": {"name": project_name, "path": str(p), "scan_date": datetime.now().strftime("%Y-%m-%d %H:%M")},
         "languages": {},
         "structure": [],
         "endpoints": [],
@@ -119,7 +151,7 @@ def _scan_languages(data, cwd):
     for lang, exts in LANG_EXTENSIONS.items():
         for ext in exts:
             find_cmd = f"find . -name '*{ext}' -not -path '*/{'/'.join(f'-not -path \"*/{d}/*\"' for d in EXCLUDE_DIRS).replace('-not -path ', '')}'"
-            simple_cmd = f"find . -name '*{ext}' | grep -v node_modules | grep -v vendor | grep -v '.git/' | grep -v __pycache__ | grep -v '/dist/' | grep -v '/.claude/' | grep -v '/worktrees/' | grep -v '/bin/' | grep -v '/obj/'"
+            simple_cmd = f"find . -name '*{ext}' {FIND_EXCLUDE}"
             out = _run(simple_cmd, cwd)
             files = _lines(out)
             if files:
@@ -179,11 +211,15 @@ def _scan_endpoints(data, cwd):
 
     # PHP file-based routing (api/*.php, no framework router)
     php_api_files = _run(
-        f"find . -path '*/api/*.php' -o -path '*/api/*/*.php' | grep -v node_modules | grep -v vendor | grep -v '.git/' | grep -v dist | grep -v '.claude/' | grep -v worktrees | sort",
+        f"find . -path '*/api/*.php' -o -path '*/api/*/*.php' {FIND_EXCLUDE} | sort",
         cwd,
     )
+    endpoint_skip = {".env", "config", "install", "migrate", "setup", "seed", "helper", "middleware", "test"}
     for filepath in _lines(php_api_files):
         filepath = filepath.lstrip("./")
+        basename = os.path.basename(filepath).replace(".php", "").lower()
+        if any(skip in basename for skip in endpoint_skip):
+            continue
         if any(filepath == ep["file"] for ep in data["endpoints"]):
             continue
         method = "API"
@@ -240,14 +276,14 @@ def _scan_database(data, cwd):
 
 
 def _scan_auth(data, cwd):
-    include = "--include='*.ts' --include='*.js' --include='*.py' --include='*.php' --include='*.go' --include='*.java'"
+    include = "--include='*.ts' --include='*.py' --include='*.php' --include='*.go' --include='*.java'"
 
-    jwt = _run(f"grep -rln 'jwt\\|JWT\\|jsonwebtoken\\|jose' {include} 2>/dev/null | grep -v node_modules | head -10", cwd)
-    oauth = _run(f"grep -rln 'oauth\\|OAuth\\|passport' {include} 2>/dev/null | grep -v node_modules | head -10", cwd)
-    session = _run(f"grep -rln 'session\\|cookie.*auth\\|express-session' {include} 2>/dev/null | grep -v node_modules | head -10", cwd)
-    apikey = _run(f"grep -rln 'api.key\\|apiKey\\|x-api-key\\|API_KEY' {include} 2>/dev/null | grep -v node_modules | head -10", cwd)
-    mfa = _run(f"grep -rln 'totp\\|2fa\\|mfa\\|two.factor\\|authenticator' {include} 2>/dev/null | grep -v node_modules | head -5", cwd)
-    rbac = _run(f"grep -rln 'role\\|permission\\|isAdmin\\|authorize\\|hasRole\\|guard' {include} 2>/dev/null | grep -v node_modules | head -10", cwd)
+    jwt = _run(f"grep -rln 'jwt\\|JWT\\|jsonwebtoken\\|jose' {include} {GREP_EXCLUDE} 2>/dev/null | head -10", cwd)
+    oauth = _run(f"grep -rln 'oauth\\|OAuth\\|passport' {include} {GREP_EXCLUDE} 2>/dev/null | head -10", cwd)
+    session = _run(f"grep -rln 'session\\|cookie.*auth\\|express-session' {include} {GREP_EXCLUDE} 2>/dev/null | head -10", cwd)
+    apikey = _run(f"grep -rln 'api.key\\|apiKey\\|x-api-key\\|API_KEY' {include} {GREP_EXCLUDE} 2>/dev/null | head -10", cwd)
+    mfa = _run(f"grep -rln 'totp\\|2fa\\|mfa\\|two.factor\\|authenticator' {include} {GREP_EXCLUDE} 2>/dev/null | head -5", cwd)
+    rbac = _run(f"grep -rln 'role\\|permission\\|isAdmin\\|authorize\\|hasRole\\|guard' {include} {GREP_EXCLUDE} 2>/dev/null | head -10", cwd)
 
     if _lines(jwt):
         data["auth"]["method"] = "JWT"
@@ -267,7 +303,7 @@ def _scan_auth(data, cwd):
 
 
 def _scan_security(data, cwd):
-    include = "--include='*.ts' --include='*.js' --include='*.py' --include='*.php' --include='*.go' --include='*.conf'"
+    include = "--include='*.ts' --include='*.py' --include='*.php' --include='*.go' --include='*.conf'"
     checks = {
         "cors": "cors\\|Access-Control-Allow",
         "helmet": "helmet\\|security.headers",
@@ -280,43 +316,60 @@ def _scan_security(data, cwd):
         "security_headers": "X-Frame-Options\\|X-Content-Type\\|Content-Security-Policy\\|Referrer-Policy",
     }
     for control, pattern in checks.items():
-        out = _run(f"grep -rln '{pattern}' {include} 2>/dev/null | grep -v node_modules | grep -v vendor | grep -v '/dist/' | grep -v '/.claude/' | grep -v '/worktrees/' | head -5", cwd)
+        out = _run(f"grep -rln '{pattern}' {include} {GREP_EXCLUDE} 2>/dev/null | head -5", cwd)
         files = _lines(out)
         data["security"][control] = {"detected": len(files) > 0, "files": files}
 
 
+INTEGRATION_IGNORE_DOMAINS = {
+    "radix-ui.com", "shadcn.com", "tailwindcss.com", "fonts.googleapis.com",
+    "cdn.jsdelivr.net", "unpkg.com", "cdnjs.cloudflare.com",
+    "seusite.com", "exemplo.com", "example.com", "empresa.com.br",
+    "www.empresa.com", "your-domain.com", "localhost",
+    "placeholder.com", "test.com", "foo.com", "bar.com",
+}
+
+INTEGRATION_IGNORE_FILES = {"index-", ".min.js", ".bundle.js", ".chunk.js"}
+
+
 def _scan_integrations(data, cwd):
-    include = "--include='*.ts' --include='*.js' --include='*.py' --include='*.php' --include='*.go' --include='*.env*'"
+    include = "--include='*.ts' --include='*.js' --include='*.py' --include='*.php' --include='*.go'"
     out = _run(
-        f"grep -rn 'https://.*api\\|amazonaws\\|googleapis\\|graph\\.facebook\\|api\\.openai\\|api\\.anthropic\\|stripe\\|twilio\\|sendgrid\\|mailgun\\|api\\.slack\\|mqtt\\|rabbitmq\\|redis\\|sap\\|oracle' {include} 2>/dev/null | grep -v node_modules | grep -v vendor | grep -v '/dist/' | grep -v '/.claude/' | grep -v '/worktrees/' | head -40",
+        f"grep -rn 'https://.*api\\|amazonaws\\|googleapis\\|graph\\.facebook\\|api\\.openai\\|api\\.anthropic\\|stripe\\|twilio\\|sendgrid\\|mailgun\\|api\\.slack\\|mqtt\\|rabbitmq\\|redis' {include} {GREP_EXCLUDE} 2>/dev/null | head -40",
         cwd,
     )
     seen = set()
     for line in _lines(out):
         parts = line.split(":", 2)
         if len(parts) >= 3:
+            filepath = parts[0].lstrip("./")
+            if any(ign in filepath for ign in INTEGRATION_IGNORE_FILES):
+                continue
             content = parts[2].strip()
             url_match = re.search(r'(https?://[^\s\'"<>]+)', content)
             if url_match:
                 domain = url_match.group(1).split("/")[2] if len(url_match.group(1).split("/")) > 2 else url_match.group(1)
-                if domain not in seen:
-                    seen.add(domain)
-                    data["integrations"].append({
-                        "service": domain,
-                        "file": parts[0].lstrip("./"),
-                        "line": parts[1],
-                    })
+                if domain in INTEGRATION_IGNORE_DOMAINS or domain in seen:
+                    continue
+                if "," in domain:
+                    domain = domain.split(",")[0]
+                seen.add(domain)
+                data["integrations"].append({
+                    "service": domain,
+                    "file": filepath,
+                    "line": parts[1],
+                })
 
     keywords = {
         "stripe": "Stripe", "twilio": "Twilio", "sendgrid": "SendGrid",
         "mailgun": "Mailgun", "sentry": "Sentry", "datadog": "Datadog",
-        "firebase": "Firebase", "supabase": "Supabase", "aws": "AWS",
-        "sap": "SAP", "oracle": "Oracle", "mqtt": "MQTT", "redis": "Redis",
+        "firebase": "Firebase", "supabase": "Supabase",
+        "mqtt": "MQTT", "redis": "Redis",
         "rabbitmq": "RabbitMQ", "kafka": "Kafka",
     }
     for kw, name in keywords.items():
         if not any(name.lower() in i["service"].lower() for i in data["integrations"]):
-            check = _run(f"grep -rln '{kw}' --include='*.ts' --include='*.js' --include='*.py' --include='*.php' --include='*.go' --include='*.yml' --include='*.yaml' --include='*.json' 2>/dev/null | grep -v node_modules | grep -v vendor | grep -v '/dist/' | grep -v '/.claude/' | grep -v '/worktrees/' | head -3", cwd)
+            check = _run(f"grep -rln '{kw}' --include='*.ts' --include='*.py' --include='*.php' --include='*.go' --include='*.yml' --include='*.yaml' {GREP_EXCLUDE} 2>/dev/null | head -3", cwd)
             files = _lines(check)
             if files:
                 data["integrations"].append({"service": name, "file": files[0].lstrip("./"), "line": "—"})
@@ -374,15 +427,15 @@ def _scan_dependencies(data, cwd):
 
     if os.path.exists(pkg):
         data["dependencies"]["manager"] = "npm"
-        out = _run("cat package.json", cwd)
-        deps = re.findall(r'"([^"]+)":\s*"([^"]+)"', out)
-        in_deps = False
-        for name, version in deps:
-            if name in ("dependencies", "devDependencies"):
-                in_deps = True
-                continue
-            if in_deps and not name.startswith("@"):
-                data["dependencies"]["items"].append({"name": name, "version": version})
+        import json as _json
+        try:
+            with open(pkg, "r", encoding="utf-8") as f:
+                pkg_data = _json.load(f)
+            for section in ("dependencies", "devDependencies"):
+                for name, version in pkg_data.get(section, {}).items():
+                    data["dependencies"]["items"].append({"name": name, "version": version})
+        except (ValueError, KeyError, IOError):
+            pass
         data["dependencies"]["total"] = len(data["dependencies"]["items"])
 
     elif os.path.exists(composer):
