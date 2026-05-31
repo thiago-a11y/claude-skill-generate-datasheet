@@ -306,7 +306,7 @@ def _scan_security(data, cwd):
     include = "--include='*.ts' --include='*.py' --include='*.php' --include='*.go' --include='*.conf'"
     checks = {
         "cors": "cors\\|Access-Control-Allow",
-        "helmet": "helmet\\|security.headers",
+        "security_middleware": "helmet\\|security.headers\\|header.*X-Frame\\|header.*X-Content\\|header.*Strict-Transport",
         "csrf": "csrf\\|CSRF\\|xsrf",
         "rate_limiting": "rate.limit\\|throttle\\|RateLimit",
         "input_validation": "sanitize\\|escape\\|htmlspecialchars\\|validator\\|joi\\|zod\\|yup",
@@ -369,8 +369,8 @@ def _scan_integrations(data, cwd):
     }
     for kw, name in keywords.items():
         if not any(name.lower() in i["service"].lower() for i in data["integrations"]):
-            check = _run(f"grep -rln '{kw}' --include='*.ts' --include='*.py' --include='*.php' --include='*.go' --include='*.yml' --include='*.yaml' {GREP_EXCLUDE} 2>/dev/null | head -3", cwd)
-            files = _lines(check)
+            check = _run(f"grep -rln '{kw}' --include='*.ts' --include='*.py' --include='*.php' --include='*.go' --include='*.yml' --include='*.yaml' {GREP_EXCLUDE} 2>/dev/null | head -5", cwd)
+            files = [f for f in _lines(check) if not any(ign in f for ign in INTEGRATION_IGNORE_FILES)]
             if files:
                 data["integrations"].append({"service": name, "file": files[0].lstrip("./"), "line": "—"})
 
@@ -630,17 +630,18 @@ def _scan_migration(data, cwd):
             data["dependencies"]["manager"] = "NuGet (packages.config)"
             data["dependencies"]["total"] = len(data["dependencies"]["items"])
 
-    # ERP-specific patterns
+    # ERP-specific patterns (only source files, no bundled JS)
     erp_patterns = {
-        "SAP": "sap\\|SAP\\|BAPI\\|RFC\\|SapNco\\|SAPConnector",
-        "TOTVS": "totvs\\|TOTVS\\|protheus\\|Protheus\\|advpl\\|ADVPL",
-        "Oracle ERP": "oracle.*erp\\|OracleERP\\|fusion.*cloud",
+        "SAP": "BAPI\\|SapNco\\|SAPConnector\\|sap\\.client",
+        "TOTVS": "protheus\\|Protheus\\|advpl\\|ADVPL\\|totvs\\.api",
+        "Oracle ERP": "OracleERP\\|fusion.*cloud\\|oracle.*erp",
     }
     for erp_name, pattern in erp_patterns.items():
-        erp_found = _run(f"grep -rln '{pattern}' {inc_all} --include='*.config' --include='*.json' --include='*.xml' 2>/dev/null | grep -v node_modules | grep -v vendor | grep -v bin | grep -v obj | head -5", cwd)
-        if _lines(erp_found):
+        erp_found = _run(f"grep -rln '{pattern}' --include='*.cs' --include='*.php' --include='*.py' --include='*.ts' --include='*.java' --include='*.config' --include='*.xml' {GREP_EXCLUDE} 2>/dev/null | head -5", cwd)
+        files = [f for f in _lines(erp_found) if not any(ign in f for ign in INTEGRATION_IGNORE_FILES)]
+        if files:
             if not any(i["service"] == erp_name for i in data["integrations"]):
-                data["integrations"].append({"service": erp_name, "file": _lines(erp_found)[0].lstrip("./"), "line": "—"})
+                data["integrations"].append({"service": erp_name, "file": files[0].lstrip("./"), "line": "—"})
 
     # Java Spring detection
     spring = _run("grep -rln '@RestController\\|@RequestMapping\\|@SpringBootApplication\\|@Service\\|@Repository' --include='*.java' 2>/dev/null | grep -v target | grep -v build | head -20", cwd)

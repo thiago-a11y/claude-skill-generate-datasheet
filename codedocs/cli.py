@@ -210,6 +210,8 @@ Examples:
         print(f"  {DIM}Open migration-plan.html for the migration roadmap{RESET}")
     print(f"{BOLD}{'═' * 60}{RESET}\n")
 
-    open_file = "scan-report.html"
     if not args.no_browser:
-        webbrowser.open(f"file://{os.path.abspath(os.path.join(output_dir, open_file))}")
+        scan_report_path = os.path.join(output_dir, "scan-report.html")
+        abs_path = os.path.abspath(scan_report_path)
+        if os.path.exists(abs_path):
+            webbrowser.open(f"file://{abs_path}")
