@@ -571,13 +571,65 @@ def _scan_migration(data, cwd):
     if _count_lines(thymeleaf) > 0 or _count_lines(jsp) > 0:
         data["migration"]["frameworks"].append({"name": "Thymeleaf/JSP", "files": []})
 
-    # PHP Laravel detection
+    # PHP detection (all frameworks + procedural)
     laravel = _run("grep -rln 'Illuminate\\\\\\|Route::get\\|Route::post\\|Eloquent\\|extends Model' --include='*.php' 2>/dev/null | grep -v vendor | head -20", cwd)
     if _lines(laravel):
         data["migration"]["frameworks"].append({"name": "Laravel", "files": _lines(laravel)})
     blade = _run("find . -name '*.blade.php' | grep -v vendor | wc -l", cwd)
     if _count_lines(blade) > 0:
         data["migration"]["frameworks"].append({"name": "Blade Templates", "files": []})
+
+    # Symfony
+    symfony = _run("grep -rln 'Symfony\\\\\\|AbstractController\\|@Route\\|#\\[Route' --include='*.php' 2>/dev/null | grep -v vendor | head -20", cwd)
+    if _lines(symfony):
+        data["migration"]["frameworks"].append({"name": "Symfony", "files": _lines(symfony)})
+    twig = _run("find . -name '*.twig' | grep -v vendor | wc -l", cwd)
+    if _count_lines(twig) > 0:
+        data["migration"]["frameworks"].append({"name": "Twig Templates", "files": []})
+
+    # CodeIgniter
+    codeigniter = _run("grep -rln 'CI_Controller\\|CodeIgniter\\|\\$this->load->\\|\\$this->input->' --include='*.php' 2>/dev/null | grep -v vendor | head -20", cwd)
+    if _lines(codeigniter):
+        data["migration"]["frameworks"].append({"name": "CodeIgniter", "files": _lines(codeigniter)})
+
+    # CakePHP
+    cakephp = _run("grep -rln 'CakePHP\\|AppController\\|TableRegistry\\|\\$this->loadModel' --include='*.php' 2>/dev/null | grep -v vendor | head -20", cwd)
+    if _lines(cakephp):
+        data["migration"]["frameworks"].append({"name": "CakePHP", "files": _lines(cakephp)})
+
+    # Procedural PHP (no framework)
+    if not _lines(laravel) and not _lines(symfony) and not _lines(codeigniter) and not _lines(cakephp):
+        php_files = _run("find . -name '*.php' | grep -v vendor | grep -v node_modules | wc -l", cwd)
+        if _count_lines(php_files) > 0:
+            raw_sql = _run("grep -rln 'mysql_query\\|mysqli_query\\|pg_query\\|PDO\\|mysql_connect\\|mysqli_connect' --include='*.php' 2>/dev/null | grep -v vendor | head -20", cwd)
+            data["migration"]["frameworks"].append({"name": "PHP Procedural", "files": _lines(raw_sql) if _lines(raw_sql) else []})
+            if _lines(raw_sql):
+                data["migration"]["blockers"].append({
+                    "type": "PHP_RAW_SQL", "severity": "MEDIUM",
+                    "description": f"{len(_lines(raw_sql))} files with raw SQL (mysql_query/mysqli/PDO) — no ORM, SQL injection risk",
+                    "recommendation": "Migrate to ORM (Prisma/SQLAlchemy/EF Core) with parameterized queries",
+                    "files_affected": len(_lines(raw_sql)),
+                })
+
+    # PHP-specific blockers
+    php_deprecated = _run("grep -rln 'mysql_query\\|mysql_connect\\|ereg\\|split(' --include='*.php' 2>/dev/null | grep -v vendor | head -10", cwd)
+    if _lines(php_deprecated):
+        data["migration"]["blockers"].append({
+            "type": "PHP_DEPRECATED", "severity": "HIGH",
+            "description": f"{len(_lines(php_deprecated))} files use deprecated PHP functions (mysql_*, ereg, split)",
+            "recommendation": "Update to mysqli/PDO, preg_match, explode before cross-platform migration",
+            "files_affected": len(_lines(php_deprecated)),
+        })
+
+    # PHP session/globals
+    php_globals = _run("grep -rln '\\$_SESSION\\|\\$_GLOBALS\\|session_start\\|\\$_REQUEST' --include='*.php' 2>/dev/null | grep -v vendor | head -20", cwd)
+    if _lines(php_globals) and len(_lines(php_globals)) > 5:
+        data["migration"]["blockers"].append({
+            "type": "PHP_SESSIONS", "severity": "MEDIUM",
+            "description": f"{len(_lines(php_globals))} files use PHP sessions/globals — stateful, blocks horizontal scaling",
+            "recommendation": "Migrate to JWT/token-based auth with stateless API architecture",
+            "files_affected": len(_lines(php_globals)),
+        })
 
     # Delphi detection
     delphi = _run("find . -name '*.pas' -o -name '*.dfm' -o -name '*.dpr' -o -name '*.dpk' | wc -l", cwd)

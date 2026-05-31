@@ -322,6 +322,56 @@ TECH_EQUIVALENCES = {
         "vue+fastapi": ("FastAPI Depends + middleware", "GREEN"),
         "go+react": ("Gin middleware", "GREEN"),
     },
+    # PHP Symfony
+    "Symfony Controllers": {
+        "react+fastapi": ("FastAPI router + Pydantic models", "GREEN"),
+        "react+express": ("NestJS controller (decorators)", "GREEN"),
+        "angular+express": ("NestJS controller (decorators)", "GREEN"),
+        "blazor": ("ASP.NET Core Controller", "YELLOW"),
+        "vue+fastapi": ("FastAPI router + Pydantic models", "GREEN"),
+        "go+react": ("Gin handler + struct binding", "GREEN"),
+    },
+    "Twig Templates": {
+        "react+fastapi": ("React TSX components", "GREEN"),
+        "react+express": ("React TSX components", "GREEN"),
+        "angular+express": ("Angular components", "GREEN"),
+        "blazor": ("Razor Components", "YELLOW"),
+        "vue+fastapi": ("Vue 3 SFC (.vue)", "GREEN"),
+        "go+react": ("React TSX components", "GREEN"),
+    },
+    "Doctrine ORM": {
+        "react+fastapi": ("SQLAlchemy or Prisma", "GREEN"),
+        "react+express": ("Prisma ORM or TypeORM", "GREEN"),
+        "angular+express": ("Prisma ORM or TypeORM", "GREEN"),
+        "blazor": ("EF Core", "YELLOW"),
+        "vue+fastapi": ("SQLAlchemy or Prisma", "GREEN"),
+        "go+react": ("GORM", "YELLOW"),
+    },
+    # PHP CodeIgniter / CakePHP / Procedural
+    "CodeIgniter / CakePHP": {
+        "react+fastapi": ("FastAPI router (full rewrite)", "YELLOW"),
+        "react+express": ("Express/NestJS (full rewrite)", "YELLOW"),
+        "angular+express": ("NestJS (full rewrite)", "YELLOW"),
+        "blazor": ("ASP.NET Core (full rewrite)", "RED"),
+        "vue+fastapi": ("FastAPI (full rewrite)", "YELLOW"),
+        "go+react": ("Gin (full rewrite)", "YELLOW"),
+    },
+    "PHP Procedural (raw SQL)": {
+        "react+fastapi": ("FastAPI + SQLAlchemy (full rewrite, add ORM)", "RED"),
+        "react+express": ("Express + Prisma (full rewrite, add ORM)", "RED"),
+        "angular+express": ("NestJS + Prisma (full rewrite)", "RED"),
+        "blazor": ("ASP.NET Core + EF Core (full rewrite)", "RED"),
+        "vue+fastapi": ("FastAPI + SQLAlchemy (full rewrite)", "RED"),
+        "go+react": ("Gin + GORM (full rewrite)", "RED"),
+    },
+    "PHP Sessions / Globals": {
+        "react+fastapi": ("JWT + stateless API (architecture change)", "YELLOW"),
+        "react+express": ("JWT + stateless API", "YELLOW"),
+        "angular+express": ("JWT + stateless API", "YELLOW"),
+        "blazor": ("ASP.NET Core Identity + JWT", "YELLOW"),
+        "vue+fastapi": ("JWT + stateless API", "YELLOW"),
+        "go+react": ("JWT + stateless API", "YELLOW"),
+    },
     # Delphi source
     "Delphi VCL/FMX Forms": {
         "react+fastapi": ("React SPA (extract logic, rewrite UI)", "RED"),
@@ -711,6 +761,15 @@ def _build_equivalence_map(data, target_key):
             detected_techs.add("Laravel Middleware")
         if "Blade" in fw_name:
             detected_techs.add("Blade Templates")
+        if "Symfony" == fw_name:
+            detected_techs.add("Symfony Controllers")
+            detected_techs.add("Doctrine ORM")
+        if "Twig" in fw_name:
+            detected_techs.add("Twig Templates")
+        if fw_name in ("CodeIgniter", "CakePHP"):
+            detected_techs.add("CodeIgniter / CakePHP")
+        if "PHP Procedural" == fw_name:
+            detected_techs.add("PHP Procedural (raw SQL)")
         if "Delphi" in fw_name:
             detected_techs.add("Delphi VCL/FMX Forms")
             detected_techs.add("Delphi ADO/BDE")
@@ -737,6 +796,10 @@ def _build_equivalence_map(data, target_key):
     for blocker in migration.get("blockers", []):
         if blocker.get("type") == "ACTIVEX":
             detected_techs.add("ActiveX Controls")
+        if blocker.get("type") == "PHP_SESSIONS":
+            detected_techs.add("PHP Sessions / Globals")
+        if blocker.get("type") == "PHP_RAW_SQL":
+            detected_techs.add("PHP Procedural (raw SQL)")
 
     result = []
     for tech in TECH_EQUIVALENCES:
