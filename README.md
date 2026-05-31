@@ -3,7 +3,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/thiago-a11y/claude-skill-generate-datasheet?style=flat&color=f59e0b)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/stargazers)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-skill-f59e0b?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PHBhdGggZD0iTTEyIDJMMiAyMmgyMEwxMiAyeiIgZmlsbD0iI2Y1OWUwYiIvPjwvc3ZnPg==)](https://docs.anthropic.com/en/docs/claude-code)
-[![Version](https://img.shields.io/badge/version-4.1.0-green.svg)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/releases)
+[![Version](https://img.shields.io/badge/version-4.1.0_|_CodeDocs_v2.1-green.svg)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/releases)
 [![Skills](https://img.shields.io/badge/skills-4-f59e0b.svg)](#skills-catalog)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#)
 [![Docs Generated](https://img.shields.io/badge/docs_generated-30+_files-purple.svg)](#what-it-generates)

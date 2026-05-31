@@ -6,35 +6,67 @@
 - **Overall Bus Factor: 1** — single contributor across all modules
 - **Risk Level: CRITICAL** — if Thiago Xavier is unavailable, no one can maintain any module
 - **Mitigating factor**: All code is open source (MIT) or source-available (BSL)
+- **Total commits**: ~32 (all by single contributor over 5 days)
 
-## Module Analysis / Análise por Módulo
+## Module Analysis / Analise por Modulo
 <!-- source: git shortlog -sn, git log per directory -->
 
-| Module | Owner | Contributors | Changes (90d) | Tests | Docs | Risk |
-|--------|-------|-------------|---------------|-------|------|------|
-| codedocs/ | Thiago Xavier | 1 | 5 commits | 0 | 1 (LICENSE) | **CRITICAL** |
+| Module | Owner | Contributors | Changes (session) | Tests | Docs | Risk |
+|--------|-------|-------------|-------------------|-------|------|------|
+| codedocs/ | Thiago Xavier | 1 | ~20 commits | 0 | 1 (LICENSE) | **CRITICAL** |
+| codedocs/migration.py | Thiago Xavier | 1 | ~8 commits | 0 | 0 | **CRITICAL** |
+| codedocs/scanner.py | Thiago Xavier | 1 | ~10 commits | 0 | 0 | **CRITICAL** |
+| codedocs/renderer.py | Thiago Xavier | 1 | ~8 commits | 0 | 0 | **CRITICAL** |
 | skills/generate-datasheet/ | Thiago Xavier | 1 | 5 commits | 0 | 1 (SKILL.md) | **CRITICAL** |
 | skills/generate-api-client/ | Thiago Xavier | 1 | 1 commit | 0 | 1 (SKILL.md) | **HIGH** |
 | skills/generate-compliance/ | Thiago Xavier | 1 | 1 commit | 0 | 1 (SKILL.md) | **HIGH** |
 | skills/health-badges/ | Thiago Xavier | 1 | 1 commit | 0 | 1 (SKILL.md) | **HIGH** |
-| docs/ | Thiago Xavier | 1 | 6 commits | 0 | Self | **MEDIUM** |
+| docs/ | Thiago Xavier | 1 | ~10 commits | 0 | Self | **MEDIUM** |
 
-## Action Items / Ações Recomendadas
+## What Changed Since Last Report
 
-1. **codedocs/ has 5 changes by 1 contributor with 0 tests.**
-   → Add pytest smoke tests. Pair another developer on scanner.py and migration.py.
+- **Commits**: grew from 19 to ~32 (all single contributor)
+- **LOC**: grew from ~2700 to 2876 LOC in codedocs/
+- **migration.py**: most complex module (1086 LOC, 9 functions, 30+ lookup tables)
+- **CodeDocs tested on SyneriumX**: 15+ bugs found and fixed — all by same contributor
+- **4 Perplexity review cycles**: external review but no code contributions
+- **Bus factor remains 1** — no improvement despite significant codebase growth
 
-2. **skills/generate-datasheet/ is the flagship product with 0 tests and 1 owner.**
-   → Document skill testing procedure. Find beta testers to validate on diverse codebases.
+## Knowledge Silos / Silos de Conhecimento
 
-3. **All 4 skills have never been tested on a real external project.**
-   → Run each skill on 3+ real projects and document results.
+| Knowledge | Who Holds It | Documentation |
+|-----------|-------------|---------------|
+| Risk Score formula | Thiago Xavier | renderer.py:77-124, docs/health-score.md |
+| Migration equivalence tables | Thiago Xavier | migration.py (30+ entries, 1086 LOC) |
+| Scanner regex patterns | Thiago Xavier | scanner.py (18 functions, 787 LOC) |
+| Perplexity review context | Thiago Xavier | docs/feedback-perplexity-review*.md |
+| SyneriumX test results | Thiago Xavier | Not formally documented |
+| Skill instruction design | Thiago Xavier | skills/*/SKILL.md |
 
-4. **Open source mitigates bus factor** — anyone can fork and continue.
-   → Ensure README has clear contribution guidelines. ✓ Done (docs/contributing.md).
+## Action Items / Acoes Recomendadas
 
-## Recommendation / Recomendação
+1. **codedocs/ has ~20 changes by 1 contributor with 0 tests.**
+   -> Add pytest smoke tests. Pair another developer on scanner.py and migration.py.
+
+2. **migration.py is the most complex module (1086 LOC) with 1 owner.**
+   -> Document the equivalence table format. Add tests for `_recommend_target()` and `_calc_complexity()`.
+
+3. **scanner.py has 18 functions, all owned by 1 person.**
+   -> Each scan function is independent — ideal for distributing to new contributors.
+
+4. **SyneriumX test results are not formally documented.**
+   -> Create a test report or add to docs/ for reproducibility.
+
+5. **4 Perplexity reviews provided external validation but no code changes.**
+   -> External review is good but doesn't reduce bus factor for maintenance.
+
+6. **Open source mitigates bus factor** — anyone can fork and continue.
+   -> Ensure README has clear contribution guidelines. Done (docs/contributing.md).
+
+## Recommendation / Recomendacao
 
 > Bus factor = 1 is expected for a solo creator project in its first week.
-> The priority is not "add contributors" — it's **add tests and documentation**
-> so that future contributors CAN onboard without the creator's help.
+> With ~32 commits and 2876 LOC, the project has outgrown "weekend project" size.
+> The priority is: **add tests so future contributors CAN contribute safely**,
+> then **find beta testers** (Reddit post, DiamondOne pilot, open source community).
+> The Perplexity reviews validated the approach but did not reduce bus factor.

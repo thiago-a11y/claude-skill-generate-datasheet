@@ -3,6 +3,30 @@
 
 ## 2026-05-31
 
+### CodeDocs v2.1
+> `2b06ac2` CodeDocs v2.1: polish — executive summary, risk narrative, unified messaging
+
+### CodeDocs v2.0
+> `84e4359` CodeDocs v2.0: 3 surgical cuts — Risk Score, contextual copy, opinionated recommendations
+
+### Perplexity Review Fixes
+> `cc49acb` fix: 7 Perplexity review corrections — credibility + honesty overhaul
+> `ce106ac` docs: save Perplexity brutal review of CodeDocs output — 7 critical issues to fix
+
+### Production Refinements
+> `2e909bc` fix: 3 final refinements for Jonatas-ready output
+> `c705845` fix: browser not opening — use PYTHONPATH instead of cd to preserve working dir
+> `92ff3b2` fix: 8 scanner refinements for production-quality output
+> `829e635` fix: remove stale args.migration reference — crash on browser open
+
+### CodeDocs v1.4
+> `f22dae8` CodeDocs v1.4: migration plan by default + neutral target comparison
+
+### Bug Fixes (SyneriumX testing)
+> `c264d2e` fix: 5 scanner bugs found from SyneriumX real-world scan
+> `024a5df` fix(lint): deduplicate ERP entries in migration planner
+> `d8dde3c` fix(lint): remove __pycache__ from git tracking
+
 ### CodeDocs v1.3.1
 > `e534655` CodeDocs v1.3.1: full PHP support — Laravel, Symfony, CodeIgniter, CakePHP, procedural
 
@@ -17,6 +41,9 @@
 
 ### CodeDocs v1.1
 > `4118827` CodeDocs v1.1: Migration Planner + C# MVC support + ERP integration plans
+
+### Context & Documentation
+> `5cfdca2` add CONTEXT.md — full project context for external AIs + mandatory doc update rule
 
 ## 2026-05-30
 
@@ -46,7 +73,7 @@
 > `f6d89d6` add CLAUDE.md — repo context for Claude Code contributors
 
 ### generate-datasheet v4.0
-> `264cfaf` v4.0: Layer 6 — Assisted Correction Engine (scan → fix with approval)
+> `264cfaf` v4.0: Layer 6 — Assisted Correction Engine (scan -> fix with approval)
 
 ### generate-datasheet v3.0
 > `95f7c1b` v3.0: Layer 5 — Operational Intelligence + PT-BR section
@@ -67,8 +94,8 @@
 
 | Period | Commits | Key Deliverables |
 |--------|---------|-----------------|
-| 2026-05-27 | 8 | Skill v1→v4, repo structure, CLAUDE.md |
+| 2026-05-27 | 8 | Skill v1->v4, repo structure, CLAUDE.md |
 | 2026-05-28 | 4 | v4.1 AI Cost Audit, 3 new skills (v5.0), Reddit post |
-| 2026-05-30 | 3 | CodeDocs v1.0→v1.1 (migration planner) |
-| 2026-05-31 | 4 | CodeDocs v1.2→v1.3.1 (full equivalences, PHP) |
-| **Total** | **19** | **4 skills + 1 offline tool in 5 days** |
+| 2026-05-30 | 1 | CodeDocs v1.0 (offline CLI) |
+| 2026-05-31 | 19 | CodeDocs v1.1->v2.1, migration planner, 4 Perplexity reviews, 15+ bug fixes, Risk Score, SyneriumX testing |
+| **Total** | **~32** | **4 skills + CodeDocs v2.1 in 5 days** |
