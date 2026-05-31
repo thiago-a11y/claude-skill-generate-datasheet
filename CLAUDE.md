@@ -31,6 +31,7 @@ docs/
 README.md             — GitHub landing page (install, usage, examples)
 ROADMAP.md            — Vision: versions, SaaS, new skills
 CLAUDE.md             — This file (repo context for Claude Code)
+CONTEXT.md            — Full project context for any AI/LLM (paste in external chats)
 ```
 
 ### Research foundation
@@ -57,6 +58,24 @@ These are the source of truth for the roadmap — read them before proposing new
 2. Add install instructions to README.md
 3. Add the skill to the roadmap if it was planned
 4. Update this structure section
+
+### Mandatory doc updates / Atualização obrigatória de docs
+When the user asks to "update docs", "atualizar docs", "sync documentation", or
+"update the context", you MUST update ALL of the following files:
+1. `CONTEXT.md` — full project context (architecture, features, state, gaps, roadmap)
+2. `docs/architecture.md` — system design, modules, stack, diagrams
+3. `docs/CHANGELOG.md` — add new entries from recent git log
+4. `docs/health-score.md` — recalculate score from current state
+5. `docs/bus-factor-report.md` — update contributor counts
+6. `docs/backlog.md` — sync with ROADMAP.md
+7. `docs/pendencies.md` — update blocked items and missing configs
+8. `docs/bugs-known.md` — add/remove based on current state
+9. `docs/security.md` — update controls matrix
+10. `CLAUDE.md` — update skills catalog, version history, structure if changed
+11. `README.md` — update version badges, install instructions if paths changed
+
+Do NOT skip any file. Do NOT ask "which files?" — update all of them.
+This ensures CONTEXT.md is always a reliable source of truth for external AIs.
 
 ### Anti-hallucination is non-negotiable (generate-datasheet)
 The generate-datasheet skill's core value is evidence-based documentation. When editing it:
