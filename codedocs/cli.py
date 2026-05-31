@@ -206,10 +206,10 @@ Examples:
     print(f"  {DIM}Open scan-report.html for the full inventory{RESET}")
     print(f"  {DIM}Open sales-datasheet.html for the sales document{RESET}")
     print(f"  {DIM}Open technical-spec.html for the technical spec{RESET}")
-    if args.migration:
+    if not args.no_migration:
         print(f"  {DIM}Open migration-plan.html for the migration roadmap{RESET}")
     print(f"{BOLD}{'═' * 60}{RESET}\n")
 
-    open_file = "migration-plan.html" if args.migration else "scan-report.html"
+    open_file = "scan-report.html"
     if not args.no_browser:
         webbrowser.open(f"file://{os.path.abspath(os.path.join(output_dir, open_file))}")
