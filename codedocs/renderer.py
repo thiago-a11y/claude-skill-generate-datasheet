@@ -60,6 +60,20 @@ def _score_color(score):
     return "red"
 
 
+def _risk_narrative(score, data):
+    tf = data["tests"]["test_files"]
+    sf = data["tests"]["source_files"]
+    contributors = len(data["git"]["contributors"])
+    if score <= 30:
+        return f"Critical operational risk. {sf} source files with {tf} tests and {contributors} contributor(s). This system is functional but fragile — any change carries significant regression risk."
+    elif score <= 50:
+        return f"Moderate-high operational risk. Test coverage and team concentration are the primary concerns. Recommended: add automated tests for critical paths and document key-person dependencies before scaling."
+    elif score <= 70:
+        return f"Moderate risk. Core security controls are in place but test coverage and bus factor need attention before enterprise deployment or major feature work."
+    else:
+        return f"Low operational risk. Strong test coverage, security controls, and team distribution. System is ready for enterprise-grade operations."
+
+
 def _risk_score(data):
     scores = []
     sf = max(1, data["tests"]["source_files"])
@@ -194,6 +208,7 @@ def render_scan_report(data):
 </div>
 
 <h2>Risk Score Breakdown</h2>
+<div class="{'warn' if score <= 50 else 'note'}"><strong>{score}/100 — {_e(_risk_narrative(score, data))}</strong></div>
 <table><tr><th>Dimension</th><th>Score</th><th>Evidence</th></tr>{score_rows}</table>
 
 <h2>Languages</h2>
@@ -303,8 +318,9 @@ def render_sales_datasheet(data):
         <div class="metric"><div class="metric-value" style="color:var(--accent)">{len(data['endpoints'])}</div><div class="metric-label">API Endpoints</div></div>
         <div class="metric"><div class="metric-value" style="color:var(--accent)">{len(data['database']['tables'])}</div><div class="metric-label">Data Tables</div></div>
         <div class="metric"><div class="metric-value" style="color:var(--accent)">{len(data['integrations'])}</div><div class="metric-label">Integrations</div></div>
-        <div class="metric"><div class="metric-value" style="color:var(--accent)">{score}/100</div><div class="metric-label">Risk Score</div></div>
+        <div class="metric"><div class="metric-value" style="color:var(--{_score_color(score)})">{score}/100</div><div class="metric-label">Risk Score</div></div>
     </div>
+    <p style="margin-top:16px;font-size:13px;color:var(--fg2)">{_e(_risk_narrative(score, data))}</p>
 </div>
 
 <h2>Overview</h2>
@@ -483,6 +499,7 @@ def render_technical_spec(data):
 {"<table><tr><th>Package</th><th>Version</th></tr>" + dep_rows + "</table>" if dep_rows else '<p class="note">No dependency manager detected.</p>'}
 
 <h2>Risk Score: {score}/100</h2>
+<div class="{'warn' if score <= 50 else 'note'}"><strong>{_e(_risk_narrative(score, data))}</strong></div>
 <table><tr><th>Dimension</th><th>Score</th><th>Evidence</th></tr>
 {"".join(f"<tr><td>{label}</td><td><span class='badge badge-{_score_color(val)}'>{val}/100</span></td><td class='evidence'>{_e(ev)}</td></tr>" for label, val, ev in score_details)}
 </table>
@@ -606,17 +623,17 @@ def render_migration_plan(data, plan):
 </div>
 
 <h2>Executive Summary</h2>
+{"<div class='card' style='border-left:3px solid var(--accent);padding:20px'><p style='font-size:16px;color:#fff;margin-bottom:12px'><strong>Recommendation:</strong> Migrate backend to <strong>" + _e(summary.get('recommended_info', {}).get('backend', '')) + "</strong>, keeping <strong>" + _e(summary.get('recommended_info', {}).get('frontend', '')) + "</strong> frontend. " + str(summary['total_modules']) + " modules, " + f"{summary['total_hours']:,}" + "h estimated effort (~" + str(summary['total_weeks']) + " weeks), " + str(summary['critical_blockers']) + " blockers to resolve first.</p><p class='evidence'>" + _e(summary.get('recommended_reason', '')) + "</p></div>" if summary.get("is_neutral") else ""}
 <div class="card">
     <table style="margin:0">
-        <tr><td><strong>Current Platform</strong></td><td>{', '.join(summary['current_frameworks']) or 'NOT DETECTED'}</td></tr>
-        <tr><td><strong>Target Framework</strong></td><td>{_e(summary['target_framework'])}</td></tr>
-        <tr><td><strong>Target Platform</strong></td><td>{_e(summary['target_platform']).title()}</td></tr>
+        <tr><td><strong>Current Platform</strong></td><td>{', '.join(summary['current_frameworks']) or _e(', '.join(data.get('languages', {}).keys()))}</td></tr>
+        <tr><td><strong>Recommended Target</strong></td><td>{_e(summary.get('recommended_info', {}).get('label', summary['target_platform']))}</td></tr>
         <tr><td><strong>Total Modules</strong></td><td>{summary['total_modules']}</td></tr>
         <tr><td><strong>Estimated Effort</strong></td><td>{summary['total_hours']:,} hours (~{summary['total_weeks']} weeks)</td></tr>
-        <tr><td><strong>Quick Wins</strong></td><td>{len(quick_wins)} modules ({qw_hours}h)</td></tr>
-        <tr><td><strong>Major Projects</strong></td><td>{len(major)} modules ({mj_hours}h)</td></tr>
-        <tr><td><strong>Defer/Avoid</strong></td><td>{len(defer)} modules</td></tr>
-        <tr><td><strong>Critical Blockers</strong></td><td><span class="badge badge-{'red' if summary['critical_blockers'] > 0 else 'green'}">{summary['critical_blockers']}</span></td></tr>
+        <tr><td><strong>Quick Wins</strong></td><td>{len(quick_wins)} modules ({qw_hours}h) — start here</td></tr>
+        <tr><td><strong>Major Projects</strong></td><td>{len(major)} modules ({mj_hours}h) — plan carefully</td></tr>
+        <tr><td><strong>Defer/Avoid</strong></td><td>{len(defer)} modules — validate usage before migrating</td></tr>
+        <tr><td><strong>Blockers</strong></td><td><span class="badge badge-{'red' if summary['critical_blockers'] > 0 else 'green'}">{summary['critical_blockers']} to resolve before migration</span></td></tr>
         <tr><td><strong>ERP Integrations</strong></td><td>{', '.join(summary['erp_integrations']) or 'None detected'}</td></tr>
     </table>
 </div>
