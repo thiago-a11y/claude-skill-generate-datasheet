@@ -85,8 +85,10 @@ def _health_score(data):
     dep_score = 80 if data["dependencies"]["manager"] != "NOT DETECTED" else 20
     scores.append(("Dependency Mgmt", dep_score, data["dependencies"]["manager"]))
 
-    weights = [0.20, 0.20, 0.15, 0.15, 0.15, 0.15]
+    weights = [0.30, 0.15, 0.10, 0.10, 0.15, 0.10]
     composite = min(100, int(sum(s[1] * w for s, w in zip(scores, weights))))
+    if data["tests"]["test_files"] == 0 and data["tests"]["source_files"] > 50:
+        composite = min(composite, 45)
     return composite, scores
 
 
@@ -256,19 +258,29 @@ def render_sales_datasheet(data):
         integrations_list += f'<span class="badge badge-blue">{_e(integ["service"])}</span> '
 
     limitations = ""
+    tf = data["tests"]["test_files"]
+    sf = data["tests"]["source_files"]
+    if tf == 0 and sf > 0:
+        limitations += f"<li><strong>Automated test coverage: 0%</strong> — {sf} source files with 0 test files. Critical risk for regression.</li>"
+    elif sf > 0:
+        ratio = int(tf / sf * 100)
+        if ratio < 20:
+            limitations += f"<li>Test coverage: {ratio}% ({tf}/{sf} files) — below industry standard of 60%+</li>"
     if not data["auth"]["mfa"]:
-        limitations += "<li>MFA/2FA: Not Detected</li>"
+        limitations += "<li>MFA/2FA: Not Detected in codebase</li>"
     for control, info in data["security"].items():
         if not info["detected"]:
             limitations += f"<li>{control.replace('_', ' ').title()}: Not Detected</li>"
-    if data["tests"]["test_files"] == 0:
-        limitations += "<li>Automated tests: Not Detected</li>"
+    contributors = len(data["git"]["contributors"])
+    if contributors <= 2:
+        limitations += f"<li>Bus factor: {contributors} contributor(s) — knowledge concentration risk</li>"
+    limitations += "<li>SLA, RPO/RTO, hosting details: Requires organizational input</li>"
 
     body = f"""
 <div class="hero" style="border-color:var(--accent)">
     <p style="color:var(--accent);font-size:13px;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">{company}</p>
     <h1 style="font-size:36px">{name}</h1>
-    <p class="subtitle">[MANUAL — add product description]</p>
+    <p class="subtitle">Product description — requires organizational input</p>
     <div class="grid" style="max-width:800px;margin:24px auto 0">
         <div class="metric"><div class="metric-value" style="color:var(--accent)">{len(data['endpoints'])}</div><div class="metric-label">API Endpoints</div></div>
         <div class="metric"><div class="metric-value" style="color:var(--accent)">{len(data['database']['tables'])}</div><div class="metric-label">Data Tables</div></div>
@@ -290,11 +302,11 @@ def render_sales_datasheet(data):
 </div>
 
 <h2>Modules</h2>
-{features if features else '<p class="note">[MANUAL — describe product modules]</p>'}
+{features if features else '<p class="note">Requires organizational input — describe product modules</p>'}
 
 <h2>Integrations</h2>
 <div class="card">
-    {integrations_list if integrations_list else '<p>[MANUAL — list integrations]</p>'}
+    {integrations_list if integrations_list else '<p>Requires organizational input — list integrations</p>'}
 </div>
 
 <h2>Security Overview</h2>
@@ -309,16 +321,16 @@ def render_sales_datasheet(data):
 <div class="warn">
     <strong>What this product does NOT have (based on code scan):</strong>
     <ul style="margin-top:8px">
-        {limitations if limitations else '<li>No significant gaps detected</li>'}
+        {limitations}
     </ul>
     <p style="margin-top:8px;font-size:12px;color:var(--fg2)">This section is mandatory. Hiding limitations breaks trust.</p>
 </div>
 
 <h2>Commercial Model</h2>
-<p class="note">[MANUAL — describe pricing, licensing, and support tiers]</p>
+<p class="note">Requires organizational input — pricing, licensing, and support tiers</p>
 
 <h2>Next Steps</h2>
-<p class="note">[MANUAL — add demo link, contact information, and CTA]</p>
+<p class="note">Requires organizational input — demo link, contact, CTA</p>
 """
     return _wrap_html(f"{name} — Sales Datasheet", body)
 
@@ -333,8 +345,14 @@ def render_technical_spec(data):
     total_loc = sum(v["lines"] for v in data["languages"].values())
     langs = ", ".join(sorted(data["languages"].keys(), key=lambda x: -data["languages"][x]["files"]))
 
-    # Quick answers
-    hosting = "[MANUAL — describe hosting]"
+    # Quick answers — derive from scan data
+    langs_str = ", ".join(sorted(data["languages"].keys(), key=lambda x: -data["languages"][x]["files"]))
+    if data["dependencies"]["manager"] == "npm":
+        hosting = f"Web application ({langs_str}). Hosting details require organizational input."
+    elif any(fw["name"] in ("WinForms", "WPF") for fw in data.get("migration", {}).get("frameworks", [])):
+        hosting = f"Desktop application ({langs_str}). Deployment details require organizational input."
+    else:
+        hosting = f"Application stack: {langs_str}. Hosting details require organizational input."
     data_flow = f"{len(data['database']['tables'])} tables, {len(data['integrations'])} external services"
     integration = f"{len(data['endpoints'])} REST endpoints, auth via {data['auth']['method']}"
     sec_count = sum(1 for v in data["security"].values() if v["detected"])
@@ -395,8 +413,8 @@ def render_technical_spec(data):
     <div class="card"><h3>How does data flow?</h3><p>{data_flow}</p></div>
     <div class="card"><h3>How do we integrate?</h3><p>{integration}</p></div>
     <div class="card"><h3>Security posture?</h3><p>{security_summary}</p></div>
-    <div class="card"><h3>SLA?</h3><p>[MANUAL — uptime, RPO, RTO]</p></div>
-    <div class="card"><h3>What does IT provision?</h3><p>[MANUAL — client requirements]</p></div>
+    <div class="card"><h3>SLA?</h3><p>Requires organizational input — uptime SLA, RPO, RTO</p></div>
+    <div class="card"><h3>What does IT provision?</h3><p>Requires organizational input — client IT requirements</p></div>
 </div>
 
 <h2>Architecture</h2>
@@ -432,7 +450,7 @@ def render_technical_spec(data):
 
 <h2>External Services &amp; Data Residency</h2>
 {"<table><tr><th>Service</th><th>Source</th></tr>" + integ_rows + "</table>" if integ_rows else '<p class="note">No external services detected.</p>'}
-<p class="note">[MANUAL — confirm data residency regions for each service]</p>
+<p class="note">Requires validation — confirm data residency regions for each service</p>
 
 <h2>Dependencies ({data['dependencies']['total']} — {_e(data['dependencies']['manager'])})</h2>
 {"<table><tr><th>Package</th><th>Version</th></tr>" + dep_rows + "</table>" if dep_rows else '<p class="note">No dependency manager detected.</p>'}
@@ -449,14 +467,14 @@ def render_technical_spec(data):
 {"<table><tr><th>Gap</th><th>Status</th><th>Impact</th></tr>" + gaps + "</table>" if gaps else '<p class="badge badge-green">No significant gaps detected.</p>'}
 
 <h2>SLA &amp; Disaster Recovery</h2>
-<p class="note">[MANUAL — define uptime SLA, RPO, RTO, backup frequency, restore process]</p>
+<p class="note">Requires organizational input — uptime SLA, RPO, RTO, backup frequency, restore process</p>
 
 <h2>Release &amp; Compatibility</h2>
 <div class="card">
     <p><strong>Commits:</strong> {data['git']['commits']}</p>
     <p><strong>Active contributors:</strong> {len(data['git']['contributors'])}</p>
     <p><strong>Recent activity:</strong> {data['git']['recent_commits']} commits in last 30 days</p>
-    <p>[MANUAL — release cadence, versioning policy, backward compatibility]</p>
+    <p>Requires organizational input — release cadence, versioning, backward compatibility</p>
 </div>
 """
     return _wrap_html(f"{name} — Technical Specification", body)
@@ -701,12 +719,12 @@ def render_migration_plan(data, plan):
 <h2>Next Steps</h2>
 <div class="note">
     <ol>
-        <li>[MANUAL] — Validate module priority with product owner (business value may differ from code analysis)</li>
-        <li>[MANUAL] — Calibrate effort estimates with team velocity (hours per story point)</li>
-        <li>[MANUAL] — Define target platform and framework (React, Blazor, Angular)</li>
-        <li>[MANUAL] — Set up YARP proxy and System.Web Adapters for hybrid period</li>
-        {"<li>[MANUAL] — Obtain ERP API credentials and test connectivity (" + ', '.join(summary['erp_integrations']) + ")</li>" if summary['erp_integrations'] else ""}
-        <li>[MANUAL] — Define success metrics and rollback criteria per phase</li>
+        <li>Action required — Validate module priority with product owner (business value may differ from code analysis)</li>
+        <li>Action required — Calibrate effort estimates with team velocity (hours per story point)</li>
+        <li>Action required — Define target platform and framework (React, Blazor, Angular)</li>
+        <li>Action required — Set up YARP proxy and System.Web Adapters for hybrid period</li>
+        {"<li>Action required — Obtain ERP API credentials and test connectivity (" + ', '.join(summary['erp_integrations']) + ")</li>" if summary['erp_integrations'] else ""}
+        <li>Action required — Define success metrics and rollback criteria per phase</li>
     </ol>
 </div>
 """

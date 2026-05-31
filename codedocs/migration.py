@@ -661,8 +661,8 @@ def analyze_migration(data, target_platform="all", target_erps=None):
     package_map = _build_package_map(eq_key) if not is_neutral else []
 
     total_hours = sum(m["complexity"]["estimated_hours"] for m in modules)
-    critical_blockers = sum(1 for b in blockers if b.get("severity") == "CRITICAL")
-    high_blockers = sum(1 for b in blockers if b.get("severity") == "HIGH")
+    critical_blockers = sum(1 for b in blockers if b.get("severity") in ("CRITICAL", "HIGH"))
+    high_blockers = sum(1 for b in blockers if b.get("severity") == "MEDIUM")
 
     return {
         "summary": {

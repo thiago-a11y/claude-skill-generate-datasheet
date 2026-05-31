@@ -80,39 +80,45 @@ def _print_summary(data):
 def _calc_health_score(data):
     scores = []
 
-    # Test coverage (20%)
+    # Test coverage (30% — heaviest weight, zero tests = critical risk)
     if data["tests"]["source_files"] > 0:
         ratio = data["tests"]["test_files"] / data["tests"]["source_files"]
-        scores.append(min(100, int(ratio * 200)) * 0.20)
+        scores.append(min(100, int(ratio * 200)) * 0.30)
     else:
         scores.append(0)
 
-    # Security (20%)
+    # Security (15%)
     sec_count = sum(1 for v in data["security"].values() if v["detected"])
     sec_total = max(1, len(data["security"]))
-    scores.append(int(sec_count / sec_total * 100) * 0.20)
+    scores.append(int(sec_count / sec_total * 100) * 0.15)
 
-    # Tech debt (15%)
+    # Tech debt (10%)
     loc = max(1, data["health"]["loc"])
     debt_per_kloc = data["health"]["todos"] / (loc / 1000)
     debt_score = max(0, 100 - int(debt_per_kloc * 15))
-    scores.append(debt_score * 0.15)
+    scores.append(debt_score * 0.10)
 
-    # Documentation (15%)
+    # Documentation (10%)
     doc_count = len(data["existing_docs"])
     doc_score = min(100, doc_count * 12)
-    scores.append(doc_score * 0.15)
+    scores.append(doc_score * 0.10)
 
     # Git health (15%)
     contributors = len(data["git"]["contributors"])
     git_score = min(100, contributors * 20) if contributors > 0 else 0
     scores.append(git_score * 0.15)
 
-    # Dependency management (15%)
+    # Dependency management (10%)
     dep_score = 80 if data["dependencies"]["manager"] != "NOT DETECTED" else 20
-    scores.append(dep_score * 0.15)
+    scores.append(dep_score * 0.10)
 
-    return min(100, int(sum(scores)))
+    total = min(100, int(sum(scores)))
+
+    # Penalty: zero tests on large codebase is a critical risk
+    if data["tests"]["test_files"] == 0 and data["tests"]["source_files"] > 50:
+        total = min(total, 45)
+
+    return total
 
 
 def main():
