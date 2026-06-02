@@ -61,6 +61,48 @@ GREP_EXCLUDE = " ".join(f"--exclude-dir={d}" for d in [
 
 FIND_EXCLUDE = "| grep -v node_modules | grep -v vendor | grep -v '/.git/' | grep -v __pycache__ | grep -v '/dist/' | grep -v '/.claude/' | grep -v '/worktrees/' | grep -v '/bin/' | grep -v '/obj/' | grep -v '/deploy-' | grep -v '/DEPLOY-' | grep -v 'index-.*\\.js$' | grep -v '\\.min\\.js$'"
 
+REVENUE_KEYWORDS = {"deal", "payment", "invoice", "order", "billing", "subscription", "checkout", "contract", "quote", "proposal", "purchase", "transaction", "revenue", "sale", "price", "cart", "charge"}
+ADMIN_KEYWORDS = {"admin", "setting", "config", "manage", "dashboard", "system", "permission", "role"}
+READONLY_KEYWORDS = {"list", "get", "fetch", "search", "report", "export", "download", "view", "find", "query", "count", "stat"}
+
+DEPRECATED_PHP_FUNCTIONS = {
+    "mysql_query": ("PDO::query() or mysqli_query()", "CRITICAL", "Removed in PHP 7.0"),
+    "mysql_connect": ("new PDO() or mysqli_connect()", "CRITICAL", "Removed in PHP 7.0"),
+    "mysql_real_escape_string": ("PDO prepared statements", "CRITICAL", "Removed in PHP 7.0"),
+    "mysql_fetch_array": ("PDOStatement::fetch() or mysqli_fetch_array()", "HIGH", "Removed in PHP 7.0"),
+    "mysql_fetch_assoc": ("PDOStatement::fetch(PDO::FETCH_ASSOC)", "HIGH", "Removed in PHP 7.0"),
+    "mysql_num_rows": ("PDOStatement::rowCount() or mysqli_num_rows()", "HIGH", "Removed in PHP 7.0"),
+    "mysql_close": ("unset($pdo) or mysqli_close()", "HIGH", "Removed in PHP 7.0"),
+    "ereg": ("preg_match()", "HIGH", "Removed in PHP 7.0"),
+    "ereg_replace": ("preg_replace()", "HIGH", "Removed in PHP 7.0"),
+    "split": ("explode() or preg_split()", "HIGH", "Removed in PHP 7.0"),
+    "create_function": ("Anonymous functions (closures)", "HIGH", "Deprecated PHP 7.2, removed PHP 8.0"),
+    "each": ("foreach loop", "MEDIUM", "Deprecated PHP 7.2, removed PHP 8.0"),
+}
+
+SERVICE_INFO = {
+    "stripe": ("critical", "USA"), "paypal": ("critical", "USA"),
+    "twilio": ("critical", "USA"), "sendgrid": ("critical", "USA"),
+    "firebase": ("critical", "USA"), "supabase": ("critical", "USA"),
+    "amazonaws": ("critical", "USA"), "googleapis": ("critical", "USA"),
+    "graph.facebook": ("critical", "USA"),
+    "api.openai": ("optional", "USA"), "api.anthropic": ("optional", "USA"),
+    "mailgun": ("optional", "USA/Europe"), "api.slack": ("optional", "USA"),
+    "mqtt": ("critical", "Unknown"), "rabbitmq": ("critical", "Unknown"),
+    "redis": ("critical", "Unknown"), "kafka": ("critical", "Unknown"),
+    "sentry": ("analytics", "USA"), "datadog": ("analytics", "USA"),
+    "newrelic": ("analytics", "USA"), "mixpanel": ("analytics", "USA"),
+    "amplitude": ("analytics", "USA"), "segment": ("analytics", "USA"),
+    "hotjar": ("analytics", "Europe"),
+}
+
+SYSTEM_TYPE_PATTERNS = {
+    "CRM": ["crm", "customer", "contact", "lead", "opportunity", "pipeline", "deal"],
+    "ERP": ["erp", "inventory", "warehouse", "manufacturing", "procurement", "supply"],
+    "E-commerce": ["cart", "checkout", "product", "catalog", "shipping"],
+    "SaaS Platform": ["tenant", "subscription", "plan", "billing", "saas"],
+}
+
 
 def _detect_project_name(cwd):
     pkg = os.path.join(cwd, "package.json")
@@ -103,7 +145,9 @@ def scan(project_path, progress_callback=None):
         "security": {},
         "integrations": [],
         "tests": {"test_files": 0, "source_files": 0},
-        "git": {"commits": 0, "contributors": [], "recent_commits": 0, "last_10": []},
+        "ghost_features": [],
+        "deprecated_functions": [],
+        "git": {"commits": 0, "contributors": [], "recent_commits": 0, "last_10": [], "bus_factor_modules": {}},
         "health": {"todos": 0, "todo_items": [], "loc": 0},
         "dependencies": {"manager": "NOT DETECTED", "total": 0, "items": []},
         "existing_docs": [],
@@ -137,6 +181,12 @@ def scan(project_path, progress_callback=None):
         ("Scanning dependencies", _scan_dependencies),
         ("Scanning existing docs", _scan_docs),
         ("Scanning migration blockers", _scan_migration),
+        ("Classifying endpoints", _classify_endpoints),
+        ("Detecting ghost features", _scan_ghost_features),
+        ("Analyzing bus factor by module", _scan_bus_factor_modules),
+        ("Scanning deprecated functions", _scan_deprecated_functions),
+        ("Classifying integrations", _classify_integrations),
+        ("Detecting system type", _detect_system_type),
     ]
 
     for i, (label, fn) in enumerate(steps):
@@ -785,3 +835,114 @@ def _scan_migration(data, cwd):
     signalr = _run("grep -rln 'SignalR\\|HubConnection\\|IHubContext' --include='*.cs' --include='*.ts' --include='*.js' --include='*.csproj' 2>/dev/null | grep -v bin | grep -v obj | head -10", cwd)
     if _lines(signalr):
         data["migration"]["frameworks"].append({"name": "SignalR", "files": _lines(signalr)})
+
+
+def _classify_endpoints(data, cwd):
+    for ep in data["endpoints"]:
+        path_lower = ep["path"].lower()
+        file_lower = ep["file"].lower()
+        combined = path_lower + " " + file_lower
+        if any(kw in combined for kw in REVENUE_KEYWORDS):
+            ep["criticality"] = "revenue-critical"
+        elif any(kw in combined for kw in ADMIN_KEYWORDS):
+            ep["criticality"] = "admin"
+        elif ep["method"] == "GET" or any(kw in combined for kw in READONLY_KEYWORDS):
+            ep["criticality"] = "read-only"
+        else:
+            ep["criticality"] = "operational"
+
+
+def _scan_ghost_features(data, cwd):
+    if not os.path.exists(os.path.join(cwd, ".git")):
+        return
+    unique_files = set(ep["file"] for ep in data["endpoints"])
+    for filepath in list(unique_files)[:100]:
+        last_commit = _run(f"git log -1 --format='%ci' -- '{filepath}' 2>/dev/null", cwd)
+        if last_commit:
+            try:
+                commit_date = datetime.strptime(last_commit[:10], "%Y-%m-%d")
+                days_ago = (datetime.now() - commit_date).days
+                if days_ago > 90:
+                    data["ghost_features"].append({
+                        "file": filepath,
+                        "last_commit": last_commit[:10],
+                        "days_ago": days_ago,
+                    })
+            except ValueError:
+                pass
+
+
+def _scan_bus_factor_modules(data, cwd):
+    if not os.path.exists(os.path.join(cwd, ".git")):
+        return
+    modules = {}
+    for ep in data["endpoints"]:
+        module = ep["file"].split("/")[0] if "/" in ep["file"] else "root"
+        if module not in modules:
+            modules[module] = {"files": set(), "endpoints": 0}
+        modules[module]["files"].add(ep["file"])
+        modules[module]["endpoints"] += 1
+    for module, info in modules.items():
+        path = f"{module}/" if module != "root" else "."
+        contributors = _run(f"git log --format='%an' -- '{path}' 2>/dev/null | sort -u", cwd)
+        contribs = _lines(contributors)
+        data["git"]["bus_factor_modules"][module] = {
+            "contributors": contribs,
+            "count": len(contribs),
+            "files": len(info["files"]),
+            "endpoints": info["endpoints"],
+        }
+
+
+def _scan_deprecated_functions(data, cwd):
+    if "php" not in data["languages"]:
+        return
+    for func_name, (replacement, severity, reason) in DEPRECATED_PHP_FUNCTIONS.items():
+        out = _run(
+            f"grep -rn '{func_name}\\s*(' --include='*.php' {GREP_EXCLUDE} 2>/dev/null | head -10",
+            cwd,
+        )
+        for line in _lines(out):
+            parts = line.split(":", 2)
+            if len(parts) >= 3:
+                data["deprecated_functions"].append({
+                    "function": func_name,
+                    "replacement": replacement,
+                    "severity": severity,
+                    "reason": reason,
+                    "file": parts[0].lstrip("./"),
+                    "line": int(parts[1]) if parts[1].isdigit() else 0,
+                })
+
+
+def _classify_integrations(data, cwd):
+    for integ in data["integrations"]:
+        service_lower = integ["service"].lower()
+        matched = False
+        for pattern, (classification, residency) in SERVICE_INFO.items():
+            if pattern in service_lower:
+                integ["classification"] = classification
+                integ["data_residency"] = residency
+                matched = True
+                break
+        if not matched:
+            integ["classification"] = "unknown"
+            integ["data_residency"] = "Unknown"
+
+
+def _detect_system_type(data, cwd):
+    all_paths = " ".join(ep["path"].lower() for ep in data["endpoints"])
+    all_files = " ".join(ep["file"].lower() for ep in data["endpoints"])
+    combined = all_paths + " " + all_files + " " + data["project"]["name"].lower()
+    for sys_type, keywords in SYSTEM_TYPE_PATTERNS.items():
+        matches = sum(1 for kw in keywords if kw in combined)
+        if matches >= 2:
+            data["project"]["system_type"] = sys_type
+            break
+    else:
+        data["project"]["system_type"] = "web-platform"
+    if data["languages"]:
+        primary = max(data["languages"].items(), key=lambda x: x[1]["files"])
+        data["project"]["primary_stack"] = primary[0]
+    else:
+        data["project"]["primary_stack"] = "unknown"

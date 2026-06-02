@@ -8,7 +8,7 @@ from pathlib import Path
 
 from codedocs import __version__
 from codedocs.scanner import scan
-from codedocs.renderer import render_sales_datasheet, render_technical_spec, render_scan_report, render_migration_plan
+from codedocs.renderer import render_sales_datasheet, render_technical_spec, render_scan_report, render_migration_plan, render_decision_brief
 from codedocs.migration import analyze_migration
 
 
@@ -140,8 +140,9 @@ Examples:
     parser.add_argument("--company", default=None, help="Company name")
     parser.add_argument("--no-browser", action="store_true", help="Don't open report in browser after scan")
     parser.add_argument("--no-migration", action="store_true", help="Skip migration plan generation")
-    parser.add_argument("--target", default=None, help="Focus on specific target (react, angular, blazor, go, vue). Default: show all options")
+    parser.add_argument("--target", default=None, help="Migration target: react-node, net-blazor, sap-fiori-ui5 (or react, angular, blazor, vue, go). Default: show all options")
     parser.add_argument("--erp", nargs="*", default=[], help="ERP integrations to plan (SAP, TOTVS, Sankhya, Senior, Oracle)")
+    parser.add_argument("--lang", default="pt-BR", choices=["pt-BR", "en-US"], help="Output language (default: pt-BR)")
     parser.add_argument("--version", action="version", version=f"codedocs {__version__}")
     parser.add_argument("--json", action="store_true", help="Output raw scan data as JSON")
     args = parser.parse_args()
@@ -178,9 +179,11 @@ Examples:
 
     outputs = []
 
-    scan_html = render_scan_report(data)
-    sales_html = render_sales_datasheet(data)
-    tech_html = render_technical_spec(data)
+    lang = args.lang
+    target = args.target if not args.no_migration else None
+    scan_html = render_scan_report(data, lang=lang)
+    sales_html = render_sales_datasheet(data, lang=lang, target=target)
+    tech_html = render_technical_spec(data, lang=lang, target=target)
 
     outputs.append(("scan-report.html", scan_html, "Scan Report"))
     outputs.append(("sales-datasheet.html", sales_html, "Sales Datasheet"))
@@ -190,8 +193,11 @@ Examples:
         erp_list = [e.upper() if e.lower() == "sap" else e.title() for e in args.erp]
         target = args.target or "all"
         plan = analyze_migration(data, target_platform=target, target_erps=erp_list)
-        migration_html = render_migration_plan(data, plan)
+        migration_html = render_migration_plan(data, plan, lang=lang)
         outputs.append(("migration-plan.html", migration_html, "Migration Plan"))
+
+        decision_html = render_decision_brief(data, plan, lang=lang)
+        outputs.append(("decision-brief.html", decision_html, "Decision Brief"))
 
         print(f"\n  {CYAN}Migration Analysis{RESET}")
         print(f"    Modules: {plan['summary']['total_modules']}")
@@ -199,6 +205,10 @@ Examples:
         print(f"    Critical blockers: {plan['summary']['critical_blockers']}")
         if plan['summary']['erp_integrations']:
             print(f"    ERP integrations: {', '.join(plan['summary']['erp_integrations'])}")
+
+    if args.no_migration:
+        decision_html = render_decision_brief(data, lang=lang)
+        outputs.append(("decision-brief.html", decision_html, "Decision Brief"))
 
     for filename, content, label in outputs:
         filepath = os.path.join(output_dir, filename)
@@ -214,6 +224,7 @@ Examples:
     print(f"  {DIM}Open technical-spec.html for the technical spec{RESET}")
     if not args.no_migration:
         print(f"  {DIM}Open migration-plan.html for the migration roadmap{RESET}")
+    print(f"  {DIM}Open decision-brief.html for the executive summary{RESET}")
     print(f"{BOLD}{'═' * 60}{RESET}\n")
 
     if not args.no_browser:

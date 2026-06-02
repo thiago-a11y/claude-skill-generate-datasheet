@@ -165,6 +165,25 @@ TARGET_PLATFORMS = {
         ],
         "best_for": "Performance-critical APIs, microservices, DevOps teams",
     },
+    "sap-fiori-ui5": {
+        "label": "SAP Fiori (SAPUI5)",
+        "frontend": "SAPUI5 / Fiori Elements",
+        "backend": "OData services (ABAP Gateway / SAP CAP)",
+        "orm": "SAP CDS (Core Data Services)",
+        "pros": [
+            "UX nativa SAP — Fiori Launchpad, Fiori Design Guidelines",
+            "Integração OData nativa com S/4HANA e SAP BTP",
+            "Fiori Elements gera UI automaticamente a partir de anotações CDS",
+            "Single sign-on e roles SAP integrados",
+        ],
+        "cons": [
+            "Stack especializada — requer time com experiência SAP/ABAP",
+            "Maior esforço inicial de setup (BTP, Gateway, Launchpad)",
+            "Ecossistema menor que React/Angular para componentes não-SAP",
+            "Licenciamento SAP pode ter custo significativo",
+        ],
+        "best_for": "Clientes com S/4HANA/BTP que exigem UI nativa SAP Fiori",
+    },
 }
 
 TECH_EQUIVALENCES = {
@@ -175,6 +194,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("ASP.NET Core Minimal API / Controller", "GREEN"),
         "vue+fastapi": ("FastAPI router + Pydantic models", "GREEN"),
         "go+react": ("Gin handler + struct binding", "GREEN"),
+        "sap-fiori-ui5": ("SAP CAP service handler / OData controller", "YELLOW"),
     },
     "Entity Framework 6": {
         "react+fastapi": ("Prisma ORM or SQLAlchemy", "YELLOW"),
@@ -183,6 +203,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("EF Core (Code-First)", "GREEN"),
         "vue+fastapi": ("SQLAlchemy or Prisma", "YELLOW"),
         "go+react": ("GORM", "YELLOW"),
+        "sap-fiori-ui5": ("SAP CDS (Core Data Services)", "RED"),
     },
     "EF Core": {
         "react+fastapi": ("Prisma ORM or SQLAlchemy", "YELLOW"),
@@ -191,6 +212,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("EF Core (keep as-is)", "GREEN"),
         "vue+fastapi": ("SQLAlchemy or Prisma", "YELLOW"),
         "go+react": ("GORM", "YELLOW"),
+        "sap-fiori-ui5": ("SAP CDS (Core Data Services)", "RED"),
     },
     "Razor Views (.cshtml)": {
         "react+fastapi": ("React TSX components", "YELLOW"),
@@ -231,6 +253,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("C# service layer", "YELLOW"),
         "vue+fastapi": ("Python service functions", "RED"),
         "go+react": ("Go service functions", "RED"),
+        "sap-fiori-ui5": ("ABAP CDS views + SAP CAP service layer", "RED"),
     },
     "COM Interop / P/Invoke": {
         "react+fastapi": ("gRPC wrapper service or REST adapter", "RED"),
@@ -239,6 +262,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("gRPC wrapper or keep in Windows service", "YELLOW"),
         "vue+fastapi": ("gRPC wrapper service or REST adapter", "RED"),
         "go+react": ("gRPC wrapper service or REST adapter", "RED"),
+        "sap-fiori-ui5": ("SAP RFC/BAPI wrapper via SAP Gateway", "RED"),
     },
     "System.Web": {
         "react+fastapi": ("FastAPI middleware (no equivalent)", "RED"),
@@ -247,6 +271,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("ASP.NET Core middleware + System.Web Adapters", "YELLOW"),
         "vue+fastapi": ("FastAPI middleware", "RED"),
         "go+react": ("Gin middleware", "RED"),
+        "sap-fiori-ui5": ("SAP CAP middleware / SAP BTP approuter", "RED"),
     },
     "System.Drawing": {
         "react+fastapi": ("Pillow (Python) or Sharp (Node via API)", "YELLOW"),
@@ -263,6 +288,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("NuGet (keep as-is)", "GREEN"),
         "vue+fastapi": ("pip + npm", "GREEN"),
         "go+react": ("go modules + npm", "GREEN"),
+        "sap-fiori-ui5": ("npm (SAPUI5 tooling) + SAP CAP CDS", "YELLOW"),
     },
     "web.config / appsettings.json": {
         "react+fastapi": (".env + python-dotenv", "GREEN"),
@@ -271,6 +297,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("appsettings.json (keep as-is)", "GREEN"),
         "vue+fastapi": (".env + python-dotenv", "GREEN"),
         "go+react": (".env + godotenv", "GREEN"),
+        "sap-fiori-ui5": ("SAP BTP environment variables / MTA descriptor", "YELLOW"),
     },
     # Java source
     "Spring MVC Controller": {
@@ -280,6 +307,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("ASP.NET Core Controller", "GREEN"),
         "vue+fastapi": ("FastAPI router + Pydantic models", "GREEN"),
         "go+react": ("Gin handler + struct binding", "GREEN"),
+        "sap-fiori-ui5": ("SAP CAP service handler", "YELLOW"),
     },
     "Spring Data JPA": {
         "react+fastapi": ("Prisma ORM or SQLAlchemy", "GREEN"),
@@ -288,6 +316,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("EF Core", "GREEN"),
         "vue+fastapi": ("SQLAlchemy or Prisma", "GREEN"),
         "go+react": ("GORM", "YELLOW"),
+        "sap-fiori-ui5": ("SAP CDS (Core Data Services)", "YELLOW"),
     },
     "Thymeleaf / JSP Views": {
         "react+fastapi": ("React TSX components", "GREEN"),
@@ -296,6 +325,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("Razor Components", "GREEN"),
         "vue+fastapi": ("Vue 3 SFC (.vue)", "GREEN"),
         "go+react": ("React TSX components", "GREEN"),
+        "sap-fiori-ui5": ("SAPUI5 XML views / Fiori Elements", "YELLOW"),
     },
     # PHP source
     "Laravel Eloquent ORM": {
@@ -305,6 +335,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("EF Core", "YELLOW"),
         "vue+fastapi": ("SQLAlchemy or Prisma", "GREEN"),
         "go+react": ("GORM", "YELLOW"),
+        "sap-fiori-ui5": ("SAP CDS / OData entity model", "RED"),
     },
     "Blade Templates": {
         "react+fastapi": ("React TSX components", "GREEN"),
@@ -313,6 +344,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("Razor Components", "GREEN"),
         "vue+fastapi": ("Vue 3 SFC (.vue)", "GREEN"),
         "go+react": ("React TSX components", "GREEN"),
+        "sap-fiori-ui5": ("SAPUI5 XML views", "RED"),
     },
     "Laravel Middleware": {
         "react+fastapi": ("FastAPI Depends + middleware", "GREEN"),
@@ -321,6 +353,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("ASP.NET Core middleware", "GREEN"),
         "vue+fastapi": ("FastAPI Depends + middleware", "GREEN"),
         "go+react": ("Gin middleware", "GREEN"),
+        "sap-fiori-ui5": ("SAP BTP approuter + CAP auth", "RED"),
     },
     # PHP Symfony
     "Symfony Controllers": {
@@ -330,6 +363,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("ASP.NET Core Controller", "YELLOW"),
         "vue+fastapi": ("FastAPI router + Pydantic models", "GREEN"),
         "go+react": ("Gin handler + struct binding", "GREEN"),
+        "sap-fiori-ui5": ("SAP CAP service handler", "RED"),
     },
     "Twig Templates": {
         "react+fastapi": ("React TSX components", "GREEN"),
@@ -338,6 +372,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("Razor Components", "YELLOW"),
         "vue+fastapi": ("Vue 3 SFC (.vue)", "GREEN"),
         "go+react": ("React TSX components", "GREEN"),
+        "sap-fiori-ui5": ("SAPUI5 XML views", "RED"),
     },
     "Doctrine ORM": {
         "react+fastapi": ("SQLAlchemy or Prisma", "GREEN"),
@@ -346,6 +381,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("EF Core", "YELLOW"),
         "vue+fastapi": ("SQLAlchemy or Prisma", "GREEN"),
         "go+react": ("GORM", "YELLOW"),
+        "sap-fiori-ui5": ("SAP CDS entity model", "RED"),
     },
     # PHP CodeIgniter / CakePHP / Procedural
     "CodeIgniter / CakePHP": {
@@ -371,6 +407,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("ASP.NET Core Identity + JWT", "YELLOW"),
         "vue+fastapi": ("JWT + stateless API", "YELLOW"),
         "go+react": ("JWT + stateless API", "YELLOW"),
+        "sap-fiori-ui5": ("SAP BTP XSUAA + JWT (SAP auth model)", "RED"),
     },
     # Delphi source
     "Delphi VCL/FMX Forms": {
@@ -388,6 +425,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("EF Core", "YELLOW"),
         "vue+fastapi": ("SQLAlchemy", "RED"),
         "go+react": ("GORM", "RED"),
+        "sap-fiori-ui5": ("SAP CDS / HANA SQL", "RED"),
     },
     # VB6 source
     "VB6 Forms": {
@@ -405,6 +443,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("EF Core", "YELLOW"),
         "vue+fastapi": ("SQLAlchemy", "RED"),
         "go+react": ("GORM", "RED"),
+        "sap-fiori-ui5": ("SAP CDS / HANA SQL", "RED"),
     },
     "ActiveX Controls": {
         "react+fastapi": ("Web components (AG Grid, Chart.js, etc.)", "RED"),
@@ -413,6 +452,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("Blazor components (limited equivalents)", "RED"),
         "vue+fastapi": ("Vue components", "RED"),
         "go+react": ("Web components", "RED"),
+        "sap-fiori-ui5": ("SAPUI5 controls (sap.m, sap.ui.table)", "RED"),
     },
     # Database
     "SQL Server": {
@@ -422,6 +462,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("SQL Server or PostgreSQL (EF Core supports both)", "GREEN"),
         "vue+fastapi": ("PostgreSQL", "YELLOW"),
         "go+react": ("PostgreSQL", "YELLOW"),
+        "sap-fiori-ui5": ("SAP HANA (requires schema migration)", "RED"),
     },
     "Oracle DB": {
         "react+fastapi": ("PostgreSQL (ora2pg: 65-75% schema)", "RED"),
@@ -430,6 +471,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("PostgreSQL or Oracle (EF Core supports both)", "YELLOW"),
         "vue+fastapi": ("PostgreSQL", "RED"),
         "go+react": ("PostgreSQL", "RED"),
+        "sap-fiori-ui5": ("SAP HANA (oracle-to-hana migration)", "RED"),
     },
     # Infrastructure
     "IIS (Web Server)": {
@@ -447,6 +489,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("GitHub Actions or Azure DevOps (keep)", "GREEN"),
         "vue+fastapi": ("GitHub Actions", "GREEN"),
         "go+react": ("GitHub Actions", "GREEN"),
+        "sap-fiori-ui5": ("SAP BTP CI/CD service or GitHub Actions", "YELLOW"),
     },
     "Windows Server": {
         "react+fastapi": ("Linux + Docker (Alpine ~50MB)", "YELLOW"),
@@ -464,6 +507,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("DevExpress Blazor (same vendor)", "GREEN"),
         "vue+fastapi": ("PrimeVue + AG Grid", "YELLOW"),
         "go+react": ("MUI + AG Grid", "YELLOW"),
+        "sap-fiori-ui5": ("SAPUI5 controls (sap.ui.table, sap.viz)", "RED"),
     },
     "Telerik Controls": {
         "react+fastapi": ("Ant Design + AG Grid + Chart.js (Scheduler: custom)", "YELLOW"),
@@ -472,6 +516,7 @@ TECH_EQUIVALENCES = {
         "blazor": ("Telerik Blazor (same vendor)", "GREEN"),
         "vue+fastapi": ("PrimeVue + AG Grid", "YELLOW"),
         "go+react": ("Ant Design + AG Grid", "YELLOW"),
+        "sap-fiori-ui5": ("SAPUI5 controls (sap.m, sap.ui.table)", "RED"),
     },
     "SignalR (Real-Time)": {
         "react+fastapi": ("FastAPI WebSocket + Socket.io client", "YELLOW"),
@@ -489,6 +534,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "jsonwebtoken",
         "pip": "PyJWT",
         "go": "github.com/golang-jwt/jwt",
+        "sap": "SAP XSUAA service binding",
         "accuracy": "GREEN",
     },
     "Logging": {
@@ -496,6 +542,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "winston",
         "pip": "loguru",
         "go": "github.com/sirupsen/logrus",
+        "sap": "SAP Application Logging service",
         "accuracy": "GREEN",
     },
     "ORM": {
@@ -503,6 +550,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "prisma",
         "pip": "SQLAlchemy",
         "go": "gorm.io/gorm",
+        "sap": "SAP CDS (Core Data Services)",
         "accuracy": "GREEN",
     },
     "HTTP Client": {
@@ -510,6 +558,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "axios",
         "pip": "httpx",
         "go": "net/http (stdlib)",
+        "sap": "SAP Cloud SDK httpClient",
         "accuracy": "GREEN",
     },
     "Testing": {
@@ -517,6 +566,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "jest / vitest",
         "pip": "pytest",
         "go": "testing (stdlib)",
+        "sap": "SAP CAP cds.test / OPA5 / QUnit",
         "accuracy": "GREEN",
     },
     "Caching": {
@@ -524,6 +574,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "node-cache / ioredis",
         "pip": "redis-py",
         "go": "github.com/go-redis/redis",
+        "sap": "SAP HANA in-memory (built-in)",
         "accuracy": "GREEN",
     },
     "Messaging": {
@@ -531,6 +582,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "kafkajs / amqplib",
         "pip": "aiokafka / pika",
         "go": "github.com/segmentio/kafka-go",
+        "sap": "SAP Event Mesh / Enterprise Messaging",
         "accuracy": "YELLOW",
     },
     "Validation": {
@@ -538,6 +590,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "joi / zod",
         "pip": "pydantic",
         "go": "github.com/go-playground/validator",
+        "sap": "SAP CDS annotations / SAPUI5 validation",
         "accuracy": "GREEN",
     },
     "Background Jobs": {
@@ -545,6 +598,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "bull / bullmq",
         "pip": "celery",
         "go": "github.com/robfig/cron",
+        "sap": "SAP BTP Job Scheduling Service",
         "accuracy": "YELLOW",
     },
     "DTO Mapping": {
@@ -552,6 +606,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "class-transformer",
         "pip": "pydantic (built-in)",
         "go": "github.com/jinzhu/copier",
+        "sap": "CDS projection views",
         "accuracy": "YELLOW",
     },
     "Email": {
@@ -559,6 +614,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "nodemailer",
         "pip": "smtplib (stdlib) / python-emails",
         "go": "gomail",
+        "sap": "SAP BTP Mail destination",
         "accuracy": "GREEN",
     },
     "PDF Generation": {
@@ -566,6 +622,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "puppeteer-pdf / pdfkit",
         "pip": "reportlab / weasyprint",
         "go": "gofpdf / unipdf",
+        "sap": "SAP Forms by Adobe / custom service",
         "accuracy": "GREEN",
     },
     "Excel": {
@@ -573,6 +630,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "exceljs / sheetjs",
         "pip": "openpyxl / pandas",
         "go": "excelize",
+        "sap": "SAP ALV export / sap.ui.export",
         "accuracy": "GREEN",
     },
     "Image Processing": {
@@ -580,6 +638,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "sharp",
         "pip": "Pillow",
         "go": "disintegration/imaging",
+        "sap": "Custom microservice (no SAP native)",
         "accuracy": "GREEN",
     },
     "Real-Time": {
@@ -587,6 +646,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "socket.io",
         "pip": "FastAPI WebSocket / websockets",
         "go": "gorilla/websocket",
+        "sap": "ABAP Push Channel / SAP BTP WebSocket",
         "accuracy": "YELLOW",
     },
     "Scheduling": {
@@ -594,6 +654,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "node-cron / bull",
         "pip": "APScheduler / celery",
         "go": "robfig/cron",
+        "sap": "SAP BTP Job Scheduling Service",
         "accuracy": "YELLOW",
     },
     "File Storage": {
@@ -601,6 +662,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "aws-sdk / @google-cloud/storage",
         "pip": "boto3 / google-cloud-storage",
         "go": "aws-sdk-go-v2 / go-storage",
+        "sap": "SAP Document Management / Object Store",
         "accuracy": "GREEN",
     },
     "Serialization": {
@@ -608,6 +670,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "JSON (built-in) / class-transformer",
         "pip": "pydantic / json (stdlib)",
         "go": "encoding/json (stdlib)",
+        "sap": "OData JSON (built-in)",
         "accuracy": "GREEN",
     },
     "DI Container": {
@@ -615,6 +678,7 @@ PACKAGE_EQUIVALENCES = {
         "npm": "NestJS @Injectable / tsyringe",
         "pip": "FastAPI Depends()",
         "go": "google/wire / uber/fx",
+        "sap": "SAP CAP cds.connect (built-in)",
         "accuracy": "YELLOW",
     },
 }
@@ -724,11 +788,13 @@ def _resolve_target(target_input):
         "react": "react+fastapi",
         "react+fastapi": "react+fastapi",
         "react+python": "react+fastapi",
+        "react-node": "react+express",
         "react+node": "react+express",
         "react+express": "react+express",
         "angular": "angular+express",
         "angular+node": "angular+express",
         "angular+express": "angular+express",
+        "net-blazor": "blazor",
         "blazor": "blazor",
         "vue": "vue+fastapi",
         "vue+fastapi": "vue+fastapi",
@@ -736,6 +802,10 @@ def _resolve_target(target_input):
         "go": "go+react",
         "go+react": "go+react",
         "react+go": "go+react",
+        "sap-fiori-ui5": "sap-fiori-ui5",
+        "sap-fiori": "sap-fiori-ui5",
+        "sap": "sap-fiori-ui5",
+        "fiori": "sap-fiori-ui5",
     }
     return aliases.get(t, "react+fastapi")
 
@@ -858,7 +928,9 @@ def _build_package_map(target_key):
     target_info = TARGET_PLATFORMS.get(target_key, {})
     backend = target_info.get("backend", "")
 
-    if "Python" in backend or "FastAPI" in backend:
+    if "OData" in backend or "ABAP" in backend or "SAP" in backend:
+        pkg_key = "sap"
+    elif "Python" in backend or "FastAPI" in backend:
         pkg_key = "pip"
     elif "Node" in backend or "Express" in backend or "NestJS" in backend:
         pkg_key = "npm"
