@@ -7,6 +7,7 @@ interface ResultsProps {
   projectName: string;
   isPro: boolean;
   onNewScan: () => void;
+  onActivateClick?: () => void;
 }
 
 export default function Results({
@@ -14,6 +15,7 @@ export default function Results({
   projectName,
   isPro,
   onNewScan,
+  onActivateClick,
 }: ResultsProps) {
   const [activeTab, setActiveTab] = useState("decision-brief");
 
@@ -67,7 +69,7 @@ export default function Results({
       </div>
 
       {/* Document area */}
-      <DocumentView html={html} locked={isLocked} />
+      <DocumentView html={html} locked={isLocked} onActivateClick={onActivateClick} />
     </div>
   );
 }

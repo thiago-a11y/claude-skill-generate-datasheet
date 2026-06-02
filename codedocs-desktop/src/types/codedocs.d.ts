@@ -14,12 +14,26 @@ export interface ScanEvent {
   message?: string;
 }
 
+export interface LicenseResult {
+  valid: boolean;
+  payload?: {
+    app_id: string;
+    edition: string;
+    modules: string[];
+    customer_id: string;
+    expires_at: string;
+  };
+  error?: string;
+  graceRemaining?: number;
+}
+
 export interface CodeDocsAPI {
   version: string;
   selectFolder: () => Promise<string | null>;
   startScan: (projectPath: string, options?: ScanOptions) => Promise<void>;
   onScanEvent: (callback: (event: ScanEvent) => void) => () => void;
   exportPDF: (html: string, defaultName?: string) => Promise<string | null>;
+  verifyLicenseKey: (key: string) => Promise<LicenseResult>;
 }
 
 declare global {

@@ -1,0 +1,36 @@
+appId: com.objetivasolucao.codedocs
+productName: CodeDocs Desktop
+directories:
+  output: release
+
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - "!node_modules"
+
+extraResources:
+  - from: python/dist/
+    to: python/
+    filter:
+      - "**/*"
+
+mac:
+  category: public.app-category.developer-tools
+  icon: assets/icon.png
+  target:
+    - dmg
+
+win:
+  icon: assets/icon.png
+  target:
+    - nsis
+
+nsis:
+  oneClick: true
+  perMachine: false
+  deleteAppDataOnUninstall: false
+
+publish:
+  provider: github
+  owner: thiago-a11y
+  repo: codedocs-desktop

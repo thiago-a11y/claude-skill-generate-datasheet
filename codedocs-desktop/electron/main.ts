@@ -4,6 +4,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { runScan } from "./sidecar.js";
 import type { ScanEvent } from "./preload.js";
+import { verifyLicense } from "./license.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -92,6 +93,11 @@ ipcMain.handle("export-pdf", async (_event, html: string, defaultName: string) =
   } finally {
     pdfWindow.close();
   }
+});
+
+// ── IPC: verify-license ─────────────────────────────────────────────
+ipcMain.handle("verify-license", (_event, key: string) => {
+  return verifyLicense(key);
 });
 
 // ── App lifecycle ───────────────────────────────────────────────────

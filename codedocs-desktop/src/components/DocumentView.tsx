@@ -1,9 +1,10 @@
 interface DocumentViewProps {
   html: string;
   locked: boolean;
+  onActivateClick?: () => void;
 }
 
-export default function DocumentView({ html, locked }: DocumentViewProps) {
+export default function DocumentView({ html, locked, onActivateClick }: DocumentViewProps) {
   return (
     <div className="relative flex-1 min-h-0">
       <iframe
@@ -26,6 +27,7 @@ export default function DocumentView({ html, locked }: DocumentViewProps) {
           </p>
           <button
             type="button"
+            onClick={onActivateClick}
             className="px-5 py-2 bg-accent text-bg text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
           >
             Ativar Licenca Pro

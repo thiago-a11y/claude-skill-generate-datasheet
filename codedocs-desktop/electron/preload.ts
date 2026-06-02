@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
+import type { LicenseResult } from "./license.js";
 
 export interface ScanOptions {
   lang?: string;
@@ -35,4 +36,7 @@ contextBridge.exposeInMainWorld("codedocs", {
 
   exportPDF: (html: string, defaultName?: string): Promise<string | null> =>
     ipcRenderer.invoke("export-pdf", html, defaultName ?? "codedocs-report.pdf"),
+
+  verifyLicenseKey: (key: string): Promise<LicenseResult> =>
+    ipcRenderer.invoke("verify-license", key),
 });
