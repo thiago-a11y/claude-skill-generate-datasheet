@@ -16,3 +16,6 @@ output-claude-code-31-05-2026
 codedocs-desktop/node_modules/
 codedocs-desktop/dist/
 codedocs-desktop/dist-electron/
+codedocs-desktop/python/dist/
+codedocs-desktop/python/build/
+!codedocs-desktop/scripts/

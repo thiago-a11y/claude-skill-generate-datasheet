@@ -8,6 +8,9 @@
     "dev": "vite",
     "build": "tsc && vite build && tsc -p tsconfig.electron.json",
     "electron:dev": "npm run build && electron .",
+    "build:python": "bash scripts/build-python.sh",
+    "build:electron": "npm run build && electron-builder",
+    "dist": "npm run build:python && npm run build:electron",
     "test": "vitest run"
   },
   "dependencies": {
