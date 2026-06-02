@@ -1,0 +1,116 @@
+<h2>Fluxo principal do app — 3 telas</h2>
+<p class="subtitle">O gestor arrasta a pasta, espera o scan, navega os documentos</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>Tela Inicial — Drop Zone</h3>
+      <div class="mockup">
+        <div class="mockup-header">CodeDocs Desktop</div>
+        <div class="mockup-body" style="min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed rgba(245,158,11,.4);border-radius:12px;margin:16px;background:rgba(245,158,11,.03)">
+          <div style="font-size:48px;margin-bottom:12px">📂</div>
+          <div style="font-size:18px;font-weight:600;color:#fff">Arraste a pasta do projeto aqui</div>
+          <div style="font-size:13px;color:#a0a0b0;margin-top:8px">ou clique para selecionar</div>
+          <div style="margin-top:24px;display:flex;gap:12px">
+            <div style="padding:6px 16px;background:rgba(245,158,11,.15);color:#f59e0b;border-radius:6px;font-size:12px">PHP</div>
+            <div style="padding:6px 16px;background:rgba(59,130,246,.15);color:#3b82f6;border-radius:6px;font-size:12px">TypeScript</div>
+            <div style="padding:6px 16px;background:rgba(34,197,94,.15);color:#22c55e;border-radius:6px;font-size:12px">Python</div>
+            <div style="padding:6px 16px;background:rgba(239,68,68,.15);color:#ef4444;border-radius:6px;font-size:12px">Java</div>
+            <div style="padding:6px 16px;background:rgba(168,85,247,.15);color:#a855f7;border-radius:6px;font-size:12px">C#</div>
+          </div>
+          <div style="font-size:11px;color:#666;margin-top:16px">100% offline · Zero IA · Seus dados nunca saem do computador</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:8px 20px;font-size:11px;color:#666">
+          <span>v1.0.0</span>
+          <span>Free — Scan Report + Decision Brief</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Tela de Progresso — Scanning</h3>
+      <div class="mockup">
+        <div class="mockup-header">CodeDocs Desktop — Analisando...</div>
+        <div class="mockup-body" style="padding:24px">
+          <div style="text-align:center;margin-bottom:20px">
+            <div style="font-size:16px;font-weight:600;color:#fff">PropostaSAP</div>
+            <div style="font-size:12px;color:#a0a0b0">/Users/thiago/propostasap</div>
+          </div>
+          <div style="background:#1a1a2e;border-radius:8px;padding:16px;margin-bottom:16px">
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
+              <span style="color:#fff">Progresso</span>
+              <span style="color:#f59e0b">68%</span>
+            </div>
+            <div style="height:6px;background:#2a2a3e;border-radius:3px;overflow:hidden">
+              <div style="width:68%;height:100%;background:linear-gradient(90deg,#f59e0b,#22c55e);border-radius:3px"></div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:#a0a0b0;space-y:4px">
+            <div style="margin-bottom:6px">✅ Detectando linguagens — 921 arquivos</div>
+            <div style="margin-bottom:6px">✅ Escaneando endpoints — 343 detectados</div>
+            <div style="margin-bottom:6px">✅ Analisando banco de dados — 54 tabelas</div>
+            <div style="margin-bottom:6px">✅ Verificando segurança — 9/9 controles</div>
+            <div style="margin-bottom:6px;color:#f59e0b">⏳ Classificando integrações...</div>
+            <div style="color:#666">○ Gerando documentos</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>Tela de Resultados — Abas + Export</h3>
+      <div class="mockup">
+        <div class="mockup-header">CodeDocs Desktop — PropostaSAP</div>
+        <div class="mockup-body" style="padding:0">
+          <div style="display:flex;background:#12121a;border-bottom:1px solid #2a2a3e;font-size:12px">
+            <div style="padding:10px 16px;color:#f59e0b;border-bottom:2px solid #f59e0b;font-weight:600">📊 Decision Brief</div>
+            <div style="padding:10px 16px;color:#a0a0b0">📋 Scan Report</div>
+            <div style="padding:10px 16px;color:#a0a0b0">🔧 Tech Spec</div>
+            <div style="padding:10px 16px;color:#666">🔒 Migration Plan</div>
+            <div style="padding:10px 16px;color:#666">🔒 Sales Datasheet</div>
+            <div style="flex:1"></div>
+            <div style="padding:10px 16px;color:#22c55e;font-weight:600;cursor:pointer">📄 Exportar PDF</div>
+          </div>
+          <div style="padding:16px">
+            <div style="text-align:center;padding:20px">
+              <div style="font-size:48px;font-weight:700;color:#eab308">51</div>
+              <div style="font-size:11px;color:#a0a0b0;text-transform:uppercase;letter-spacing:1px">Risk Score</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+              <div style="background:#12121a;border-radius:6px;padding:10px;border-left:3px solid #22c55e">
+                <div style="font-size:11px;color:#22c55e;font-weight:600">O que funciona bem</div>
+                <div style="font-size:10px;color:#a0a0b0;margin-top:4px">JWT + RBAC + 9/9 segurança</div>
+              </div>
+              <div style="background:#12121a;border-radius:6px;padding:10px;border-left:3px solid #eab308">
+                <div style="font-size:11px;color:#eab308;font-weight:600">Precisa de atenção</div>
+                <div style="font-size:10px;color:#a0a0b0;margin-top:4px">0% testes · bus factor 2</div>
+              </div>
+              <div style="background:#12121a;border-radius:6px;padding:10px;border-left:3px solid #3b82f6">
+                <div style="font-size:11px;color:#3b82f6;font-weight:600">Recomendamos</div>
+                <div style="font-size:10px;color:#a0a0b0;margin-top:4px">Testes nos módulos de receita</div>
+              </div>
+            </div>
+            <div style="margin-top:12px;padding:8px 12px;background:rgba(245,158,11,.08);border-left:3px solid #f59e0b;border-radius:0 6px 6px 0;font-size:11px;color:#a0a0b0">
+              Parecer Executivo: Sistema moderadamente arriscado. Pode crescer em escopo, mas precisa de plano de mitigação ativo nos próximos 60 dias.
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:8px 16px;font-size:10px;color:#666;border-top:1px solid #2a2a3e">
+            <span>🔒 = Pro (Migration Plan, Sales Datasheet)</span>
+            <span>Escaneado em 2026-06-02 15:23</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:20px;padding:14px;background:rgba(59,130,246,.08);border-left:3px solid #3b82f6;border-radius:0 6px 6px 0">
+  <p style="margin:0;font-size:13px"><strong>Nota:</strong> As abas com 🔒 mostram um preview borrado + botão "Desbloquear (Pro)" para o modelo freemium. Scan Report e Decision Brief são sempre livres.</p>
+</div>

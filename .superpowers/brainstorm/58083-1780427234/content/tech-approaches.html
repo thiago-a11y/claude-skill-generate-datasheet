@@ -1,0 +1,98 @@
+<h2>Qual tecnologia usar para o app desktop?</h2>
+<p class="subtitle">3 abordagens reais para Windows + Mac, com o CodeDocs (Python) rodando por baixo</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Electron (TypeScript + React)</h3>
+      <p>O app é uma janela de browser que roda local. A UI é feita em React (sua stack atual). O Python do CodeDocs roda como processo filho.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Prós</h4>
+          <ul>
+            <li>Você já sabe React + TypeScript</li>
+            <li>Maior ecossistema de componentes desktop (VS Code, Slack, Discord usam)</li>
+            <li>Empacota para .exe (Windows) e .dmg (Mac) com electron-builder</li>
+            <li>Renderiza HTML nativo — seus documentos CodeDocs aparecem pixel-perfect</li>
+            <li>PDF export nativo via Chromium (print-to-PDF built-in)</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Contras</h4>
+          <ul>
+            <li>Instalador grande (~150-200MB) porque inclui Chromium</li>
+            <li>Precisa embutir Python no pacote (ou pedir que o usuário instale)</li>
+            <li>Consumo de RAM médio-alto (~200-400MB)</li>
+          </ul>
+        </div>
+      </div>
+      <p style="margin-top:12px;color:#22c55e"><strong>Referências:</strong> VS Code, Slack, Discord, Figma Desktop, Postman</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Tauri (TypeScript + React + Rust)</h3>
+      <p>Como o Electron, mas usa o WebView nativo do SO (Edge/WebKit) em vez de embutir Chromium. Backend em Rust, mas a UI continua sendo React.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Prós</h4>
+          <ul>
+            <li>Instalador MUITO pequeno (~5-15MB vs 150MB do Electron)</li>
+            <li>Baixo consumo de RAM (~50-100MB)</li>
+            <li>Você ainda usa React + TypeScript na UI</li>
+            <li>Mais rápido para abrir, mais leve para rodar</li>
+            <li>Segurança melhor (sem Node.js no processo principal)</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Contras</h4>
+          <ul>
+            <li>WebView do Windows (Edge WebView2) pode ter inconsistências visuais vs Mac (WebKit)</li>
+            <li>Comunidade menor que Electron (crescendo rápido)</li>
+            <li>Precisa de Rust para o backend — ou usar "sidecar" para rodar o Python</li>
+            <li>PDF export precisa de lib externa (não tem Chromium built-in)</li>
+          </ul>
+        </div>
+      </div>
+      <p style="margin-top:12px;color:#22c55e"><strong>Referências:</strong> Cody (Sourcegraph), 1Password (migrou do Electron), Crabnebula</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Python Nativo (PyInstaller + CustomTkinter ou PyWebView)</h3>
+      <p>App 100% Python. Usa CustomTkinter para UI nativa OU PyWebView para renderizar HTML. Empacota com PyInstaller em .exe/.app.</p>
+      <div class="pros-cons">
+        <div class="pros">
+          <h4>Prós</h4>
+          <ul>
+            <li>Sem dependência de Node/npm/React — tudo em Python</li>
+            <li>CodeDocs já é Python — integração direta, sem processo filho</li>
+            <li>PyWebView renderiza HTML nativo (seus documentos CodeDocs funcionam)</li>
+            <li>Instalador pequeno (~30-50MB)</li>
+          </ul>
+        </div>
+        <div class="cons">
+          <h4>Contras</h4>
+          <ul>
+            <li>UI menos polida que React (CustomTkinter é limitado)</li>
+            <li>PyWebView tem menos controle que Electron/Tauri</li>
+            <li>Comunidade muito menor para apps desktop em Python</li>
+            <li>PDF export manual (weasyprint/reportlab)</li>
+            <li>Menos exemplos de apps comerciais bem-sucedidos</li>
+          </ul>
+        </div>
+      </div>
+      <p style="margin-top:12px;color:#22c55e"><strong>Referências:</strong> Poucos — Calibre (e-book), Frescobaldi (music notation)</p>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:24px;padding:16px;background:rgba(59,130,246,.08);border-left:3px solid #3b82f6;border-radius:0 6px 6px 0">
+  <h3 style="margin-top:0">💡 Minha recomendação: Tauri (B)</h3>
+  <p>Para um gestor não-técnico, o instalador de 10MB vs 200MB faz diferença real. A UI continua sendo React (sua stack). O CodeDocs Python roda como "sidecar" (processo separado que o Tauri gerencia). O único trade-off é o PDF export, que resolve com uma lib como <code>wkhtmltopdf</code> embutida ou gerando PDF no próprio Python (que você já tem).</p>
+</div>
