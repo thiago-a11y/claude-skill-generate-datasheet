@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import DropZone from "./pages/DropZone";
 import Progress from "./pages/Progress";
+import Results from "./pages/Results";
 
 type Page = "dropzone" | "progress" | "results" | "error";
 
@@ -51,24 +52,18 @@ function App() {
         />
       );
 
-    case "results":
+    case "results": {
+      const projectName =
+        scanState.projectPath.split("/").filter(Boolean).pop() ?? "project";
       return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-bg text-fg p-8">
-          <h1 className="text-2xl font-semibold mb-4">Scan completo</h1>
-          <p className="text-fg2 mb-8">
-            {scanState.files
-              ? `${Object.keys(scanState.files).length} docs gerados`
-              : "Nenhum documento gerado"}
-          </p>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="px-6 py-2 bg-accent text-bg font-medium rounded-lg hover:bg-accent/90 transition-colors"
-          >
-            Escanear outro projeto
-          </button>
-        </div>
+        <Results
+          files={scanState.files ?? {}}
+          projectName={projectName}
+          isPro={false}
+          onNewScan={handleReset}
+        />
       );
+    }
 
     case "error":
       return (
