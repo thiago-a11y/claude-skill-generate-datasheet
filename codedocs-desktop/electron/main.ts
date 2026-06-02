@@ -1,16 +1,21 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
+import { runScan } from "./sidecar.js";
+import type { ScanEvent } from "./preload.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
 
+let mainWindow: BrowserWindow | null = null;
+
 function createWindow() {
   const preload = path.join(__dirname, "preload.js");
 
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1000,
     height: 700,
     minWidth: 800,
@@ -24,12 +29,72 @@ function createWindow() {
   });
 
   if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL);
+    mainWindow.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    win.loadFile(path.join(__dirname, "../dist/index.html"));
+    mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
   }
+
+  mainWindow.on("closed", () => {
+    mainWindow = null;
+  });
 }
 
+// ── IPC: select-folder ──────────────────────────────────────────────
+ipcMain.handle("select-folder", async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ["openDirectory"],
+    title: "Select project folder",
+  });
+  if (result.canceled || result.filePaths.length === 0) {
+    return null;
+  }
+  return result.filePaths[0];
+});
+
+// ── IPC: start-scan ─────────────────────────────────────────────────
+ipcMain.handle("start-scan", async (_event, projectPath: string, options: Record<string, string>) => {
+  await runScan(projectPath, options, (scanEvent: ScanEvent) => {
+    mainWindow?.webContents.send("scan-event", scanEvent);
+  });
+});
+
+// ── IPC: export-pdf ─────────────────────────────────────────────────
+ipcMain.handle("export-pdf", async (_event, html: string, defaultName: string) => {
+  const saveResult = await dialog.showSaveDialog({
+    defaultPath: defaultName,
+    filters: [{ name: "PDF", extensions: ["pdf"] }],
+  });
+
+  if (saveResult.canceled || !saveResult.filePath) {
+    return null;
+  }
+
+  const pdfWindow = new BrowserWindow({
+    show: false,
+    width: 1024,
+    height: 768,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  try {
+    await pdfWindow.loadURL(
+      `data:text/html;charset=utf-8,${encodeURIComponent(html)}`
+    );
+    const pdfData = await pdfWindow.webContents.printToPDF({
+      printBackground: true,
+      pageSize: "A4",
+    });
+    fs.writeFileSync(saveResult.filePath, pdfData);
+    return saveResult.filePath;
+  } finally {
+    pdfWindow.close();
+  }
+});
+
+// ── App lifecycle ───────────────────────────────────────────────────
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
