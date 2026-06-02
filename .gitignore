@@ -11,3 +11,8 @@ launch-post-*
 codedocs-output/
 __pycache__/
 output-claude-code-31-05-2026
+
+# CodeDocs Desktop
+codedocs-desktop/node_modules/
+codedocs-desktop/dist/
+codedocs-desktop/dist-electron/
