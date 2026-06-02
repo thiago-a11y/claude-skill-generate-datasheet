@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import { runScan } from "./sidecar.js";
 import type { ScanEvent } from "./preload.js";
 import { verifyLicense } from "./license.js";
+import { setupAutoUpdater } from "./updater.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -34,6 +35,8 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
   }
+
+  setupAutoUpdater(mainWindow);
 
   mainWindow.on("closed", () => {
     mainWindow = null;
