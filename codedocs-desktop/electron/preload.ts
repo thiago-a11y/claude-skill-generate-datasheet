@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
-import type { LicenseResult } from "./license.js";
+import type { LicenseResult } from "./license";
 
 export interface ScanOptions {
   lang?: string;

@@ -1,14 +1,10 @@
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
-import { runScan } from "./sidecar.js";
-import type { ScanEvent } from "./preload.js";
-import { verifyLicense } from "./license.js";
-import { setupAutoUpdater } from "./updater.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { runScan } from "./sidecar";
+import type { ScanEvent } from "./preload";
+import { verifyLicense } from "./license";
+import { setupAutoUpdater } from "./updater";
 
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
 
