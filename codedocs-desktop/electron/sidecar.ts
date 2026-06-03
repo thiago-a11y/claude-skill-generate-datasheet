@@ -42,8 +42,18 @@ export function resolvePythonPath(isPackaged?: boolean, resourcesPath?: string):
   const repoRoot = path.resolve(__dirname, "..", "..");
 
   if (isPackaged && resourcesPath) {
+    const pythonDir = path.join(resourcesPath, "python");
+    const isWin = process.platform === "win32";
+
+    if (isWin) {
+      return {
+        python: path.join(pythonDir, "python.exe"),
+        wrapper: path.join(pythonDir, "wrapper.py"),
+        repoRoot: pythonDir,
+      };
+    }
     return {
-      python: path.join(resourcesPath, "python", "codedocs-wrapper"),
+      python: path.join(pythonDir, "codedocs-wrapper"),
       wrapper: "",
       repoRoot,
     };

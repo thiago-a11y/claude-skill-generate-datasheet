@@ -144,6 +144,7 @@ Examples:
     parser.add_argument("--erp", nargs="*", default=[], help="ERP integrations to plan (SAP, TOTVS, Sankhya, Senior, Oracle)")
     parser.add_argument("--lang", default="pt-BR", choices=["pt-BR", "en-US"], help="Output language (default: pt-BR)")
     parser.add_argument("--version", action="version", version=f"codedocs {__version__}")
+    parser.add_argument("--full-docs", action="store_true", help="Generate full documentation pack (11 Markdown files)")
     parser.add_argument("--json", action="store_true", help="Output raw scan data as JSON")
     args = parser.parse_args()
 
@@ -210,8 +211,17 @@ Examples:
         decision_html = render_decision_brief(data, lang=lang)
         outputs.append(("decision-brief.html", decision_html, "Decision Brief"))
 
+    if args.full_docs:
+        from codedocs.md_renderer import render_all_md
+        docs_dir = os.path.join(output_dir, "docs")
+        os.makedirs(docs_dir, exist_ok=True)
+        md_files = render_all_md(data)
+        for filename, content in md_files.items():
+            outputs.append((os.path.join("docs", filename), content, filename.replace(".md", "").replace("-", " ").title()))
+
     for filename, content, label in outputs:
         filepath = os.path.join(output_dir, filename)
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)
         print(f"  {GREEN}✓{RESET} {label:<20} → {os.path.relpath(filepath)}")

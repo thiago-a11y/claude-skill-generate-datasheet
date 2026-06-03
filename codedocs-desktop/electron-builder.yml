@@ -19,11 +19,21 @@ mac:
   icon: assets/icon.png
   target:
     - dmg
+  extraResources:
+    - from: python/dist/
+      to: python/
+      filter:
+        - "**/*"
 
 win:
   icon: assets/icon.png
   target:
     - nsis
+  extraResources:
+    - from: python/win-embed/python-runtime/
+      to: python/
+      filter:
+        - "**/*"
 
 nsis:
   oneClick: true

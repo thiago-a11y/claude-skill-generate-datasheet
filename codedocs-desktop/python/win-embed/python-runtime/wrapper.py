@@ -18,9 +18,9 @@ import os
 import sys
 import traceback
 
-# Resolve the codedocs package two levels up from this file.
+# When bundled: codedocs/ is in the same directory as this script
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-_REPO_ROOT = os.path.abspath(os.path.join(_THIS_DIR, "..", ".."))
+_REPO_ROOT = _THIS_DIR
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
@@ -33,7 +33,6 @@ from codedocs.renderer import (
     render_decision_brief,
 )
 from codedocs.migration import analyze_migration
-from codedocs.md_renderer import render_all_md
 
 
 def _emit(obj):
@@ -68,11 +67,6 @@ def handle_scan(path, options=None):
         files["decision-brief"] = render_decision_brief(data, plan, lang=lang)
     else:
         files["decision-brief"] = render_decision_brief(data, lang=lang)
-
-    # --- markdown docs (full documentation pack) ---
-    if options.get("full_docs"):
-        md_files = render_all_md(data)
-        files["md_docs"] = md_files
 
     _emit({"type": "result", "files": files})
 
