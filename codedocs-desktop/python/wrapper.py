@@ -62,12 +62,9 @@ def handle_scan(path, options=None):
     files["sales-datasheet"] = render_sales_datasheet(data, lang=lang, target=target)
     files["technical-spec"] = render_technical_spec(data, lang=lang, target=target)
 
-    if target:
-        plan = analyze_migration(data, target_platform=target)
-        files["migration-plan"] = render_migration_plan(data, plan, lang=lang)
-        files["decision-brief"] = render_decision_brief(data, plan, lang=lang)
-    else:
-        files["decision-brief"] = render_decision_brief(data, lang=lang)
+    plan = analyze_migration(data, target_platform=target or "all")
+    files["migration-plan"] = render_migration_plan(data, plan, lang=lang)
+    files["decision-brief"] = render_decision_brief(data, plan, lang=lang)
 
     # --- markdown docs (full documentation pack) ---
     if options.get("full_docs"):
