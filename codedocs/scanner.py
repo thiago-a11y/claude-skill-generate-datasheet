@@ -104,6 +104,30 @@ SYSTEM_TYPE_PATTERNS = {
 }
 
 
+def _load_codedocsignore(cwd):
+    ignore_file = os.path.join(cwd, ".codedocsignore")
+    extra = set()
+    if os.path.exists(ignore_file):
+        try:
+            with open(ignore_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        extra.add(line.rstrip("/"))
+        except IOError:
+            pass
+    return extra
+
+
+def _build_excludes(extra_dirs):
+    all_dirs = EXCLUDE_DIRS | extra_dirs
+    grep_parts = " ".join(f"--exclude-dir={d}" for d in sorted(all_dirs))
+    grep_parts += " --exclude='index-*.js' --exclude='*.min.js' --exclude='*.bundle.js' --exclude='*.chunk.js'"
+    find_parts = " ".join(f"| grep -v '/{d}/'" for d in sorted(all_dirs))
+    find_parts += " | grep -v 'index-.*\\.js$' | grep -v '\\.min\\.js$'"
+    return grep_parts, find_parts
+
+
 def _detect_project_name(cwd):
     pkg = os.path.join(cwd, "package.json")
     if os.path.exists(pkg):
@@ -132,6 +156,11 @@ def scan(project_path, progress_callback=None):
     p = Path(project_path).resolve()
     if not p.exists():
         raise FileNotFoundError(f"Path not found: {p}")
+
+    extra_ignores = _load_codedocsignore(str(p))
+    if extra_ignores:
+        global GREP_EXCLUDE, FIND_EXCLUDE
+        GREP_EXCLUDE, FIND_EXCLUDE = _build_excludes(extra_ignores)
 
     project_name = _detect_project_name(str(p)) or p.name
 
