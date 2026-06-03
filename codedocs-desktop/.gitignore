@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist-electron/
+release/
+python/dist/
+python/build/
+python/*.spec
+.env
