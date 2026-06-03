@@ -24,8 +24,8 @@ function App() {
   });
   const license = useLicense();
 
-  const handleFolderSelected = useCallback((path: string, fullDocs: boolean) => {
-    setScanState({ projectPath: path, fullDocs, files: null, error: null });
+  const handleFolderSelected = useCallback((path: string) => {
+    setScanState({ projectPath: path, fullDocs: true, files: null, error: null });
     setPage("progress");
   }, []);
 
