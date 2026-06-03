@@ -9,6 +9,7 @@ type Page = "dropzone" | "progress" | "results" | "error";
 
 interface ScanState {
   projectPath: string;
+  fullDocs: boolean;
   files: Record<string, string> | null;
   error: string | null;
 }
@@ -17,13 +18,14 @@ function App() {
   const [page, setPage] = useState<Page>("dropzone");
   const [scanState, setScanState] = useState<ScanState>({
     projectPath: "",
+    fullDocs: false,
     files: null,
     error: null,
   });
   const license = useLicense();
 
-  const handleFolderSelected = useCallback((path: string) => {
-    setScanState({ projectPath: path, files: null, error: null });
+  const handleFolderSelected = useCallback((path: string, fullDocs: boolean) => {
+    setScanState({ projectPath: path, fullDocs, files: null, error: null });
     setPage("progress");
   }, []);
 
@@ -38,7 +40,7 @@ function App() {
   }, []);
 
   const handleReset = useCallback(() => {
-    setScanState({ projectPath: "", files: null, error: null });
+    setScanState({ projectPath: "", fullDocs: false, files: null, error: null });
     setPage("dropzone");
   }, []);
 
@@ -51,6 +53,7 @@ function App() {
         return (
           <Progress
             projectPath={scanState.projectPath}
+            fullDocs={scanState.fullDocs}
             onComplete={handleScanComplete}
             onError={handleScanError}
           />

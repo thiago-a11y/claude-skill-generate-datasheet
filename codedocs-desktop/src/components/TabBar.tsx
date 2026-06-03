@@ -17,12 +17,17 @@ interface TabBarProps {
   activeTab: string;
   onTabChange: (tabId: string) => void;
   isPro: boolean;
+  hasMdDocs?: boolean;
 }
 
-export default function TabBar({ activeTab, onTabChange, isPro }: TabBarProps) {
+export default function TabBar({ activeTab, onTabChange, isPro, hasMdDocs }: TabBarProps) {
+  const allTabs = hasMdDocs
+    ? [...TABS, { id: "md-docs", label: "Docs MD (11)", icon: "📁", pro: false }]
+    : TABS;
+
   return (
     <div className="flex bg-bg2 overflow-x-auto">
-      {TABS.map((tab) => {
+      {allTabs.map((tab) => {
         const isActive = activeTab === tab.id;
         const isLocked = tab.pro && !isPro;
 

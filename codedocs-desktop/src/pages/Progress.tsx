@@ -3,6 +3,7 @@ import useScan from "../hooks/useScan";
 
 interface ProgressProps {
   projectPath: string;
+  fullDocs?: boolean;
   onComplete: (files: Record<string, string>) => void;
   onError: (message: string) => void;
 }
@@ -14,10 +15,11 @@ function projectName(path: string): string {
 
 export default function Progress({
   projectPath,
+  fullDocs,
   onComplete,
   onError,
 }: ProgressProps) {
-  const { status, progress, steps, result, error } = useScan(projectPath);
+  const { status, progress, steps, result, error } = useScan(projectPath, fullDocs);
 
   useEffect(() => {
     if (status === "done" && result) {

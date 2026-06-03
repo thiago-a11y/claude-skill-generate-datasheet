@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 
 interface DropZoneProps {
-  onFolderSelected: (path: string) => void;
+  onFolderSelected: (path: string, fullDocs: boolean) => void;
 }
 
 const langBadges = [
@@ -14,6 +14,7 @@ const langBadges = [
 
 export default function DropZone({ onFolderSelected }: DropZoneProps) {
   const [dragging, setDragging] = useState(false);
+  const [fullDocs, setFullDocs] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -38,7 +39,7 @@ export default function DropZone({ onFolderSelected }: DropZoneProps) {
         // Electron exposes .path on dropped files
         const filePath = (file as File & { path: string }).path;
         if (filePath) {
-          onFolderSelected(filePath);
+          onFolderSelected(filePath, fullDocs);
         }
       }
     },
@@ -48,9 +49,9 @@ export default function DropZone({ onFolderSelected }: DropZoneProps) {
   const handleClick = useCallback(async () => {
     const folder = await window.codedocs.selectFolder();
     if (folder) {
-      onFolderSelected(folder);
+      onFolderSelected(folder, fullDocs);
     }
-  }, [onFolderSelected]);
+  }, [onFolderSelected, fullDocs]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-bg text-fg p-8 select-none">
@@ -94,8 +95,21 @@ export default function DropZone({ onFolderSelected }: DropZoneProps) {
         ))}
       </div>
 
+      {/* Full docs toggle */}
+      <label className="flex items-center gap-3 mt-6 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={fullDocs}
+          onChange={(e) => setFullDocs(e.target.checked)}
+          className="w-4 h-4 rounded border-fg2/30 bg-bg2 text-accent accent-amber-500 cursor-pointer"
+        />
+        <span className="text-sm text-fg2">
+          Gerar documentação completa (11 arquivos Markdown extras)
+        </span>
+      </label>
+
       {/* Trust message */}
-      <p className="mt-6 text-sm text-fg2 text-center">
+      <p className="mt-4 text-sm text-fg2 text-center">
         100% offline &middot; Zero IA &middot; Seus dados nunca saem do
         computador
       </p>

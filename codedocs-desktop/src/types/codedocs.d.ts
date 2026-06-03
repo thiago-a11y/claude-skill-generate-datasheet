@@ -3,6 +3,7 @@
 export interface ScanOptions {
   lang?: string;
   target?: string;
+  full_docs?: boolean;
 }
 
 export interface ScanEvent {
@@ -34,6 +35,8 @@ export interface CodeDocsAPI {
   onScanEvent: (callback: (event: ScanEvent) => void) => () => void;
   exportPDF: (html: string, defaultName?: string) => Promise<string | null>;
   verifyLicenseKey: (key: string) => Promise<LicenseResult>;
+  saveFile: (folder: string, filename: string, content: string) => Promise<void>;
+  saveTextFile: (content: string, defaultName: string) => Promise<string | null>;
 }
 
 declare global {

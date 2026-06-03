@@ -11,6 +11,7 @@ import path from "path";
 export interface ScanOptions {
   lang?: string;
   target?: string;
+  full_docs?: boolean;
 }
 
 export interface ScanEvent {
@@ -81,6 +82,7 @@ export function buildScanRequest(
     options: {
       lang: options?.lang ?? "pt-BR",
       ...(options?.target ? { target: options.target } : {}),
+      ...(options?.full_docs ? { full_docs: true } : {}),
     },
   });
 }

@@ -72,7 +72,7 @@ def handle_scan(path, options=None):
     # --- markdown docs (full documentation pack) ---
     if options.get("full_docs"):
         md_files = render_all_md(data)
-        files["md_docs"] = md_files
+        files["md_docs"] = json.dumps(md_files, ensure_ascii=False)
 
     _emit({"type": "result", "files": files})
 

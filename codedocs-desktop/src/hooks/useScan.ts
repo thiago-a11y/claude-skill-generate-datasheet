@@ -16,7 +16,7 @@ interface UseScanResult {
   error: string | null;
 }
 
-export default function useScan(projectPath: string): UseScanResult {
+export default function useScan(projectPath: string, fullDocs?: boolean): UseScanResult {
   const [status, setStatus] = useState<ScanStatus>("idle");
   const [progress, setProgress] = useState(0);
   const [steps, setSteps] = useState<ScanStep[]>([]);
@@ -62,7 +62,7 @@ export default function useScan(projectPath: string): UseScanResult {
       }
     });
 
-    window.codedocs.startScan(projectPath, { lang: "pt-BR" }).catch((err) => {
+    window.codedocs.startScan(projectPath, { lang: "pt-BR", full_docs: fullDocs }).catch((err) => {
       setError(err instanceof Error ? err.message : String(err));
       setStatus("error");
     });

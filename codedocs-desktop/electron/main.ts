@@ -99,6 +99,25 @@ ipcMain.handle("verify-license", (_event, key: string) => {
   return verifyLicense(key);
 });
 
+// ── IPC: save-file (write to folder) ────────────────────────────────
+ipcMain.handle("save-file", async (_event, folder: string, filename: string, content: string) => {
+  const filepath = path.join(folder, filename);
+  await fs.promises.mkdir(path.dirname(filepath), { recursive: true });
+  await fs.promises.writeFile(filepath, content, "utf-8");
+});
+
+// ── IPC: save-text-file (save dialog) ───────────────────────────────
+ipcMain.handle("save-text-file", async (_event, content: string, defaultName: string) => {
+  if (!mainWindow) return null;
+  const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+    defaultPath: defaultName,
+    filters: [{ name: "Markdown", extensions: ["md"] }],
+  });
+  if (canceled || !filePath) return null;
+  await fs.promises.writeFile(filePath, content, "utf-8");
+  return filePath;
+});
+
 // ── App lifecycle ───────────────────────────────────────────────────
 app.whenReady().then(createWindow);
 

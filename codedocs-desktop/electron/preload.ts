@@ -39,4 +39,10 @@ contextBridge.exposeInMainWorld("codedocs", {
 
   verifyLicenseKey: (key: string): Promise<LicenseResult> =>
     ipcRenderer.invoke("verify-license", key),
+
+  saveFile: (folder: string, filename: string, content: string): Promise<void> =>
+    ipcRenderer.invoke("save-file", folder, filename, content),
+
+  saveTextFile: (content: string, defaultName: string): Promise<string | null> =>
+    ipcRenderer.invoke("save-text-file", content, defaultName),
 });

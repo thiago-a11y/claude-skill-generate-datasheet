@@ -1,6 +1,7 @@
 import { useState } from "react";
 import TabBar, { TABS } from "../components/TabBar";
 import DocumentView from "../components/DocumentView";
+import MdDocsList from "../components/MdDocsList";
 
 interface ResultsProps {
   files: Record<string, string>;
@@ -19,8 +20,12 @@ export default function Results({
 }: ResultsProps) {
   const [activeTab, setActiveTab] = useState("decision-brief");
 
+  const mdDocs = (files.md_docs ? JSON.parse(files.md_docs) : null) as Record<string, string> | null;
+  const hasMdDocs = mdDocs !== null && Object.keys(mdDocs).length > 0;
+  const isMdTab = activeTab === "md-docs";
+
   const currentTab = TABS.find((t) => t.id === activeTab) ?? TABS[0];
-  const isLocked = currentTab.pro && !isPro;
+  const isLocked = !isMdTab && currentTab.pro && !isPro;
   const html = files[activeTab] ?? "";
 
   const handleExportPDF = async () => {
@@ -43,7 +48,7 @@ export default function Results({
     <div className="flex flex-col h-screen bg-bg text-fg">
       {/* Top bar */}
       <div className="flex items-center justify-between border-b border-bg3">
-        <TabBar activeTab={activeTab} onTabChange={setActiveTab} isPro={isPro} />
+        <TabBar activeTab={activeTab} onTabChange={setActiveTab} isPro={isPro} hasMdDocs={hasMdDocs} />
 
         <div className="flex items-center gap-2 px-4 shrink-0">
           <button
@@ -69,7 +74,11 @@ export default function Results({
       </div>
 
       {/* Document area */}
-      <DocumentView html={html} locked={isLocked} onActivateClick={onActivateClick} />
+      {isMdTab && mdDocs ? (
+        <MdDocsList mdDocs={mdDocs} projectName={projectName} />
+      ) : (
+        <DocumentView html={html} locked={isLocked} onActivateClick={onActivateClick} />
+      )}
     </div>
   );
 }
