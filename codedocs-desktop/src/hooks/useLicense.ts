@@ -41,8 +41,9 @@ export default function useLicense(): UseLicenseResult {
       });
   }, []);
 
-  const activate = useCallback(async (key: string) => {
+  const activate = useCallback(async (rawKey: string) => {
     setError(undefined);
+    const key = rawKey.trim().replace(/\s+/g, "");
     try {
       const result: LicenseResult = await window.codedocs.verifyLicenseKey(key);
       if (result.valid) {
