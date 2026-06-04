@@ -17,12 +17,21 @@ def render_architecture(data):
 
     integ_list = "\n".join(f"- {i['service']} (`{i['file']}:{i['line']}`)" for i in integrations[:15])
 
+    sap_section = ""
+    sap_stacks = data.get("sap_stacks", [])
+    if sap_stacks:
+        sap_rows = "| SAP Stack | Description | Evidence |\n|-----------|------------|----------|\n"
+        for s in sap_stacks:
+            evidence = ", ".join(f"`{e}`" for e in s["evidence"][:3])
+            sap_rows += f"| {s['name']} | {s['description']} | {evidence} |\n"
+        sap_section = f"\n## SAP Ecosystem\n\n{sap_rows}\n"
+
     return f"""# Architecture — {name}
 
 ## Stack
 
 {lang_table}
-
+{sap_section}
 ## Directory Structure
 
 ```

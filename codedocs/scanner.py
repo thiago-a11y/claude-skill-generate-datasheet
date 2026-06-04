@@ -45,6 +45,11 @@ LANG_EXTENSIONS = {
     "dart": [".dart"],
     "c": [".c", ".h"],
     "cpp": [".cpp", ".hpp", ".cc"],
+    "abap": [".abap"],
+    "cds": [".cds"],
+    "hana": [".hdbtable", ".hdbview", ".hdbprocedure", ".hdbcalculationview"],
+    "groovy": [".groovy"],
+    "xsjs": [".xsjs"],
 }
 
 EXCLUDE_DIRS = {
@@ -176,6 +181,7 @@ def scan(project_path, progress_callback=None):
         "tests": {"test_files": 0, "source_files": 0},
         "ghost_features": [],
         "deprecated_functions": [],
+        "sap_stacks": [],
         "git": {"commits": 0, "contributors": [], "recent_commits": 0, "last_10": [], "bus_factor_modules": {}},
         "health": {"todos": 0, "todo_items": [], "loc": 0},
         "dependencies": {"manager": "NOT DETECTED", "total": 0, "items": []},
@@ -216,6 +222,7 @@ def scan(project_path, progress_callback=None):
         ("Scanning deprecated functions", _scan_deprecated_functions),
         ("Classifying integrations", _classify_integrations),
         ("Detecting system type", _detect_system_type),
+        ("Detecting SAP ecosystem", _scan_sap_ecosystem),
     ]
 
     for i, (label, fn) in enumerate(steps):
@@ -975,3 +982,15 @@ def _detect_system_type(data, cwd):
         data["project"]["primary_stack"] = primary[0]
     else:
         data["project"]["primary_stack"] = "unknown"
+
+
+def _scan_sap_ecosystem(data, cwd):
+    from codedocs.sap_detection import detect_sap_stacks
+    detected = detect_sap_stacks(cwd)
+    data["sap_stacks"] = detected
+    for stack in detected:
+        if not any(f["name"] == stack["name"] for f in data["migration"]["frameworks"]):
+            data["migration"]["frameworks"].append({
+                "name": stack["name"],
+                "files": stack["evidence"],
+            })
