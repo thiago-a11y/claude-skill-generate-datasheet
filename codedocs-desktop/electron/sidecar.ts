@@ -103,9 +103,14 @@ export function runScan(
   return new Promise((resolve, reject) => {
     let resolved: boolean | undefined;
 
-    // Dynamic import avoidance: app may not be available in test env.
-    // The caller (main.ts) should pass isPackaged/resourcesPath if needed.
-    const paths = resolvePythonPath();
+    let isPackaged = false;
+    let resourcesPath: string | undefined;
+    try {
+      const electron = require("electron");
+      isPackaged = electron.app?.isPackaged ?? false;
+      resourcesPath = process.resourcesPath;
+    } catch { /* test env */ }
+    const paths = resolvePythonPath(isPackaged, resourcesPath);
 
     const args = paths.wrapper ? [paths.wrapper] : [];
     const env = {
