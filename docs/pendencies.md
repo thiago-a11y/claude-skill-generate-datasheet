@@ -7,33 +7,38 @@
 |---|------|-----------|--------|
 | 1 | DiamondOne documentation | Need to clone from BitBucket + run CodeDocs | First commercial use case blocked |
 | 2 | Reddit launch post | Need to create Reddit App for API credentials | Marketing/distribution delayed |
-| 3 | 4 copy adjustments | Need dev time to apply (minor renderer.py changes) | Polish level — not blocking release |
-| 4 | SaaS version | Needs 500+ users + 10+ consulting clients first | Revenue model not yet validated |
+| 3 | Desktop auto-update | Need to publish to GitHub Releases + code signing | Users can't auto-update yet |
+| 4 | Desktop code signing | Need Apple Developer ID + Windows Authenticode cert | SmartScreen/Gatekeeper warnings |
+| 5 | SaaS version | Needs 500+ users + 10+ consulting clients first | Revenue model not yet validated |
 
 ## Missing Configurations / Configuracoes Faltando
 
 | # | What | Status | Action |
 |---|------|--------|--------|
 | 1 | CI/CD pipeline (.github/workflows/) | [NOT DETECTED] | Create basic Python lint + test workflow |
-| 2 | Tests (any framework) | [NOT DETECTED] | Add pytest smoke tests for scanner + renderer + migration |
+| 2 | Scanner/renderer tests | [NOT DETECTED] | Add pytest smoke tests for scanner + renderer + md_renderer |
 | 3 | Reddit API credentials | Not configured | Create app at reddit.com/prefs/apps, fill scripts/.env |
 | 4 | PyPI package setup | Not configured | Create pyproject.toml for CodeDocs distribution |
-| 5 | GitHub release tags | Not configured | Tag v4.1.0 for skills, v2.1 for CodeDocs |
-| 6 | CodeDocs __version__ | Stale | __init__.py shows "1.0.0" but product is v2.1 |
+| 5 | GitHub release tags | Not configured | Tag v4.1.0 for skills, v3.0 for CodeDocs CLI, v1.0.0 for Desktop |
+| 6 | CodeDocs __version__ | Stale | __init__.py shows "1.0.0" but product is v3.0 |
+| 7 | Code signing certificates | Not configured | Apple Developer ID + Windows Authenticode |
+| 8 | GitHub Releases for Desktop | Not configured | Publish .exe + .dmg for auto-update |
 
 ## Partial Implementations / Implementacoes Parciais
 
 | # | Feature | What's Done | What's Missing |
 |---|---------|------------|----------------|
-| 1 | CodeDocs migration planner | Equivalence tables + scoring + HTML output + opinionated recs | Skeleton code generation for target platform |
+| 1 | CodeDocs migration planner | Equivalence tables + scoring + HTML output + opinionated recs + 7 targets | Skeleton code generation for target platform |
 | 2 | health-badges skill | SKILL.md complete | Never tested on real project |
 | 3 | generate-compliance skill | SKILL.md complete | Never tested on real project |
 | 4 | generate-api-client skill | SKILL.md complete | Never tested on real project |
 | 5 | Reddit posting script | Script ready | Credentials not configured, not tested |
-| 6 | Risk Score copy | 3 surgical cuts applied (v2.0) + polish (v2.1) | 4 minor copy adjustments remaining |
-| 7 | codedocs global install | /usr/local/bin/codedocs works | Version string still shows 1.0.0 |
+| 6 | codedocs global install | /usr/local/bin/codedocs works | Version string still shows 1.0.0 |
+| 7 | Desktop auto-update | electron-updater integrated | GitHub Releases not published, no code signing |
+| 8 | Desktop licensing | Ed25519 verification works | No license key distribution system |
+| 9 | Test coverage | 2 pytest files (i18n + targets) | Scanner, renderer, md_renderer untested |
 
-## What Was Resolved This Session
+## What Was Resolved (v2.1 cycle)
 
 | # | Item | Resolution |
 |---|------|-----------|
@@ -45,3 +50,19 @@
 | 6 | TOTVS duplicate in ERP list | Deduplicated via `seen` set in `analyze_migration()` |
 | 7 | Browser not opening after scan | Fixed: use PYTHONPATH instead of cd |
 | 8 | __pycache__ in git | Removed + added to .gitignore |
+
+## What Was Resolved (v3.0 cycle)
+
+| # | Item | Resolution |
+|---|------|-----------|
+| 1 | Scanner depends on grep/find/wc (Windows broken) | Rewrote scanner in pure Python (os.walk + re) |
+| 2 | Only PT-BR output | Added i18n system (PT-BR + EN-US, ~200 keys, --lang flag) |
+| 3 | No executive summary for decision-makers | Added Decision Brief (5th HTML output) |
+| 4 | No SAP detection | Added sap_detection.py (B1, Fiori, CAP, HANA, ABAP) |
+| 5 | No custom exclusion | Added .codedocsignore support |
+| 6 | Only 6 migration targets | Added SAP Fiori/UI5 (7th target) + aliases |
+| 7 | No Markdown docs output | Added md_renderer.py (11 MD files, --full-docs) |
+| 8 | No Executive Verdict / Audit Readiness | Added to renderer.py with ROI projections |
+| 9 | No Desktop app | Built CodeDocs Desktop (Electron + React + Python sidecar) |
+| 10 | Desktop ESM/CJS conflicts | Fixed: removed type:module, CJS configs |
+| 11 | Desktop UTF-8 on Windows | Fixed: force UTF-8 stdout in sidecar |

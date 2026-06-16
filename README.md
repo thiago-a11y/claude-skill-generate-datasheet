@@ -3,7 +3,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/thiago-a11y/claude-skill-generate-datasheet?style=flat&color=f59e0b)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/stargazers)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-skill-f59e0b?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PHBhdGggZD0iTTEyIDJMMiAyMmgyMEwxMiAyeiIgZmlsbD0iI2Y1OWUwYiIvPjwvc3ZnPg==)](https://docs.anthropic.com/en/docs/claude-code)
-[![Version](https://img.shields.io/badge/version-4.1.0_|_CodeDocs_v2.1-green.svg)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/releases)
+[![Version](https://img.shields.io/badge/version-4.1.0_|_CodeDocs_v3.0_|_Desktop_v1.0-green.svg)](https://github.com/thiago-a11y/claude-skill-generate-datasheet/releases)
 [![Skills](https://img.shields.io/badge/skills-4-f59e0b.svg)](#skills-catalog)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg)](#)
 [![Docs Generated](https://img.shields.io/badge/docs_generated-30+_files-purple.svg)](#what-it-generates)
@@ -12,6 +12,8 @@
 > The cure for vibe-coding without documentation.
 
 A Claude Code skill that scans your codebase and generates a **complete documentation pack** — evidence-based, zero hallucination. Only documents what it can prove from actual files, configs, and code.
+
+Also available as **CodeDocs Desktop** — an Electron app with drag-and-drop scanning, no CLI needed. [Download for Windows (.exe) or Mac (.dmg)](#codedocs-desktop).
 
 ---
 
@@ -102,7 +104,12 @@ For compliance, infosec reviews, and procurement.
 | `incident-response.md` | Current capabilities + gaps |
 | `backup-dr-policy.md` | RPO, RTO, restore process |
 
-### Layer 4 — Evolution Report (Markdown) `NEW`
+### Decision Brief (HTML) `NEW in v3`
+
+A 1-page executive summary for decision-makers. Combines Risk Score, ROI projections,
+Executive Verdict, and Audit Readiness into a single shareable document.
+
+### Layer 4 — Evolution Report (Markdown)
 
 What SonarQube and CodeClimate can't do: explain WHY you should change, not just WHAT is wrong.
 
@@ -360,6 +367,50 @@ Based on documentation from best-in-class B2B SaaS companies:
 | FastAPI / Supabase / Cal.com | Well-documented open source standards |
 | CAIQ / SIG | Questionnaire standards for mid-market SaaS |
 
+## CodeDocs Desktop
+
+A desktop application for scanning codebases without the command line.
+
+- **Drag-and-drop** any folder to scan
+- **Tabbed viewer** for all generated outputs
+- **PDF export** with one click
+- **Freemium**: Free tier (scan report + sales + tech spec) / Pro tier (migration + decision brief + full docs pack)
+- **Auto-update** via GitHub Releases
+- **Installers**: Windows (.exe) + Mac (.dmg)
+
+Stack: Electron 35 + React 18 + TypeScript + Vite + TailwindCSS + Python sidecar.
+
+### Download
+
+> Coming soon to GitHub Releases. For now, build from source:
+> ```bash
+> cd codedocs-desktop && npm install && npm run dist
+> ```
+
+## CodeDocs CLI
+
+Offline Python CLI (v3.0) — zero AI, zero internet, zero data egress. Pure Python scanner
+(no grep/find/wc — works on Windows, Mac, Linux).
+
+```bash
+codedocs /path/to/project                          # scan in PT-BR (default)
+codedocs /path --lang en-US                         # scan in English
+codedocs /path --target react+fastapi               # with migration target
+codedocs /path --target sap-fiori-ui5 --erp SAP     # SAP Fiori migration
+codedocs /path --full-docs                          # generate 11 Markdown files
+```
+
+### New in v3.0
+- **i18n**: PT-BR + EN-US with ~200 translation keys (`--lang` flag)
+- **Decision Brief**: 1-page executive summary (5th HTML output)
+- **Pure Python scanner**: no grep/find/wc — works on Windows without shell tools
+- **SAP ecosystem detection**: B1, Fiori, CAP, HANA, ABAP
+- **.codedocsignore**: custom directory exclusion
+- **7 migration targets**: + SAP Fiori/UI5, react-node alias, net-blazor alias
+- **Full docs pack**: 11 Markdown files from scan data (`--full-docs`)
+- **Executive Verdict**: ROI projections + Audit Readiness assessment
+- **Smart stack detection**: auto-recommends migration target based on detected stack
+
 ## Works With Any Stack
 
 The discovery phase adapts to your project:
@@ -372,6 +423,8 @@ The discovery phase adapts to your project:
 | Python / Django / FastAPI | Views, models, serializers |
 | Go | Handlers, models, middleware |
 | Rust | Handlers, structs, configs |
+| SAP (B1 / Fiori / CAP / HANA) | RFC, OData, CDS, ABAP patterns |
+| C# / .NET / Delphi / VB6 | MVC, WinForms, WPF, legacy patterns |
 | Any | Git history, configs, external APIs, TODOs |
 
 ## License

@@ -4,20 +4,23 @@
 ## Summary / Resumo
 
 - TODOs/FIXMEs in source code: **0** (in Python source files)
-- TODOs in pattern strings (scanner.py): 28 references (these are detection patterns, not actual debt)
+- TODOs in pattern strings (scanner.py): references exist (detection patterns, not actual debt)
 - Bugs found during SyneriumX testing: 15+ (all fixed)
-- Remaining known issues: 5 (all LOW severity)
+- Desktop bugs found during development: 9 (all fixed)
+- Remaining known issues: 7 (all LOW-MEDIUM severity)
 
 ## Known Issues / Problemas Conhecidos
-<!-- source: manual analysis of codedocs/*.py + SyneriumX testing results -->
+<!-- source: manual analysis of codedocs/*.py + codedocs-desktop/ + testing results -->
 
 | # | File | Issue | Severity | Status | Workaround |
 |---|------|-------|----------|--------|------------|
-| 1 | scanner.py | Endpoint detection uses broad grep — may produce false positives on repos that contain regex patterns (scans its own patterns) | LOW | Known | Run on target project, not on self |
-| 2 | scanner.py | `wc -l` for file counting includes empty lines | LOW | Known | Cosmetic — doesn't affect decisions |
-| 3 | __init__.py | `__version__` shows "1.0.0" but product is at v2.1 | LOW | Pending | Does not affect functionality |
-| 4 | cli.py | `python` command not found on macOS — must use `python3` | LOW | Known | Global install at /usr/local/bin/codedocs avoids this |
-| 5 | renderer.py | 4 copy adjustments remaining from Perplexity review (executive summary tightness, risk narrative specificity, phase framework references, tech spec auto-fill) | LOW | Pending | Output is functional, copy is professional but could be tighter |
+| 1 | scanner.py | Endpoint detection uses broad regex — may produce false positives on repos with regex patterns | LOW | Known | Run on target project, not on self |
+| 2 | __init__.py | `__version__` shows "1.0.0" but product is at v3.0 | LOW | Pending | Does not affect functionality |
+| 3 | cli.py | `python` command not found on macOS — must use `python3` | LOW | Known | Global install at /usr/local/bin/codedocs avoids this |
+| 4 | scanner.py | Git-based features (history, contributors, bus factor) require Git installed and in PATH | MEDIUM | Known | Windows users need Git for Windows installed |
+| 5 | Desktop | PDF export uses window.print() — content may be truncated on complex reports | MEDIUM | Known | Use browser print for better control |
+| 6 | Desktop | Not code-signed — Windows SmartScreen and macOS Gatekeeper show warnings | MEDIUM | Pending | Users must click "More info" -> "Run anyway" (Windows) or right-click -> Open (Mac) |
+| 7 | Desktop | Auto-update not functional until published to GitHub Releases | LOW | Pending | Manual download of new versions |
 
 ## Bugs Fixed During SyneriumX Testing (15+)
 <!-- source: git log --oneline commits c264d2e, 92ff3b2, 829e635, c705845, 2e909bc, cc49acb, 024a5df -->
@@ -34,6 +37,21 @@
 | 8 | `d8dde3c` | Remove __pycache__ from git tracking | Repo hygiene |
 | 9 | `84e4359` | 3 surgical cuts — Risk Score, contextual copy, opinionated recs | Major overhaul |
 | 10 | `2b06ac2` | Executive summary, risk narrative, unified messaging | Copy polish |
+
+## Bugs Fixed During Desktop Development (9)
+<!-- source: git log --oneline (desktop commits) -->
+
+| # | Commit | Fix | Category |
+|---|--------|-----|----------|
+| 1 | `822d9a8` | Force UTF-8 stdout on Windows | Encoding |
+| 2 | `5f746cc` | Detect app.isPackaged in sidecar to find bundled Python | Packaging |
+| 3 | `06f0c38` | Graceful fallback when electron-updater not bundled | Runtime |
+| 4 | `3558808` | Always generate Migration Plan (even without --target) | Feature |
+| 5 | `a815ebc` | Strip whitespace from license key before verification | UX |
+| 6 | `e785178` | Always generate full docs (remove checkbox) | UX |
+| 7 | `5f29c41` | Use Node native crypto instead of @noble/hashes | Compatibility |
+| 8 | `888cb8c` | Resolve ESM/CJS conflict — remove type:module, use CJS configs | Build |
+| 9 | `f9147b1` | Switch electron tsconfig to commonjs | Build |
 
 ## Not Bugs — By Design
 <!-- source: CLAUDE.md -->

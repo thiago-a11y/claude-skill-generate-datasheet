@@ -25,11 +25,23 @@ skills/
     SKILL.md          — v1.0: CAIQ/SIG/LGPD questionnaires from code evidence
   health-badges/
     SKILL.md          — v1.0: SVG badges for README from real metrics
-codedocs/             — CodeDocs v2.1 (BSL, offline CLI)
-  cli.py              — 223 LOC, argument parsing, orchestration
-  scanner.py          — 787 LOC, 18 scan functions (grep/find/git)
-  renderer.py         — 775 LOC, 10 functions, 4 HTML generators + Risk Score
-  migration.py        — 1086 LOC, 9 functions, 30+ equivalences, 6 targets
+codedocs/             — CodeDocs v3.0 (BSL, offline CLI)
+  cli.py              — 244 LOC, argument parsing, orchestration
+  scanner.py          — 1426 LOC, 28 functions, pure Python scanner (no grep/find/wc)
+  scanner_shell.py    — 997 LOC, legacy shell-based scanner (kept for reference)
+  renderer.py         — 1390 LOC, 25 functions, 5 HTML generators + Risk Score + i18n
+  migration.py        — 1158 LOC, 9 functions, 30+ equivalences, 7 targets
+  md_renderer.py      — 389 LOC, 14 functions, 11 Markdown doc generators
+  sap_detection.py    — 125 LOC, SAP ecosystem detection (B1/Fiori/CAP/HANA/ABAP)
+  i18n/               — ~200 keys: pt_BR.json + en_US.json
+codedocs-desktop/     — CodeDocs Desktop v1.0.0 (Electron + React + Python sidecar)
+  electron/           — main.ts, preload.ts, sidecar.ts, license.ts, updater.ts
+  src/                — React app: pages, components, hooks, types
+  python/             — Python wrapper (JSON stdio protocol)
+  scripts/            — Build scripts (PyInstaller)
+  release/            — Built installers (.exe + .dmg)
+  tests/              — Vitest tests
+tests/                — pytest: test_i18n.py, test_targets.py
 docs/                 — 25 files: 7 research + 18 generated docs
   feedback-perplexity-review*.md  — 4 Perplexity review cycles
   research-*.md       — 7 research queries that shaped every layer
@@ -48,11 +60,20 @@ IT procurement, exemplary SaaS docs, vibe-coding crisis, tech debt tools gap,
 migration planning, and migration equivalences.
 These are the source of truth for the roadmap — read them before proposing new features.
 
-### CodeDocs (v2.1)
+### CodeDocs CLI (v3.0)
 CodeDocs is an offline Python CLI (BSL licensed) that scans codebases without AI or internet.
-Tested on SyneriumX CRM (1071 files, 341 endpoints, 54 tables) through 4 Perplexity review cycles.
-Key modules: scanner.py (18 functions), renderer.py (10 functions, Risk Score),
-migration.py (9 functions, 30+ equivalences, 6 targets). Installed at /usr/local/bin/codedocs.
+Pure Python scanner (no grep/find/wc) — works on Windows, Mac, Linux.
+i18n support: PT-BR + EN-US with ~200 keys. 7 migration targets including SAP Fiori/UI5.
+5 HTML outputs + 11 Markdown full docs pack. .codedocsignore for custom exclusions.
+Key modules: scanner.py (28 funcs, 1426 LOC), renderer.py (25 funcs, 1390 LOC),
+migration.py (9 funcs, 1158 LOC), md_renderer.py (14 funcs, 389 LOC),
+sap_detection.py (125 LOC). Installed at /usr/local/bin/codedocs.
+
+### CodeDocs Desktop (v1.0.0)
+Electron + React + Vite + TailwindCSS desktop application with Python sidecar.
+Drag-and-drop folder scanning, tabbed results viewer, PDF export.
+Freemium licensing with Ed25519 signed keys. Auto-update via electron-updater.
+Installers: .exe (Windows) + .dmg (Mac). Located at codedocs-desktop/.
 
 ### Rules for contributing
 - Each skill lives in its own directory under `skills/`
@@ -115,7 +136,7 @@ The generate-datasheet skill's core value is evidence-based documentation. When 
 - v4.0 — + Layer 6 assisted correction engine (scan → propose → approve → fix → verify)
 - v4.1 — + AI API Cost Audit in Layer 4 (callsite inventory, model mapping, downgrade recommendations)
 
-### Version history (CodeDocs)
+### Version history (CodeDocs CLI)
 - v1.0 — Offline CLI with scanner + renderer (scan report, sales, tech spec)
 - v1.1 — + Migration Planner + C# MVC support + ERP integration plans
 - v1.2 — + Target selector + technology equivalences + package mapping
@@ -124,3 +145,7 @@ The generate-datasheet skill's core value is evidence-based documentation. When 
 - v1.4 — + Migration plan by default + neutral target comparison
 - v2.0 — 3 surgical cuts: Risk Score, contextual copy, opinionated recommendations
 - v2.1 — Polish: executive summary, risk narrative, unified messaging. Perplexity-approved.
+- v3.0 — Pure Python scanner, i18n (PT-BR + EN-US), Decision Brief, SAP detection, .codedocsignore, 7 targets, full docs pack (11 MD), Executive Verdict, Audit Readiness, ROI
+
+### Version history (CodeDocs Desktop)
+- v1.0.0 — Electron + React app, drag-and-drop, tabbed viewer, PDF export, freemium licensing (Ed25519), auto-update, Windows + Mac installers

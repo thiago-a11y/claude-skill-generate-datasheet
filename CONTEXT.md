@@ -12,17 +12,23 @@
 
 ## What is this project? / O que e este projeto?
 
-This repository is a **documentation tools factory** with two products:
+This repository is a **documentation tools factory** with three products:
 
 ### Product 1: Claude Skills Factory (MIT, free)
 A collection of 4 Claude Code skills (instruction files) that scan any codebase and
 generate evidence-based documentation. Skills are `.md` files — no code, no dependencies.
 Claude Code reads the instructions and executes them.
 
-### Product 2: CodeDocs (BSL, commercial)
-An offline Python CLI tool (v2.1) that does the same scanning but **without any AI, internet,
-or data egress**. Designed for air-gapped environments, compliance-heavy industries
+### Product 2: CodeDocs CLI (BSL, commercial)
+An offline Python CLI tool (v3.0) that does the same scanning but **without any AI, internet,
+or data egress**. Pure Python scanner (no grep/find/wc — works on Windows, Mac, Linux).
+Designed for air-gapped environments, compliance-heavy industries
 (finance, healthcare, defense, industrial), and codebases that cannot be sent to LLMs.
+
+### Product 3: CodeDocs Desktop (BSL, commercial)
+An Electron + React desktop application with a Python sidecar. Drag-and-drop folder scanning,
+tabbed results viewer, PDF export, freemium licensing (Ed25519 signed keys), auto-update.
+Installers available: `.exe` (Windows) and `.dmg` (Mac).
 
 **Tested on SyneriumX CRM** (1071 source files, 341 endpoints, 54 tables, 771 commits) —
 15+ scanner bugs fixed through 4 Perplexity review cycles. Final verdict from Perplexity:
@@ -35,7 +41,7 @@ or data egress**. Designed for air-gapped environments, compliance-heavy industr
 - **Creator**: Thiago Xavier — Objetiva Solucao Empresarial (Brazil)
 - **Contact**: thiago@objetivasolucao.com.br
 - **GitHub**: https://github.com/thiago-a11y/claude-skill-generate-datasheet
-- **Built in**: 5 days (May 27-31, 2026), ~30 commits, with Claude Code assistance
+- **Built in**: 3 weeks (May 27 — Jun 16, 2026), ~60 commits, with Claude Code assistance
 
 ---
 
@@ -45,24 +51,37 @@ or data egress**. Designed for air-gapped environments, compliance-heavy industr
 +-------------------------------------------------------------+
 |                     GitHub Repository                        |
 +----------------------------+--------------------------------+
-|   SKILLS (MIT, free)       |   CODEDOCS (BSL, commercial)   |
+|   SKILLS (MIT, free)       |   CODEDOCS CLI (BSL)           |
 |                            |                                |
 |   Instruction files that   |   Python CLI (stdlib only)     |
-|   Claude Code reads and    |   that runs 100% offline.      |
+|   Claude Code reads and    |   Pure Python scanner.         |
 |   executes. Requires       |   Zero AI, zero internet,      |
 |   Claude Code + internet.  |   zero data egress.            |
+|                            |   i18n: PT-BR + EN-US          |
+|   skills/                  |                                |
+|   +- generate-datasheet/   |   codedocs/                    |
+|   +- generate-api-client/  |   +- scanner.py    (28 funcs)  |
+|   +- generate-compliance/  |   +- renderer.py   (25 funcs)  |
+|   +- health-badges/        |   +- migration.py  (9 funcs)   |
+|                            |   +- md_renderer.py(14 funcs)  |
+|   Output: 30+ MD files,    |   +- sap_detection.py          |
+|   2 HTML files, fixes      |   +- cli.py        (6 funcs)   |
+|   applied with approval    |   +- i18n/ (PT-BR + EN-US)     |
 |                            |                                |
-|   skills/                  |   codedocs/                    |
-|   +- generate-datasheet/   |   +- scanner.py  (18 funcs)   |
-|   +- generate-api-client/  |   +- renderer.py (10 funcs)   |
-|   +- generate-compliance/  |   +- migration.py (9 funcs)   |
-|   +- health-badges/        |   +- cli.py      (4 funcs)    |
-|                            |                                |
-|   Output: 30+ MD files,    |   Output: 4 HTML files         |
-|   2 HTML files, fixes      |   (scan report, sales,         |
-|   applied with approval    |   tech spec, migration plan)   |
+|                            |   Output: 5 HTML + 11 MD files |
+|                            |   (scan, sales, tech spec,     |
+|                            |   migration, decision brief,   |
+|                            |   + full docs pack)            |
 +----------------------------+--------------------------------+
+|   CODEDOCS DESKTOP (BSL, commercial)                        |
+|   Electron + React + Vite + TailwindCSS                     |
+|   Python sidecar (JSON stdio protocol)                      |
+|   Drag-and-drop, tabbed viewer, PDF export                  |
+|   Freemium licensing (Ed25519), auto-update                 |
+|   Installers: .exe (Windows) + .dmg (Mac)                   |
++-------------------------------------------------------------+
 |   docs/           — 7 Perplexity research + 25 generated    |
+|   tests/          — pytest: i18n + migration targets        |
 |   README.md       — GitHub landing page with install        |
 |   ROADMAP.md      — v4->v5->v6->SaaS vision                |
 |   CLAUDE.md       — Repo context for AI tools               |
@@ -106,20 +125,26 @@ dependency freshness, bus factor, doc coverage, tech debt. shields.io visual sty
 
 ---
 
-## CodeDocs Detail / Detalhe do CodeDocs
+## CodeDocs CLI Detail / Detalhe do CodeDocs CLI
 
-### Version: v2.1 (installed globally at /usr/local/bin/codedocs)
+### Version: v3.0 (installed globally at /usr/local/bin/codedocs)
 
 ### How it works / Como funciona
 ```bash
-codedocs /path/to/project                                      # basic scan
-codedocs /path --migration --target react+fastapi --erp SAP TOTVS  # with migration plan
+codedocs /path/to/project                                        # basic scan (PT-BR default)
+codedocs /path --lang en-US                                      # scan in English
+codedocs /path --target react+fastapi --erp SAP TOTVS             # with migration plan + target
+codedocs /path --full-docs                                        # generate 11 MD files
+codedocs /path --target sap-fiori-ui5                             # SAP Fiori migration target
 ```
 
-### Scanner (scanner.py — 18 functions, 787 LOC)
-Uses `grep`, `find`, `git log` via `subprocess`. Detects:
+### Scanner (scanner.py — 28 functions, 1426 LOC)
+**Pure Python implementation** — no grep, find, or wc. Works on Windows, Mac, Linux without shell tools.
+Uses `os.walk()`, file reading, `re` module. Supports `.codedocsignore` for custom exclusions.
+
+Detects:
 - Languages (Python, PHP, C#, Java, Go, Rust, TypeScript, Delphi, VB6)
-- Endpoints (REST routes, MVC controllers, Flask/FastAPI decorators)
+- Endpoints (REST routes, MVC controllers, Flask/FastAPI decorators) + **endpoint criticality**
 - Database (CREATE TABLE, migrations, EF/Prisma/Eloquent models)
 - Authentication (JWT, OAuth, sessions, API keys, MFA, RBAC)
 - Security (CORS, CSRF, rate limiting, encryption, headers, audit logging)
@@ -130,12 +155,40 @@ Uses `grep`, `find`, `git log` via `subprocess`. Detects:
 - Dependencies (npm, composer, pip, NuGet, go mod, cargo)
 - Migration blockers (COM Interop, P/Invoke, System.Web, EDMX, BDE, ActiveX)
 - Frameworks (Spring MVC, Laravel, Symfony, CodeIgniter, WinForms, WPF, Web Forms)
+- **Ghost features** (code behind feature flags, commented-out blocks)
+- **Bus factor by module** (single-owner modules from git blame)
+- **Deprecated functions** (marked @deprecated, obsolete attributes)
+- **SAP ecosystem** (B1, Fiori, CAP, HANA, ABAP via sap_detection.py)
+- **Service classification** (monolith vs microservices detection)
 
-### Migration Planner (migration.py — 9 functions, 1086 LOC)
+### MD Renderer (md_renderer.py — 14 functions, 389 LOC) `NEW in v3.0`
+Generates 11 Markdown documentation files from scan data:
+- `render_architecture(data)` — system design, stack, modules
+- `render_data_dictionary(data)` — tables, columns, types
+- `render_endpoints(data)` — all routes with criticality
+- `render_glossary(data)` — domain terms mapped to code
+- `render_changelog(data)` — from git history
+- `render_security(data)` — controls matrix with status tags
+- `render_bugs_known(data)` — from FIXME/HACK/TODO
+- `render_contributing(data)` — setup, test, PR process
+- `render_health_score(data)` — explainable 0-100 score
+- `render_bus_factor(data)` — single-owner modules, knowledge silos
+- `render_evolution_report(data)` — tech radar, dependency audit
+- `render_all_md(data)` — orchestrator for all 11 files
+
+### SAP Detection (sap_detection.py — 1 function, 125 LOC) `NEW in v3.0`
+Detects SAP ecosystem presence: SAP B1, Fiori/SAPUI5, CAP, HANA, ABAP.
+
+### i18n (i18n/ — ~200 keys, 2 locales) `NEW in v3.0`
+Full internationalization with PT-BR and EN-US. ~200 translation keys covering all
+HTML outputs (scan report, sales datasheet, technical spec, migration plan, decision brief).
+CLI flag: `--lang pt-BR` (default) or `--lang en-US`.
+
+### Migration Planner (migration.py — 9 functions, 1158 LOC)
 Key functions:
 - `_recommend_target(data)` — opinionated recommendation based on detected stack
 - `analyze_migration(data, target, erps)` — full migration analysis orchestrator
-- `_resolve_target(target_input)` — alias resolution for 6 targets
+- `_resolve_target(target_input)` — alias resolution for 7 targets + aliases
 - `_build_equivalence_map(data, target_key)` — cross-stack technology mapping
 - `_build_package_map(target_key)` — 20 package equivalences per target
 - `_build_module_inventory(data)` — module list from scan data
@@ -144,22 +197,29 @@ Key functions:
 - `_generate_phases(modules, data)` — 5-phase Strangler Fig roadmap
 
 Capabilities:
-- **6 target platforms**: React+FastAPI, React+Express, Angular+NestJS, Blazor, Vue+FastAPI, Go+React
+- **7 target platforms**: React+FastAPI, React+Express, Angular+NestJS, Blazor, Vue+FastAPI, Go+React, **SAP Fiori/UI5**
+- **Target aliases**: react-node -> react+express, net-blazor -> blazor, sap-fiori-ui5
 - **30+ technology equivalences**: MVC->FastAPI, EF->Prisma, Razor->React, WinForms->SPA, etc.
 - **20 package mappings**: auth, ORM, logging, testing, email, PDF, Excel, image, scheduling, etc.
 - **3 ERP integration plans**: SAP (OData/RFC), TOTVS (REST/iPaaS), Oracle (REST)
 - **Accuracy labels**: GREEN (90%+ safe), YELLOW (70-85%), RED (50-70% manual)
 - **Source languages**: C#, Java, PHP (Laravel/Symfony/CI/procedural), Delphi, VB6
 - **5-phase Strangler Fig roadmap** with effort estimates (story points -> hours)
+- **Target-specific recommendations** in sales datasheet and technical spec
 
-### Renderer (renderer.py — 10 functions, 775 LOC)
+### Renderer (renderer.py — 25 functions, 1390 LOC)
 Key functions:
 - `_risk_score(data)` — weighted composite with brutal test/bus-factor penalties
-- `_risk_narrative(score, data)` — contextual narrative for risk level
-- `render_scan_report(data)` — full inventory with risk score
-- `render_sales_datasheet(data)` — metrics bar, modules, honest limitations
-- `render_technical_spec(data)` — "6 answers in 60 seconds", security matrix
-- `render_migration_plan(data, plan)` — target selector, equivalences, phased roadmap
+- `_risk_narrative(score, data, lang)` — contextual narrative for risk level
+- `_executive_verdict(score, data, lang)` — **Executive Verdict** with ROI projections
+- `_audit_readiness(data, lang)` — **Audit Readiness** assessment
+- `render_scan_report(data, lang)` — full inventory with risk score
+- `render_sales_datasheet(data, lang, target)` — metrics bar, modules, honest limitations
+- `render_technical_spec(data, lang, target)` — "6 answers in 60 seconds", security matrix
+- `render_migration_plan(data, plan, lang)` — target selector, equivalences, phased roadmap
+- `render_decision_brief(data, plan, lang)` — **Decision Brief** (NEW — 1-page executive summary)
+
+All render functions accept `lang` parameter for i18n support.
 
 Risk Score formula (renderer.py):
 - Test Coverage: 35% weight, cap at 30 if 0 tests + 50+ files
@@ -169,21 +229,68 @@ Risk Score formula (renderer.py):
 - Documentation: 8% weight
 - Dependency Management: 7% weight
 
-### CLI (cli.py — 4 functions, 223 LOC)
+### CLI (cli.py — 6 functions, 244 LOC)
 - `main()` — argument parsing, orchestration, browser open
 - `_calc_health_score(data)` — console health score (30% test weight)
 - `_print_summary(data)` — terminal summary
 - `_progress(step, total, label)` — progress bar
+- Smart stack detection for target recommendations
 
 ### Key Design Decisions
 1. **Zero dependencies** — only Python stdlib (no pip install)
-2. **Zero internet** — all scans are local grep/find/git
+2. **Zero internet** — all scans are pure Python file operations
 3. **Zero AI** — intelligence is lookup tables and scoring formulas
 4. **Deterministic** — same input = same output, auditable
 5. **BSL license** — free for internal use, commercial for resale/hosting
 6. **Risk Score not Health Score** — renamed after Perplexity review; brutal weighting
 7. **Opinionated recommendations** — `_recommend_target()` picks best-fit based on stack
 8. **Contextual copy** — placeholders replaced with industry-standard suggestions
+9. **Pure Python scanner** — no shell dependencies (grep/find/wc), works on Windows
+10. **i18n from day 1** — PT-BR + EN-US with ~200 keys
+11. **.codedocsignore** — custom directory exclusion (like .gitignore)
+
+---
+
+## CodeDocs Desktop Detail / Detalhe do CodeDocs Desktop
+
+### Version: v1.0.0
+
+### Stack
+- **Frontend**: Electron 35 + React 18 + TypeScript + Vite + TailwindCSS
+- **Backend**: Python sidecar (JSON stdio protocol)
+- **Licensing**: Ed25519 signed keys (freemium: Free tier + Pro tier)
+- **Auto-update**: electron-updater
+- **Packaging**: electron-builder (Windows .exe + Mac .dmg)
+
+### Architecture
+```
+codedocs-desktop/
++- electron/
+|  +- main.ts        — Electron main process
+|  +- preload.ts     — IPC bridge (contextBridge)
+|  +- sidecar.ts     — Python process manager (spawn + JSON stdio)
+|  +- license.ts     — Ed25519 license verification
+|  +- updater.ts     — Auto-update via electron-updater
++- src/
+|  +- App.tsx         — React app with routing
+|  +- pages/          — DropZone, Progress, Results
+|  +- components/     — UI components
+|  +- hooks/          — useScan (IPC communication)
+|  +- types/          — TypeScript interfaces
++- python/            — Python wrapper (JSON stdio protocol)
++- scripts/           — Build scripts (PyInstaller)
++- release/           — Built installers (.exe, .dmg)
++- tests/             — Vitest tests
+```
+
+### Features
+- **Drag-and-drop** folder scanning (no CLI needed)
+- **Tabbed viewer** for all generated outputs (HTML + MD)
+- **PDF export** via window.print()
+- **Freemium licensing**: Free tier (scan report + sales + tech spec) / Pro tier (migration + decision brief + full docs)
+- **Auto-update** via GitHub Releases
+- **Python sidecar**: spawns CodeDocs CLI as subprocess with JSON stdio protocol
+- **Windows + Mac installers**: .exe (97 MB) + .dmg (107 MB)
 
 ---
 
@@ -222,14 +329,22 @@ Risk Score formula (renderer.py):
 
 ### What's done / O que esta feito
 - 4 Claude Code skills (generate-datasheet v4.1, generate-api-client v1.0, generate-compliance v1.0, health-badges v1.0)
-- CodeDocs v2.1 (offline CLI with full migration planner, Risk Score, contextual copy, opinionated recommendations)
+- CodeDocs v3.0 (offline CLI with pure Python scanner, i18n, Decision Brief, 7 targets, SAP detection, full docs pack)
+- CodeDocs Desktop v1.0.0 (Electron + React app with drag-and-drop, PDF export, freemium licensing, auto-update)
 - CodeDocs installed globally at /usr/local/bin/codedocs
 - Tested on SyneriumX CRM (1071 files, 341 endpoints, 54 tables) — 15+ bugs fixed
 - 4 Perplexity review cycles completed — final verdict: production-ready
-- 25 docs files + 7 research docs
-- ~30 commits over 5 days
+- Pure Python scanner — works on Windows, Mac, Linux (no grep/find/wc)
+- i18n: PT-BR + EN-US with ~200 translation keys
+- 7 migration targets including SAP Fiori/UI5
+- 5 HTML outputs: scan report, sales datasheet, tech spec, migration plan, Decision Brief
+- 11 Markdown full docs pack (architecture, data-dictionary, endpoints, glossary, changelog, security, bugs-known, contributing, health-score, bus-factor, evolution-report)
+- .codedocsignore support for custom directory exclusion
+- Windows (.exe) + Mac (.dmg) installers built
+- pytest tests for i18n and migration targets
+- ~60 commits over 3 weeks
 
-### Risk Score: 42/100
+### Risk Score: 45/100
 
 Renamed from "Health Score" after Perplexity review #2. Brutal weighting:
 - Test Coverage: 35% weight (was 20%). Zero tests cap score at 30.
@@ -241,29 +356,32 @@ Renamed from "Health Score" after Perplexity review #2. Brutal weighting:
 
 | Dimension | Score | Why |
 |-----------|-------|-----|
-| Test Coverage | 0/100 | 0 test files for 2876 LOC |
-| Security Posture | 90/100 | Zero deps, zero network, HTML escaping |
+| Test Coverage | 15/100 | 2 test files (i18n + targets) for 5769 LOC |
+| Security Posture | 90/100 | Zero deps (CLI), HTML escaping, Ed25519 signing |
 | Tech Debt | 95/100 | 0 TODOs in source code |
 | Documentation | 100/100 | 25+ markdown files |
 | Bus Factor | 20/100 | 1 contributor on all modules |
-| Dependency Health | 100/100 | Zero dependencies |
+| Dependency Health | 100/100 | Zero dependencies (CLI) |
 
 ### Known Gaps / Lacunas
-1. **Zero tests** — no pytest, no smoke tests, no CI
+1. **Low test coverage** — 2 pytest files (i18n + targets), no scanner/renderer tests
 2. **Bus factor = 1** — single contributor, no external testers
 3. **CodeDocs tested on 1 real project** — SyneriumX only, needs DiamondOne
 4. **CodeDocs regex-based** — no AST parsing (tree-sitter planned for future)
 5. **No CI/CD pipeline** — no .github/workflows/
 6. **Reddit post not yet published** — script ready, credentials not configured
-7. **4 copy adjustments remaining** from Perplexity review (minor)
+7. **Windows scan needs Git in PATH** — git-based features (history, contributors) require Git installed
+8. **PDF export limited** — uses window.print(), content may be truncated on complex reports
+9. **Desktop app not code-signed** — Windows SmartScreen / macOS Gatekeeper warnings
 
 ### Pendencies / Pendencias
 1. Clone DiamondOne from BitBucket -> run CodeDocs (first commercial use case)
 2. Create Reddit App -> configure credentials -> publish launch post
-3. Apply 4 remaining copy adjustments from Perplexity review
-4. Add pytest smoke tests for CodeDocs scanner + renderer
-5. Create GitHub Actions workflow (lint + test)
-6. Tag releases (v4.1.0 for skills, v2.1 for CodeDocs)
+3. Add pytest tests for scanner + renderer + md_renderer
+4. Create GitHub Actions workflow (lint + test)
+5. Tag releases (v4.1.0 for skills, v3.0 for CodeDocs CLI, v1.0.0 for Desktop)
+6. Code-sign Desktop app (Apple Developer ID + Windows Authenticode)
+7. Publish Desktop app to GitHub Releases for auto-update
 
 ---
 
@@ -272,8 +390,9 @@ Renamed from "Health Score" after Perplexity review #2. Brutal weighting:
 ### Strategy (validated by research)
 1. **Skills (MIT, free)** -> adoption + GitHub stars + reputation
 2. **Consultoria (short-term revenue)** -> "I run CodeDocs on your codebase and deliver the pack" (R$ 2-8K per project)
-3. **CodeDocs (BSL, mid-term)** -> commercial license for resale/hosting
-4. **SaaS (long-term)** -> hosted scans, team dashboard, history, exports
+3. **CodeDocs Desktop (BSL, mid-term)** -> freemium desktop app (Free tier + Pro tier with license key)
+4. **CodeDocs commercial license** -> for resale/hosting
+5. **SaaS (long-term)** -> hosted scans, team dashboard, history, exports
 
 ### Target Market
 - **Skills**: indie devs, startups, open source projects
@@ -287,7 +406,9 @@ Renamed from "Health Score" after Perplexity review #2. Brutal weighting:
 | Target platforms | Same-language upgrades | Cross-stack (Razor->React, EF->Prisma) |
 | Deployment | Cloud/AI required | 100% offline, zero data egress |
 | Price | $100K-500K/year (CAST Highlight) | $5K-20K one-time or free (skills) |
-| Output | PDF assessment | Markdown + HTML + CSV + migration plan |
+| Output | PDF assessment | Markdown + HTML + migration plan + Decision Brief |
+| Desktop | N/A | Electron app with drag-and-drop, no CLI needed |
+| i18n | English only | PT-BR + EN-US (extensible) |
 | Trust | Black-box AI | Deterministic rules, file:line evidence |
 
 ---
@@ -305,17 +426,21 @@ Renamed from "Health Score" after Perplexity review #2. Brutal weighting:
 - Training Pack per role
 
 ### CodeDocs (planned)
-- PyInstaller single binary distribution
-- pip install codedocs
+- Desktop app code signing (Apple Developer ID + Windows Authenticode)
+- pip install codedocs (PyPI distribution)
 - Docker image for CI/CD
 - Tree-sitter parsing for higher accuracy
 - Quality gates (block merge if doc score drops)
+- More i18n locales (ES, DE, FR)
 
 ### SaaS (vision)
-- Free: CLI/skill (everything today)
-- Pro: hosted scans, dashboard, PDF export, badges
+- Free: CLI/skill (everything today) + Desktop Free tier
+- Pro: Desktop Pro tier + hosted scans, dashboard, badges
 - Team: multiple repos, approval workflows, templates
 - Enterprise: SSO/SAML, evidence retention, CI/CD integration
+
+Note: Desktop app is the first commercial product (freemium model).
+SaaS is a future evolution, not immediate priority.
 
 ---
 
@@ -326,11 +451,13 @@ If you're an AI reading this, here's what the creator needs help with:
 1. **Code review** — is the Python code in codedocs/ well-structured? Any bugs?
 2. **Missing equivalences** — are there technology mappings we missed in migration.py?
 3. **Marketing** — how to position this for maximum adoption?
-4. **Monetization** — is the BSL + consultoria model realistic?
+4. **Monetization** — is the BSL + Desktop freemium model realistic?
 5. **Architecture** — should CodeDocs be restructured as the feature set grows?
-6. **Testing** — what should the first pytest tests cover?
-7. **Distribution** — PyInstaller vs pip vs Docker — what first?
+6. **Testing** — scanner + renderer + md_renderer need pytest coverage
+7. **Distribution** — Desktop app is built, needs code signing + GitHub Releases
 8. **Competition** — are there new tools we should know about?
+9. **i18n** — review EN-US translations (~200 keys), add more locales?
+10. **Desktop UX** — is the drag-and-drop + tabbed viewer intuitive?
 
 If you're a human reading this:
 - **Star the repo** if you find it useful

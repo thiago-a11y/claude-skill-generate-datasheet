@@ -10,26 +10,35 @@ This repository contains two products:
 | Product | Type | License | Language |
 |---------|------|---------|----------|
 | **Claude Skills Factory** | 4 Claude Code skill files (SKILL.md) | MIT | English (instruction files) |
-| **CodeDocs** | Offline CLI documentation generator | BSL 1.1 | Python 3.6+ |
+| **CodeDocs CLI** | Offline CLI documentation generator | BSL 1.1 | Python 3.6+ |
+| **CodeDocs Desktop** | Desktop app (Electron + React + Python sidecar) | BSL 1.1 | TypeScript + Python |
 
 ### Architecture Diagram (ASCII)
 ```
 +-----------------------------------------------------+
 |                   GitHub Repository                  |
 +----------------------+------------------------------+
-|   Skills (MIT)       |   CodeDocs (BSL)             |
+|   Skills (MIT)       |   CodeDocs CLI (BSL)         |
 |                      |                              |
 |  skills/             |  codedocs/                   |
-|  +- generate-datasheet/|  +- __init__.py            |
-|  |  +- SKILL.md      |  +- __main__.py             |
-|  +- generate-api-client/| +- cli.py     (4 funcs)   |
-|  |  +- SKILL.md      |  +- scanner.py (18 funcs)   |
-|  +- generate-compliance/| +- renderer.py(10 funcs)  |
-|  |  +- SKILL.md      |  +- migration.py(9 funcs)   |
-|  +- health-badges/   |  +- LICENSE (BSL)            |
-|     +- SKILL.md      |                              |
+|  +- generate-datasheet/|  +- scanner.py  (28 funcs) |
+|  |  +- SKILL.md      |  +- renderer.py  (25 funcs) |
+|  +- generate-api-client/| +- migration.py (9 funcs) |
+|  |  +- SKILL.md      |  +- md_renderer.py(14 funcs)|
+|  +- generate-compliance/| +- sap_detection.py       |
+|  |  +- SKILL.md      |  +- cli.py       (6 funcs)  |
+|  +- health-badges/   |  +- i18n/ (PT-BR + EN-US)   |
+|     +- SKILL.md      |  +- scanner_shell.py(legacy)|
 +----------------------+------------------------------+
+|   CodeDocs Desktop (BSL)                            |
+|   codedocs-desktop/                                 |
+|   +- electron/ (main, preload, sidecar, license)    |
+|   +- src/ (React: pages, components, hooks)         |
+|   +- python/ (JSON stdio wrapper)                   |
+|   +- release/ (.exe + .dmg installers)              |
++-----------------------------------------------------+
 |  docs/          — 7 Perplexity research + 25 docs   |
+|  tests/         — pytest: i18n + migration targets  |
 |  README.md      — GitHub landing page               |
 |  ROADMAP.md     — v4->v5->v6->SaaS vision           |
 |  CLAUDE.md      — Repo context for Claude Code      |
@@ -49,45 +58,93 @@ Skills are **instruction files** — they contain no executable code. Claude Cod
 | `generate-compliance` | v1.0.0 | ~420 | CAIQ/SIG/LGPD questionnaires from code evidence |
 | `health-badges` | v1.0.0 | ~280 | SVG health badges for README from real metrics |
 
-## CodeDocs Architecture / Arquitetura do CodeDocs
+## CodeDocs CLI Architecture / Arquitetura do CodeDocs CLI
 <!-- source: codedocs/*.py -->
 
-CodeDocs is a **Python CLI application** (v2.1) with zero external dependencies (stdlib only).
-Installed globally at `/usr/local/bin/codedocs`.
+CodeDocs is a **Python CLI application** (v3.0) with zero external dependencies (stdlib only).
+Pure Python scanner — no grep/find/wc. Works on Windows, Mac, Linux.
+i18n: PT-BR + EN-US with ~200 keys. Installed globally at `/usr/local/bin/codedocs`.
 
 ```
-codedocs/                   Total: 2876 LOC
-+- __init__.py      (2 LOC)    — Version constant (__version__ = "1.0.0")
-+- __main__.py      (3 LOC)    — Entry point (python -m codedocs)
-+- cli.py         (223 LOC)    — Argument parsing, progress bars, health score calc
-+- scanner.py     (787 LOC)    — 18 scan functions (grep/find/git), returns structured dict
-+- renderer.py    (775 LOC)    — 10 functions: 4 HTML generators + Risk Score + utilities
-+- migration.py  (1086 LOC)    — 9 functions: migration analysis, 30+ equivalences, 6 targets
+codedocs/                    Total: 5769 LOC
++- __init__.py       (2 LOC)    — Version constant
++- __main__.py       (3 LOC)    — Entry point (python -m codedocs)
++- cli.py          (244 LOC)    — Argument parsing, progress bars, health score calc
++- scanner.py     (1426 LOC)    — 28 functions, pure Python scanner (os.walk + re)
++- scanner_shell.py(997 LOC)    — Legacy shell-based scanner (kept for reference)
++- renderer.py    (1390 LOC)    — 25 functions: 5 HTML generators + Risk Score + i18n
++- migration.py   (1158 LOC)    — 9 functions: migration analysis, 30+ equivalences, 7 targets
++- md_renderer.py  (389 LOC)    — 14 functions: 11 Markdown doc generators
++- sap_detection.py(125 LOC)    — SAP ecosystem detection (B1/Fiori/CAP/HANA/ABAP)
++- i18n/__init__.py  (36 LOC)   — Translation loader
++- i18n/pt_BR.json (485 lines)  — Portuguese translations (~200 keys)
++- i18n/en_US.json (485 lines)  — English translations (~200 keys)
 ```
 
-### Module Detail: scanner.py (18 functions)
+### Module Detail: scanner.py (28 functions)
 <!-- source: grep -n "def " codedocs/scanner.py -->
+
+Pure Python implementation — uses os.walk(), file reading, re module. No shell dependencies.
+Supports .codedocsignore for custom directory exclusion.
 
 | Function | Purpose |
 |----------|---------|
-| `_run(cmd, cwd)` | Execute subprocess with timeout |
+| `_run(cmd, cwd)` | Execute subprocess with timeout (used only for git) |
 | `_count_lines(output)` | Count non-empty lines |
 | `_lines(output)` | Split output into list |
+| `_should_exclude_dir(dirname, exclude_dirs)` | Check against .codedocsignore |
+| `_should_exclude_file(filename)` | Skip binary/generated files |
+| `_walk_files(cwd, extensions, exclude_dirs)` | Pure Python file walker (replaces find) |
+| `_search_files(cwd, pattern, extensions, exclude_dirs)` | Pure Python grep replacement |
+| `_count_file_lines(filepath)` | Count lines in a single file (replaces wc -l) |
+| `_find_files_by_name(cwd, name_pattern, exclude_dirs)` | Find files by name pattern |
+| `_read_file(filepath)` | Safe file reader with encoding fallback |
+| `_load_codedocsignore(cwd)` | Load .codedocsignore patterns |
 | `_detect_project_name(cwd)` | Detect project name from git/directory |
-| `scan(project_path)` | Main orchestrator — runs all 13 scans |
-| `_scan_languages(data, cwd)` | Detect languages by file extension |
-| `_scan_structure(data, cwd)` | Directory structure inventory |
-| `_scan_endpoints(data, cwd)` | REST routes, MVC controllers, decorators |
-| `_scan_database(data, cwd)` | Tables, migrations, ORM models |
-| `_scan_auth(data, cwd)` | JWT, OAuth, sessions, MFA, RBAC |
-| `_scan_security(data, cwd)` | CORS, CSRF, rate limiting, encryption |
-| `_scan_integrations(data, cwd)` | External APIs, ERP, payment gateways |
-| `_scan_tests(data, cwd)` | Test files vs source files |
-| `_scan_git(data, cwd)` | Commits, contributors, churn |
-| `_scan_health(data, cwd)` | TODOs, FIXMEs, LOC |
-| `_scan_dependencies(data, cwd)` | npm, composer, pip, NuGet, go mod, cargo |
-| `_scan_docs(data, cwd)` | Existing documentation files |
-| `_scan_migration(data, cwd)` | Migration blockers + framework detection |
+| `scan(project_path, progress_callback)` | Main orchestrator — runs all scans |
+| `_scan_languages(data, cwd, excludes)` | Detect languages by file extension |
+| `_scan_structure(data, cwd, excludes)` | Directory structure inventory |
+| `_scan_endpoints(data, cwd, excludes)` | REST routes, MVC controllers, decorators + **criticality** |
+| `_scan_database(data, cwd, excludes)` | Tables, migrations, ORM models |
+| `_scan_auth(data, cwd, excludes)` | JWT, OAuth, sessions, MFA, RBAC |
+| `_scan_security(data, cwd, excludes)` | CORS, CSRF, rate limiting, encryption |
+| `_scan_integrations(data, cwd, excludes)` | External APIs, ERP, payment gateways |
+| `_scan_tests(data, cwd, excludes)` | Test files vs source files |
+| `_scan_git(data, cwd, excludes)` | Commits, contributors, churn |
+| `_scan_health(data, cwd, excludes)` | TODOs, FIXMEs, LOC |
+| `_scan_dependencies(data, cwd, excludes)` | npm, composer, pip, NuGet, go mod, cargo |
+| `_scan_docs(data, cwd, excludes)` | Existing documentation files |
+| `_scan_ghost_features(data, cwd, excludes)` | **NEW**: Feature flags, commented-out code |
+| `_scan_bus_factor_modules(data, cwd, excludes)` | **NEW**: Single-owner modules (git blame) |
+| `_scan_deprecated_functions(data, cwd, excludes)` | **NEW**: @deprecated, Obsolete attributes |
+| `_scan_sap_ecosystem(data, cwd, excludes)` | **NEW**: SAP B1/Fiori/CAP/HANA/ABAP |
+
+### Module Detail: md_renderer.py (14 functions) `NEW in v3.0`
+<!-- source: grep -n "def " codedocs/md_renderer.py -->
+
+Generates 11 Markdown documentation files from scan data.
+
+| Function | Purpose |
+|----------|---------|
+| `render_architecture(data)` | System design, stack, modules |
+| `render_data_dictionary(data)` | Tables, columns, types |
+| `render_endpoints(data)` | All routes with criticality |
+| `render_glossary(data)` | Domain terms mapped to code |
+| `render_changelog(data)` | From git history |
+| `render_security(data)` | Controls matrix with status tags |
+| `render_bugs_known(data)` | From FIXME/HACK/TODO |
+| `render_contributing(data)` | Setup, test, PR process |
+| `render_health_score(data)` | Explainable 0-100 score |
+| `render_bus_factor(data)` | Single-owner modules, knowledge silos |
+| `render_evolution_report(data)` | Tech radar, dependency audit |
+| `render_all_md(data)` | Orchestrator for all 11 files |
+
+### Module Detail: sap_detection.py (1 function) `NEW in v3.0`
+<!-- source: codedocs/sap_detection.py -->
+
+| Function | Purpose |
+|----------|---------|
+| `detect_sap_stacks(cwd)` | Detect SAP B1, Fiori/SAPUI5, CAP, HANA, ABAP presence |
 
 ### Module Detail: migration.py (9 functions)
 <!-- source: grep -n "def " codedocs/migration.py -->
@@ -96,7 +153,7 @@ codedocs/                   Total: 2876 LOC
 |----------|---------|
 | `_recommend_target(data)` | Opinionated recommendation based on detected stack (C# -> Blazor, PHP+TS -> React+Express, etc.) |
 | `analyze_migration(data, target, erps)` | Full migration analysis orchestrator — returns summary, modules, phases, blockers, equivalences |
-| `_resolve_target(target_input)` | Alias resolution (e.g., "react" -> "react+fastapi", "vue" -> "vue+fastapi") |
+| `_resolve_target(target_input)` | Alias resolution (e.g., "react" -> "react+fastapi", "react-node" -> "react+express", "net-blazor" -> "blazor") |
 | `_build_equivalence_map(data, target_key)` | Cross-stack technology mapping (MVC->FastAPI, EF->Prisma, Razor->React, etc.) |
 | `_build_package_map(target_key)` | 20 package equivalences per target (auth, ORM, logging, testing, email, PDF, etc.) |
 | `_build_module_inventory(data)` | Module list from scan data with metadata |
@@ -104,24 +161,40 @@ codedocs/                   Total: 2876 LOC
 | `_calc_priority(module)` | Priority ranking for migration order |
 | `_generate_phases(modules, data)` | 5-phase Strangler Fig roadmap with effort estimates |
 
-Lookup tables: 6 TARGET_PLATFORMS, 30+ EQUIVALENCE entries, 20 PACKAGE_MAP entries,
+Lookup tables: 7 TARGET_PLATFORMS (+ SAP Fiori/UI5), 30+ EQUIVALENCE entries, 20 PACKAGE_MAP entries,
 3 ERP_INTEGRATION_PLANS (SAP/TOTVS/Oracle), SEVERITY_WEIGHT scoring.
+Aliases: react-node, net-blazor, sap-fiori-ui5.
 
-### Module Detail: renderer.py (10 functions)
+### Module Detail: renderer.py (25 functions)
 <!-- source: grep -n "def " codedocs/renderer.py -->
+
+All render functions accept `lang` parameter for i18n (PT-BR or EN-US).
 
 | Function | Purpose |
 |----------|---------|
 | `_e(text)` | HTML escape wrapper |
-| `_status_badge(detected)` | Green/red badge for detected/not |
+| `_status_badge(detected, lang)` | Green/red badge for detected/not |
 | `_score_color(score)` | Color coding for risk score (green/yellow/red) |
-| `_risk_narrative(score, data)` | Contextual narrative for risk level (critical/moderate/low) |
-| `_risk_score(data)` | **Risk Score** — weighted composite with brutal test/bus-factor penalties |
-| `_wrap_html(title, body)` | HTML boilerplate with dark theme CSS |
-| `render_scan_report(data)` | Full inventory with risk score |
-| `render_sales_datasheet(data)` | Metrics bar, modules, honest limitations |
-| `render_technical_spec(data)` | "6 answers in 60 seconds", security matrix |
-| `render_migration_plan(data, plan)` | Target selector, equivalences, phased roadmap, ERP plans |
+| `_risk_narrative(score, data, lang)` | Contextual narrative for risk level |
+| `_risk_score(data, lang)` | **Risk Score** — weighted composite with brutal penalties |
+| `_executive_verdict(score, data, lang)` | **NEW**: Executive Verdict with ROI projections |
+| `_audit_readiness(data, lang)` | **NEW**: Audit Readiness assessment |
+| `_product_description(data, lang)` | **NEW**: Smart product description from scan |
+| `_render_executive_verdict(score, data, lang)` | HTML renderer for verdict section |
+| `_render_audit_readiness(data, lang)` | HTML renderer for audit section |
+| `_render_sla_by_size(lang)` | SLA recommendations by project size |
+| `_is_dotnet_project(data)` | Detect .NET projects for target recs |
+| `_target_recs_html(target_key, lang)` | **NEW**: Target-specific recommendations |
+| `_target_summary_html(target_key, lang)` | Target summary for migration section |
+| `_neutral_note_html(lang)` | Neutral comparison note |
+| `_sales_target_note(target, name, lang)` | Sales note for specific target |
+| `_techspec_target_note(target, lang)` | Tech spec note for specific target |
+| `_wrap_html(title, body, lang)` | HTML boilerplate with dark theme CSS |
+| `render_scan_report(data, lang)` | Full inventory with risk score |
+| `render_sales_datasheet(data, lang, target)` | Metrics bar, modules, limitations |
+| `render_technical_spec(data, lang, target)` | "6 answers in 60 seconds", security matrix |
+| `render_migration_plan(data, plan, lang)` | Target selector, equivalences, roadmap |
+| `render_decision_brief(data, plan, lang)` | **NEW**: Decision Brief (1-page executive summary) |
 
 Risk Score formula (`_risk_score`):
 ```
@@ -133,7 +206,7 @@ Caps (brutal penalties):
   - 1 contributor + 50+ files -> score capped at 35
 ```
 
-### Module Detail: cli.py (4 functions)
+### Module Detail: cli.py (6 functions)
 <!-- source: grep -n "def " codedocs/cli.py -->
 
 | Function | Purpose |
@@ -141,48 +214,71 @@ Caps (brutal penalties):
 | `_progress(step, total, label)` | Terminal progress bar |
 | `_print_summary(data)` | Console summary after scan |
 | `_calc_health_score(data)` | Console health score (30% test weight, 15% git health) |
-| `main()` | Entry point — argument parsing, orchestration, browser open |
+| `main()` | Entry point — argument parsing (--lang, --target, --full-docs), orchestration, browser open |
+
+CLI flags: `--lang` (pt-BR/en-US), `--target` (migration target), `--full-docs` (11 MD files),
+`--erp` (SAP/TOTVS/Oracle), `--migration` (migration plan).
 
 ### Data Flow / Fluxo de Dados
 ```
-User runs: codedocs /path/to/project --migration --target react+fastapi
+User runs: codedocs /path/to/project --target react+fastapi --lang en-US --full-docs
 
          cli.py                    scanner.py              migration.py          renderer.py
          +-----+                  +----------+            +------------+        +----------+
-         |Parse |---- path -------|18 scans  |-- dict ---|_recommend_  |--plan--|_risk_    |
-         |args  |                 | (grep,   |            |_target     |        |_score    |
-         |      |                 |  find,   |            |_build_     |        |render_*  |
-         |      |                 |  git)    |            |_equivalence|        | (4 HTMLs)|
-         +-----+                  +----------+            +------------+        +----------+
-                                       |                                             |
-                                  100% local                                    HTML files
-                                  zero internet                              in codedocs-output/
+         |Parse |---- path -------|28 scans  |-- dict ---|_recommend_  |--plan--|_risk_    |
+         |args  |                 | (pure    |            |_target     |        |_score    |
+         | lang |                 | Python,  |            |_build_     |        |render_*  |
+         |target|                 | os.walk, |            |_equivalence|        | (5 HTMLs)|
+         |      |                 | re)      |            +------------+        +----------+
+         +-----+                  +----------+                                       |
+              |                        |                  md_renderer.py        HTML files
+              |                   100% local              +----------+         in output/
+              |                   zero internet           |render_all|
+              |                                           |_md (11   |
+              |                   sap_detection.py        | MD files)|
+              |                   +----------+            +----------+
+              +--- --full-docs -->| SAP B1,  |                 |
+                                  | Fiori,   |            MD files
+                                  | CAP, etc.|           in output/
+                                  +----------+
 ```
 
 ### Key Design Decisions / Decisoes de Design
 <!-- source: docs/research-offline-doc-tool.md, CLAUDE.md -->
 
 1. **Zero dependencies** — only Python stdlib. No pip install needed. Runs anywhere Python exists.
-2. **Zero internet** — all scans are grep/find/git. No API calls, no telemetry, no data egress.
+2. **Zero internet** — all scans are pure Python file operations. No API calls, no telemetry, no data egress.
 3. **Zero AI** — intelligence is lookup tables and scoring formulas, not LLM inference.
 4. **Deterministic** — same input = same output. Reproducible, auditable.
 5. **Dual license** — Skills are MIT (free adoption), CodeDocs is BSL (commercial product).
 6. **Risk Score over Health Score** — renamed after Perplexity review. Brutal weighting penalizes zero tests and single contributor.
 7. **Opinionated recommendations** — `_recommend_target()` gives a clear recommendation instead of neutral comparison.
 8. **Contextual copy** — [MANUAL] placeholders replaced with industry-standard suggestions.
+9. **Pure Python scanner** — no shell dependencies (grep/find/wc), works on Windows natively.
+10. **i18n from day 1** — PT-BR + EN-US with ~200 translation keys, extensible to more locales.
+11. **.codedocsignore** — custom directory exclusion similar to .gitignore.
 
 ## Tech Stack / Stack Tecnologica
 <!-- source: codedocs/*.py, skills/*/SKILL.md -->
 
 | Layer | Technology | Version | Evidence |
 |-------|-----------|---------|----------|
-| Language | Python | 3.6+ (stdlib only) | codedocs/__init__.py |
+| Language (CLI) | Python | 3.6+ (stdlib only) | codedocs/__init__.py |
+| Language (Desktop) | TypeScript + React | TS 5.7, React 18 | codedocs-desktop/package.json |
 | CLI | argparse | stdlib | codedocs/cli.py |
-| Scan | subprocess + grep/find/git | OS commands | codedocs/scanner.py |
+| Scan | Pure Python (os.walk + re) | No shell deps | codedocs/scanner.py |
 | Templates | String formatting (f-strings) | Python built-in | codedocs/renderer.py |
+| i18n | JSON translation files | 2 locales | codedocs/i18n/*.json |
 | Output | HTML + inline CSS | Self-contained | codedocs/renderer.py |
+| Output | Markdown | 11 files | codedocs/md_renderer.py |
+| Desktop | Electron | 35 | codedocs-desktop/package.json |
+| Desktop UI | React + Vite + TailwindCSS | React 18, Vite 5 | codedocs-desktop/src/ |
+| Desktop IPC | JSON stdio protocol | Custom | codedocs-desktop/electron/sidecar.ts |
+| Desktop Licensing | Ed25519 signatures | @noble/ed25519 | codedocs-desktop/electron/license.ts |
+| Desktop Update | electron-updater | 6.8 | codedocs-desktop/electron/updater.ts |
 | Skills | Markdown (SKILL.md) | Claude Code format | skills/*/SKILL.md |
 | Documentation | Markdown | GitHub-flavored | docs/*.md |
+| Testing | pytest + vitest | — | tests/, codedocs-desktop/tests/ |
 | Global install | Shell wrapper | /usr/local/bin/codedocs | Symlink to codedocs |
 
 ## Module Inventory / Inventario de Modulos
@@ -190,8 +286,10 @@ User runs: codedocs /path/to/project --migration --target react+fastapi
 
 | Module | Files | Lines | Purpose |
 |--------|-------|-------|---------|
-| `codedocs/` | 6 (.py) | 2876 | Offline CLI tool |
+| `codedocs/` | 10 (.py) + 2 (.json) | 5769 + 970 | Offline CLI tool + i18n |
+| `codedocs-desktop/` | ~20 (.ts/.tsx) | ~2500 | Desktop app (Electron + React) |
 | `skills/` | 4 (SKILL.md) | ~2250 | Claude Code instruction files |
+| `tests/` | 2 (.py) | ~200 | pytest (i18n + targets) |
 | `docs/` | 25 (.md) | ~2500 | Research + generated docs |
 | Root | 4 (.md) | ~700 | README, ROADMAP, CLAUDE.md, CONTEXT.md |
-| **Total** | **~39** | **~8326** | |
+| **Total** | **~65** | **~14889** | |

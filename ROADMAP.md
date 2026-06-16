@@ -7,7 +7,7 @@
 
 ## generate-datasheet
 
-### v4.0 — Current (Shipped)
+### v4.1 — Current (Shipped)
 
 Six layers from a single codebase scan:
 
@@ -37,28 +37,25 @@ Zero hallucination protocol: every claim traces to file:line. Uncertainty marker
 
 ---
 
-### v5.0 — Planned: Integration, Compliance & Badges
+### v5.0 — Shipped as Standalone Skills
 
-#### Layer 7: SDK & Integration Pack
+All v5.0 features shipped as standalone skills (not layers in generate-datasheet):
+
+#### Layer 7: SDK & Integration Pack — `SHIPPED as generate-api-client v1.0`
 - Postman collection generated from detected endpoints
 - Integration guide per stack (React, Python, PHP, Node)
 - Webhook recipes with payload examples
 - Auth setup guide (step-by-step authentication flow)
-- Source: endpoint scan + auth middleware analysis
 
-#### Compliance Questionnaire Engine
-- CAIQ (Consensus Assessments Initiative Questionnaire) pre-filled with code evidence
+#### Compliance Questionnaire Engine — `SHIPPED as generate-compliance v1.0`
+- CAIQ pre-filled with code evidence
 - SIG / SIG-Lite pre-filled from security scan results
-- Evidence manifest (JSON with links to file:line for each control)
-- "Unsupported claims" section — what CANNOT be proven from code alone
-- Each answer: evidence source (file:line), confidence level, `[MANUAL]` if human input needed
-- Source: security scan + audit log + encryption + headers
+- Evidence manifest (JSON)
+- "Unsupported claims" section
 
-#### Live Health Badges
+#### Live Health Badges — `SHIPPED as health-badges v1.0`
 - Dynamic badges for README based on real health score
-- Dimensions: test coverage, dependency freshness, doc coverage, bus factor
-- Format: shields.io compatible or SVG inline
-- Updates on each skill run
+- shields.io compatible SVG
 
 ---
 
@@ -87,12 +84,47 @@ Zero hallucination protocol: every claim traces to file:line. Uncertainty marker
 
 ---
 
+## CodeDocs Desktop — Shipped (v1.0.0)
+
+First commercial product. Electron + React + Vite + TailwindCSS + Python sidecar.
+
+| Feature | Status |
+|---------|--------|
+| Drag-and-drop folder scanning | Shipped |
+| Tabbed results viewer (HTML + MD) | Shipped |
+| PDF export | Shipped |
+| Freemium licensing (Ed25519 signed keys) | Shipped |
+| Auto-update (electron-updater) | Shipped |
+| Windows installer (.exe) | Shipped |
+| Mac installer (.dmg, ARM64) | Shipped |
+| Code signing (Apple Developer ID + Windows Authenticode) | Planned |
+| GitHub Releases for auto-update | Planned |
+
+## CodeDocs CLI — v3.0 (Shipped)
+
+| Feature | Status |
+|---------|--------|
+| Pure Python scanner (no grep/find/wc) | Shipped |
+| i18n: PT-BR + EN-US (~200 keys, --lang flag) | Shipped |
+| Decision Brief (5th HTML output) | Shipped |
+| SAP ecosystem detection (B1/Fiori/CAP/HANA/ABAP) | Shipped |
+| .codedocsignore (custom directory exclusion) | Shipped |
+| 7 migration targets (+ SAP Fiori/UI5) | Shipped |
+| Full docs pack (11 Markdown files, --full-docs) | Shipped |
+| Executive Verdict + Audit Readiness + ROI | Shipped |
+| Smart stack detection for target recommendations | Shipped |
+| Endpoint criticality + ghost features | Shipped |
+| Bus factor by module + deprecated functions | Shipped |
+
+---
+
 ## SaaS — Business Model
 
-### Free Tier (CLI/Skill)
+### Free Tier (CLI/Skill + Desktop Free)
 - Everything the skill does today (Layers 1-6 + Security Pack)
+- Desktop Free: scan report + sales datasheet + tech spec
 - Runs locally, zero dependencies
-- MIT licensed
+- MIT licensed (skills) / BSL licensed (CodeDocs)
 
 ### Pro Tier (Hosted)
 - Upload repo or connect GitHub
@@ -125,7 +157,7 @@ Skills being considered for the factory. Each is a standalone SKILL.md.
 
 | Skill | Purpose | Priority | Target |
 |-------|---------|----------|--------|
-| `generate-datasheet` | The main skill — docs + ops + fix | Active | v4.0 shipped |
+| `generate-datasheet` | The main skill — docs + ops + fix | Active | v4.1 shipped |
 | `generate-api-client` | SDK + Postman + integration guides | High | v5.0 |
 | `generate-compliance` | CAIQ/SIG/GDPR questionnaire answers from code evidence | High | v5.0 |
 | `health-badges` | Dynamic README badges from health score | High | v5.0 |
