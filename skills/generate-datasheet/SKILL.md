@@ -572,7 +572,7 @@ Ask the user what they need:
 ```
 What do you need?
 
-1. Full pack (all 6 layers + security pack) — recommended for first run
+1. Full pack (all 7 layers + security pack) — recommended for first run
 2. Document only (Layers 1-5: all docs, no corrections)
 3. Internal only (Layer 1: MD files for the dev team)
 4. External only (Layer 2+3: sales + technical HTML)
@@ -581,6 +581,8 @@ What do you need?
 7. Scan & fix only (Layer 6: diagnose + propose + fix with approval)
 8. Security pack only
 9. Specific files (I'll tell you which)
+10. Reverse PRD (Layer 7: reconstruct product requirements from existing codebase)
+    → docs/prd.md + docs/decisions/ADR-*.md
 ```
 
 ### Phase 1 — Discovery (read-only, no output)
