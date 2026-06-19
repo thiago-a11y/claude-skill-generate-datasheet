@@ -38,7 +38,7 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-# Generate Datasheet v4 — Understand, Document, and Fix
+# Generate Datasheet v5 — Understand, Document, Fix, and Reconstruct
 
 ## What this skill produces
 
