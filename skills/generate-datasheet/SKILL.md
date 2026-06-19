@@ -1356,6 +1356,51 @@ Use `AskUserQuestion` with open-ended text input. Incorporate any corrections be
 
 Only advance to Phase 9.3 after the user confirms.
 
+#### 9.3 — Adaptive Interview
+
+Ask fixed questions first, then conditional questions based on Phase 1 findings.
+
+**Rules (enforce strictly):**
+- One question at a time — use `AskUserQuestion` for each
+- Maximum 10 questions total: 4 fixed + up to 6 conditional (most relevant first)
+- If a fixed question's answer already addresses a conditional question, skip that conditional
+- Answer of "pular", "skip", or blank → record as `[MANUAL]` in the PRD, never block the flow
+- Ask conditional questions in priority order (highest architectural impact first)
+
+**Fixed questions (always ask, in this order):**
+
+**Q1:** "Em uma frase: qual problema este produto resolve, para quem?"
+→ Maps to §1 Problem & Context in prd.md
+
+**Q2:** "Quem é o usuário principal? (cargo, contexto de uso, nível técnico)"
+→ Maps to §2 Stakeholders & Personas
+
+**Q3:** "O que foi conscientemente NÃO construído neste produto, e por quê?"
+→ Maps to §3 Scope — Out of scope (intentional)
+
+**Q4:** "Onde este produto deveria estar em 6 a 12 meses?"
+→ Maps to §10 To-Be — Product Vision
+
+**Conditional questions — check each trigger against Phase 1 data:**
+
+| Priority | Trigger (from Phase 1) | Question to ask |
+|----------|------------------------|-----------------|
+| 1 | ERP detected: grep found SAP, TOTVS, Protheus, Oracle, Datasul | "Esta integração com ERP é bidirecional? Quem é o sistema de registro (master) para cada entidade de dados?" |
+| 2 | >3 external APIs detected in Phase 1.6 | "Quais integrações são core para o produto funcionar vs nice-to-have? Se uma cair, o que quebra para o usuário final?" |
+| 3 | Public API endpoints detected AND external consumers possible | "Esta API é consumida por terceiros, parceiros ou clientes? Existe contrato de versionamento ou SLA de API?" |
+| 4 | Service layer OR microservices pattern detected (services/, modules/ with independent configs) | "Esses serviços são produtos independentes ou componentes auxiliares deste sistema?" |
+| 5 | Both admin and end-user routes detected in same codebase | "Quem paga pelo produto? Quem usa no dia a dia? São a mesma pessoa ou papéis distintos?" |
+| 6 | tenant_id, schema separation, or row-level security detected | "O produto é SaaS multi-tenant, multi-instância, ou implantado on-premise por cliente?" |
+| 7 | test file count = 0 AND critical modules exist (auth, payment, data mutation) | "Qual a tolerância a downtime em produção? Existe SLA formal com clientes?" |
+| 8 | TODO/FIXME count > 20 in critical paths (auth/, api/, payments/) | "Existe tech debt deixado intencionalmente? Qual o contexto e o plano para ele?" |
+| 9 | git shortlog shows 1 contributor with > 80% of commits | "Existe um 'guardião' deste projeto? Quem deve herdar o conhecimento técnico?" |
+| 10 | Undocumented modules with high churn (>10 changes in 90d, 0 doc files) | "Quais módulos têm regras de negócio críticas que não estão documentadas em lugar nenhum?" |
+| 11 | Legacy stack: PHP 5/7, VB6, Delphi, .NET Framework < 4.8 | "Existe plano de modernização da stack? Qual o horizonte previsto?" |
+| 12 | Heavy vendor dependency: all compute on one cloud, cPanel-only deploy | "O lock-in com este vendor é intencional (custo, suporte, contrato) ou acidental?" |
+| 13 | Multiple auth roles with no RBAC documentation found | "Quais perfis de acesso existem? O modelo de permissão atual está correto ou é legado/acumulado?" |
+
+Select the top 6 most relevant conditional questions given the specific codebase. Skip those whose triggers were not detected.
+
 ---
 
 ### Phase 10 — Correction Engine (Layer 6)
