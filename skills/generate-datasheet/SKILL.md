@@ -1401,6 +1401,72 @@ Ask fixed questions first, then conditional questions based on Phase 1 findings.
 
 Select the top 6 most relevant conditional questions given the specific codebase. Skip those whose triggers were not detected.
 
+#### 9.4 — Build To-Be
+
+Combine interview answers with existing backlog and roadmap evidence.
+
+**Inputs:**
+- Q4 answer (product vision — `[USER-PROVIDED]`)
+- Q3 answer (intentional out of scope — `[USER-PROVIDED]`)
+- `docs/backlog.md` if generated (Layer 1), or raw TODO/issue scan from Phase 1
+- `docs/roadmap.md` if generated (Layer 1)
+- Any features mentioned in interview answers
+
+**Feature roadmap construction:**
+1. Start with all items from backlog.md / TODO scan — these are `origin: backlog`
+2. Add features mentioned in Q4 answer — these are `origin: [USER-PROVIDED]`
+3. For each feature, generate 1-3 acceptance criteria:
+   - Must be measurable ("User can X" or "System returns Y within Z")
+   - Must NOT be vague ("Works correctly", "Is fast", "Is secure")
+4. Assign initial priority: Critical / High / Medium / Low based on:
+   - Critical = mentioned in Q4 + blocks core user journey
+   - High = in backlog with FIXME/TODO markers in critical paths
+   - Medium = in backlog, no critical path dependency
+   - Low = nice-to-have, no evidence in code
+
+**Acceptance criteria format:**
+```
+WRONG: "The feature works correctly"
+RIGHT: "User can upload a file up to 10MB and receive a confirmation with file ID within 3 seconds"
+
+WRONG: "Improve performance"
+RIGHT: "API response time for /api/deals returns in < 500ms for payloads up to 100 records"
+```
+
+Mark all acceptance criteria derived from inference as `[VERIFY — confirm with stakeholders]`.
+
+#### 9.5 — Gate 2: Present To-Be Draft + Approval
+
+```
+## To-Be Draft — {Project Name}
+<!-- Layer 7 · Gate 2 · generate-datasheet v5 -->
+
+### Product Vision [USER-PROVIDED]
+"{Q4 answer verbatim}"
+
+### Out of Scope (intentional) [USER-PROVIDED]
+"{Q3 answer verbatim}"
+
+### Feature Roadmap
+
+| Feature | Origin | Priority | Acceptance Criteria |
+|---------|--------|----------|---------------------|
+| {feature} | backlog / [USER-PROVIDED] | Critical/High/Medium/Low | {measurable criteria} |
+
+### To-Be: Integration Direction
+| Integration | Direction | Master System | Status |
+|-------------|-----------|---------------|--------|
+| {ERP / API / Service} | {bidirectional / outbound / inbound} | {system} | Current / Planned [USER-PROVIDED] |
+
+---
+Isso captura a direção correta do produto?
+O que deve mudar? (Digite correções ou "está correto")
+```
+
+Use `AskUserQuestion` with open-ended text input. Incorporate corrections.
+
+Only advance to Phase 9.6 after user confirms.
+
 ---
 
 ### Phase 10 — Correction Engine (Layer 6)
