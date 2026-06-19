@@ -123,7 +123,7 @@ The generate-datasheet skill's core value is evidence-based documentation. When 
 
 | Skill | Version | Purpose |
 |-------|---------|---------|
-| `generate-datasheet` | v4.1.0 | Scan → Document → Diagnose → Fix (6 layers + AI cost audit) |
+| `generate-datasheet` | v5.0.0 | Scan → Document → Diagnose → Fix → PRD (7 layers + AI cost audit + Reverse PRD) |
 | `generate-api-client` | v1.0.0 | Postman collection + integration guides + webhook docs + auth setup |
 | `generate-compliance` | v1.0.0 | CAIQ/SIG pre-filled from code evidence + LGPD/GDPR data mapping |
 | `health-badges` | v1.0.0 | SVG health badges for README (test coverage, deps, bus factor, etc.) |
@@ -135,6 +135,7 @@ The generate-datasheet skill's core value is evidence-based documentation. When 
 - v3.0 — + Layer 5 operational intelligence (onboarding, bus-factor, runbooks, health score)
 - v4.0 — + Layer 6 assisted correction engine (scan → propose → approve → fix → verify)
 - v4.1 — + AI API Cost Audit in Layer 4 (callsite inventory, model mapping, downgrade recommendations)
+- v5.0 — + Layer 7 Reverse PRD (As-Is auto-generation → Gate 1 → adaptive interview → To-Be → Gate 2 → docs/prd.md + ADR files)
 
 ### Version history (CodeDocs CLI)
 - v1.0 — Offline CLI with scanner + renderer (scan report, sales, tech spec)
