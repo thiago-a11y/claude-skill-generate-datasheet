@@ -1,12 +1,12 @@
 ---
 name: generate-datasheet
-version: 4.1.0
+version: 5.0.0
 description: |
   Turns any codebase into operational understanding + fixes it with your approval.
   Scans → Documents → Diagnoses → Proposes fixes → You approve → It corrects.
   Every claim traced to code. Zero hallucination. Zero unauthorized changes.
   
-  6 layers:
+  7 layers:
   Layer 1 (Internal/MD): architecture, data-dictionary, glossary, changelog, 
     endpoints, security, roadmap, contributing, bugs-known, backlog, pendencies
   Layer 2 (External/HTML): Sales datasheet — persona filters, 3-layer depth
@@ -16,6 +16,9 @@ description: |
   Layer 6 (Correction): Scan → diagnose → propose → approve → fix → verify.
     Branch-based safety. Per-item approval. Confidence labels. Post-fix verification.
     Never touches main. Every fix = 1 commit = 1 revert.
+  Layer 7 (Reverse PRD): Reconstruct product requirements from existing codebase.
+    As-Is → approval gate → adaptive interview → To-Be → approval gate → PRD + ADRs.
+    Evidence-based. Two approval gates. Max 10 questions. Zero hallucination.
   
   Plus: Security Pack (whitepaper, data-residency, subprocessors, 
     incident-response, backup-dr-policy)
@@ -23,7 +26,9 @@ description: |
   Use when: "generate docs", "document this project", "fix issues", "scan and fix",
   "onboarding guide", "runbook", "bus factor", "project health", "tech debt",
   "evolution report", "security docs", "ficha técnica", "corrigir problemas",
-  "AI cost", "LLM audit", "model optimization", "custo de IA".
+  "AI cost", "LLM audit", "model optimization", "custo de IA",
+  "generate PRD", "reverse PRD", "reconstruct requirements", "gerar PRD",
+  "requisitos do produto", "o que esse projeto faz", "PRD do projeto".
 allowed-tools:
   - Bash
   - Read
