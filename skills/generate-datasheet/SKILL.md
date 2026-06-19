@@ -42,7 +42,7 @@ allowed-tools:
 
 ## What this skill produces
 
-Six layers from a single codebase scan — from documentation to correction:
+Seven layers from a single codebase scan — from documentation to correction:
 
 ### Layer 1 — Internal Documentation (Markdown)
 
@@ -308,6 +308,23 @@ Generate runbooks for each detected failure domain:
 2. Pair developer on payments module (+10 points) — bus factor = 1
 3. Update 3 critical dependencies (+5 points) — see evolution-report.md
 ```
+
+### Layer 7 — Reverse PRD (Markdown + ADR files)
+
+For founders, PMs, tech leads, and anyone inheriting an undocumented project.
+
+| File | Content |
+|------|---------|
+| `docs/prd.md` | Reverse PRD — problem, personas, As-Is capabilities, To-Be vision, ADR summary |
+| `docs/decisions/ADR-001-*.md` | Architecture Decision Records — one per significant architectural decision (max 5-7) |
+
+Two-gate flow: As-Is auto-generated → approval gate → adaptive interview (max 10 questions) → To-Be draft → approval gate → PRD + ADRs generated.
+
+Every claim is traced to code evidence, git history, or explicit user input. Markers distinguish:
+- Code-proven facts (no marker)
+- `[INFERRED]` — reconstructed from code patterns
+- `[USER-PROVIDED]` — came from the interview
+- `[MANUAL]` — requires human input, cannot be extracted from code
 
 ### Security Pack (Markdown)
 
