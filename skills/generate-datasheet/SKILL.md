@@ -535,6 +535,8 @@ When the skill cannot determine something with confidence, it MUST use markers:
 | `[NOT DETECTED]` | Looked for it, didn't find it | `2FA: [NOT DETECTED]` |
 | `[MANUAL]` | Requires human input, can't extract from code | `Product description: [MANUAL — describe in 1-2 sentences]` |
 | `[PARTIAL]` | Found evidence but incomplete | `Auth: JWT detected [PARTIAL — refresh token not found]` |
+| `[INFERRED]` | Reconstructed from code patterns — not explicitly documented | `Auth strategy: JWT [INFERRED] — no explicit ADR found` |
+| `[USER-PROVIDED]` | Came from interview answers — not from code evidence | `Vision: [USER-PROVIDED] — "expand to enterprise by Q4"` |
 
 ### Rule 3: Source attribution
 
@@ -1832,6 +1834,8 @@ After all approved fixes are applied:
 12. **Cure for vibe-coding** — code nobody can explain is a liability
 13. **Fixes need evidence** — no fix without file:line, blast radius, and confidence label
 14. **1 fix = 1 commit** — atomic, revertible, traceable
+15. **PRD from code, not from imagination** — Layer 7 documents what exists and what users explicitly said; it never invents personas, features, or intent
+16. **Two gates, no shortcuts** — As-Is gate before the interview, To-Be gate before generation; skipping either defeats the purpose
 
 ## What This Skill Is NOT
 
