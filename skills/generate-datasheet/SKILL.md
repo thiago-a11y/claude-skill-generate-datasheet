@@ -1249,11 +1249,120 @@ Design: dark theme, accent blue (#3b82f6), JetBrains Mono for code, status tags,
 - Module coverage: X/Y documented
 ```
 
-### Phase 9 — Correction Engine (Layer 6)
+### Phase 9 — Reverse PRD (Layer 7)
+
+Only runs if user selected Layer 7 (option 10 in Phase 0) or "Full pack" (option 1).
+
+Reuses all data from Phase 1 — no re-scan needed. If Phase 1 has not run yet, run it first.
+
+#### 9.1 — Build As-Is
+
+Consolidate Phase 1 evidence into structured As-Is sections.
+
+**Persona reconstruction:**
+```bash
+# Roles and permission levels
+grep -rn "role\|permission\|admin\|manager\|operator\|viewer\|owner" \
+  --include="*.ts" --include="*.php" --include="*.py" --include="*.go" 2>/dev/null | head -20
+
+# UI labels that reveal audience
+grep -rn "admin\|dashboard\|portal\|backoffice\|customer\|client\|partner" \
+  --include="*.tsx" --include="*.jsx" --include="*.html" --include="*.blade.php" 2>/dev/null | head -20
+
+# Enum values for roles
+grep -rn "enum.*[Rr]ole\|ROLE_\|UserType\|AccountType" \
+  --include="*.ts" --include="*.php" --include="*.py" 2>/dev/null | head -15
+```
+
+**User journey reconstruction:**
+- For each detected route group: identify entry point → core action → output
+- Pattern: `GET /login` → `POST /login` → redirect to dashboard = auth journey
+- Pattern: `GET /api/v1/resource` → `POST` → `PUT` → `DELETE` = CRUD journey
+- Group journeys by persona (admin journeys vs end-user journeys)
+
+**Implicit constraint detection:**
+```bash
+# Hosting/deployment constraints
+ls Dockerfile docker-compose.yml fly.toml vercel.json netlify.toml railway.json 2>/dev/null
+
+# Scale/performance constraints
+grep -rn "max_connections\|pool_size\|MAX_FILE\|rate_limit\|timeout\|memory_limit" \
+  --include="*.ts" --include="*.php" --include="*.py" --include="*.env*" 2>/dev/null | head -10
+
+# Architecture pattern
+ls src/services/ src/modules/ src/domain/ api/ app/ microservices/ 2>/dev/null
+```
+
+**Decision archaeology:**
+```bash
+# Git messages indicating architectural decisions
+git log --all --oneline | grep -iE "chose|decided|instead of|replaced|migrated|switched to|moved to|refactor|rewrote" 2>/dev/null | head -20
+
+# Code comments with explicit intent
+grep -rn "// Note:\|// Reason:\|// Because\|// workaround\|// intentionally\|# NOTE:\|# HACK:\|# DECISION:" \
+  --include="*.ts" --include="*.php" --include="*.py" --include="*.go" 2>/dev/null | head -30
+```
+
+For each significant decision candidate found, record:
+- What was decided (framework, pattern, data structure, integration)
+- Evidence (file:line or git hash)
+- Confidence: DOCUMENTED (explicit comment/git) or [INFERRED] (pattern only)
+
+#### 9.2 — Gate 1: Present As-Is + Approval
+
+Present the As-Is summary to the user before asking any interview questions.
+
+```
+## As-Is Summary — {Project Name}
+<!-- Layer 7 · Gate 1 · generate-datasheet v5 -->
+
+### Personas detected
+| Persona | Evidence | Confidence |
+|---------|----------|------------|
+| {role from enum/code} | {file:line} | HIGH / [INFERRED] |
+
+### Core capabilities (from Phase 1 endpoints + components)
+| Module | Capabilities | Evidence |
+|--------|-------------|----------|
+
+### User journeys reconstructed
+**{Persona 1}:**
+1. Entry: {route or action}
+2. Core action: {what they do}
+3. Output: {what they get}
+
+**{Persona 2}:** (if detected)
+...
+
+### Architectural constraints
+| Constraint | Value | Evidence |
+|------------|-------|----------|
+| Deployment | {Dockerfile / cPanel / Vercel / [NOT DETECTED]} | {file} |
+| Auth pattern | {JWT / Sessions / OAuth / [NOT DETECTED]} | {file:line} |
+| Database | {MySQL / Postgres / MongoDB / [NOT DETECTED]} | {file:line} |
+| Scale model | {Single server / Containers / Serverless / [NOT DETECTED]} | {evidence} |
+
+### ADR candidates (decisions found in code or git)
+| Decision | Evidence | Confidence |
+|----------|----------|------------|
+| {e.g. JWT vs Sessions} | {auth.php:12} | [INFERRED] |
+
+---
+Isso reflete com precisão o que o sistema faz?
+O que está errado ou faltando? (Digite correções ou "está correto")
+```
+
+Use `AskUserQuestion` with open-ended text input. Incorporate any corrections before Phase 9.3.
+
+Only advance to Phase 9.3 after the user confirms.
+
+---
+
+### Phase 10 — Correction Engine (Layer 6)
 
 Only runs if user selected Layer 6 (option 1 or 7 in Phase 0).
 
-**9.1 — Compile issue list from previous phases**
+**10.1 — Compile issue list from previous phases**
 
 Gather all issues found during Phases 1, 4 (Evolution), and 5 (Operational):
 - Security gaps from security.md
@@ -1263,7 +1372,7 @@ Gather all issues found during Phases 1, 4 (Evolution), and 5 (Operational):
 - Lint/format issues from code scan
 - AI model downgrades from AI API Cost Audit (HIGH confidence only — single-line model parameter changes)
 
-**9.2 — Classify each issue**
+**10.2 — Classify each issue**
 
 For each issue, determine:
 ```
@@ -1279,7 +1388,7 @@ Classification rules:
 - **MEDIUM confidence**: single-file security fixes, missing test skeletons, simple TODO resolutions
 - **LOW confidence**: multi-file refactors, major dependency upgrades, architecture changes
 
-**9.3 — Present correction plan**
+**10.3 — Present correction plan**
 
 Use AskUserQuestion tool to present the plan grouped by confidence level.
 User must explicitly approve which fixes to apply.
@@ -1290,7 +1399,7 @@ IMPORTANT:
 - Show diff preview for MEDIUM items
 - Group by category for easy batch approval ("all-high", "all-medium")
 
-**9.4 — Create safety branch**
+**10.4 — Create safety branch**
 
 ```bash
 git checkout -b fix/datasheet-corrections
@@ -1298,7 +1407,7 @@ git checkout -b fix/datasheet-corrections
 
 If branch already exists from a previous run, ask user whether to continue or start fresh.
 
-**9.5 — Apply approved fixes**
+**10.5 — Apply approved fixes**
 
 For each approved fix, in order of confidence (HIGH first, then MEDIUM):
 
@@ -1328,7 +1437,7 @@ For each approved fix, in order of confidence (HIGH first, then MEDIUM):
    Revert: git revert {hash}
    ```
 
-**9.6 — Post-fix actions**
+**10.6 — Post-fix actions**
 
 After all approved fixes are applied:
 
@@ -1339,7 +1448,7 @@ After all approved fixes are applied:
 2. Report results to user (applied, failed, skipped, not approved)
 3. Provide merge and revert instructions
 
-**9.7 — Rules the correction engine MUST follow**
+**10.7 — Rules the correction engine MUST follow**
 
 1. NEVER commit to main — always dedicated branch
 2. NEVER apply LOW confidence fixes — only generate plans
