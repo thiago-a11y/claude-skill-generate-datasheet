@@ -253,10 +253,33 @@ for skill in generate-datasheet generate-api-client generate-compliance health-b
 done
 ```
 
+### Updating skills
+
+Skills are static files — there is no auto-update. To get the latest version, re-run the install command for any skill:
+
+```bash
+# Update generate-datasheet only
+curl -sL -o .claude/skills/generate-datasheet/SKILL.md \
+  https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/skills/generate-datasheet/SKILL.md
+
+# Update all skills at once
+for skill in generate-datasheet generate-api-client generate-compliance health-badges; do
+  curl -sL -o .claude/skills/$skill/SKILL.md \
+    https://raw.githubusercontent.com/thiago-a11y/claude-skill-generate-datasheet/main/skills/$skill/SKILL.md
+done
+```
+
+> **No restart needed.** Claude Code picks up the new file on the next conversation.
+
+To check which version you have installed:
+```bash
+grep "^version:" .claude/skills/generate-datasheet/SKILL.md
+```
+
 ## Skills Catalog
 
-### generate-datasheet (v4.1)
-The main skill — 6 layers from a single codebase scan. [Full documentation above](#what-it-generates).
+### generate-datasheet (v5.0)
+The main skill — 7 layers from a single codebase scan, including Reverse PRD. [Full documentation above](#what-it-generates).
 
 ```
 /generate-datasheet
